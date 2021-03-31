@@ -6,7 +6,7 @@
 (set-fringe-mode -1)
 (setq visible-bell t)
 (set-face-attribute 'default nil :font "Source Code Pro")
-(load-theme 'wombat t)
+(load-theme 'misterioso t)
  
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
@@ -30,6 +30,7 @@
 (use-package ivy
   :diminish
   :bind (("C-s" . swiper)
+	 ("M-x" . counsel-M-x)
 	 :map ivy-minibuffer-map
          ("TAB" . ivy-alt-done)
          ("C-f" . ivy-alt-done)
@@ -44,6 +45,52 @@
          ("C-d" . ivy-reverse-i-search-kill))
   :init
   (ivy-mode 1))
+
+
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 1))
+
+(use-package ivy-rich
+  :after ivy
+  :init
+  (ivy-rich-mode 1))
+
+
+(column-number-mode)
+(global-display-line-numbers-mode t)
+(dolist (mode '(org-mode-hook
+		term-mode-hook
+		eshell-mode-hook
+		shell-mode-hook))
+  (add-hook mode (lambda() (display-line-numbers-mode 0))))
+
+
+(use-package helpful
+  :commands (helpful-callable helpful-variable helpful-command helpful-key)
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . counsel-describe-function)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-variable] . counsel-describe-variable)
+  ([remap describe-key] . helpful-key))
+
+
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
 (use-package doom-modeline
-  :ensure t
   :init (doom-modeline-mode 1))
+
+(use-package doom-themes
+  :init (load-theme 'doom-oceanic-next t))
+
+(use-package all-the-icons)
+; TODO: Add a way to compile all the icons at the first run 
+(use-package general)
+;(general-define-key
+ 
