@@ -11,7 +11,7 @@
 (set-fringe-mode -1) ; I don't like the menus
 (setq visible-bell t) ; I don't like my errors being screamed at to me
 #+end_src
-** Themes 
+** Themes
 #+begin_src emacs-lisp
 (set-face-attribute 'default nil :font "Source Code Pro")
 (use-package doom-modeline
@@ -27,15 +27,15 @@ First we initialize the package manager, and then we install `use-package`, and 
 (unless package-archive-contents
   (package-refresh-contents))
 
-(unless (package-installed-p 'use-package) 
+(unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
 (require 'use-package)
 (setq use-package-always-ensure t)
 #+end_src
 ** Interaction with Emacs
-*** Ivy 
- Package for enhance the experience, along with swiper its a marvel. 
+*** Ivy
+ Package for enhance the experience, along with swiper its a marvel.
  #+begin_src emacs-lisp
  (use-package ivy
    :diminish
