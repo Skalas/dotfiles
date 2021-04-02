@@ -1,0 +1,102 @@
+#+Author: Miguel Escalante
+#+Title: My emacs Config
+* Set everything up
+** First Basics
+#+begin_src emacs-lisp
+(setq inhibit-startup-message t) ; No emacs init paga
+(menu-bar-mode -1) ; I don't like the menus
+(scroll-bar-mode -1) ; I don't like the menus
+(tool-bar-mode -1) ; I don't like the menus
+(tooltip-mode -1) ; I don't like the menus
+(set-fringe-mode -1) ; I don't like the menus
+(setq visible-bell t) ; I don't like my errors being screamed at to me
+#+end_src
+** Themes 
+#+begin_src emacs-lisp
+(set-face-attribute 'default nil :font "Source Code Pro")
+(use-package doom-modeline
+  :init (doom-modeline-mode 1))
+(use-package doom-themes
+  :init (load-theme 'doom-oceanic-next t))
+(use-package all-the-icons)
+#+end_src
+** Initialize use-package
+First we initialize the package manager, and then we install `use-package`, and we make sure that every time it ensures the packages it wants to use.
+#+begin_src emacs-lisp
+(package-initialize)
+(unless package-archive-contents
+  (package-refresh-contents))
+
+(unless (package-installed-p 'use-package) 
+  (package-install 'use-package))
+
+(require 'use-package)
+(setq use-package-always-ensure t)
+#+end_src
+** Interaction with Emacs
+*** Ivy 
+ Package for enhance the experience, along with swiper its a marvel. 
+ #+begin_src emacs-lisp
+ (use-package ivy
+   :diminish
+   :bind (("C-s" . swiper)
+	  ("M-x" . counsel-M-x)
+	  :map ivy-minibuffer-map
+          ("TAB" . ivy-alt-done)
+          ("C-f" . ivy-alt-done)
+          ("C-j" . ivy-next-line)
+          ("C-k" . ivy-previous-line)
+          :map ivy-switch-buffer-map
+          ("C-k" . ivy-previous-line)
+          ("C-l" . ivy-done)
+          ("C-d" . ivy-switch-buffer-kill)
+          :map ivy-reverse-i-search-map
+          ("C-k" . ivy-previous-line)
+          ("C-d" . ivy-reverse-i-search-kill))
+   :init
+   (ivy-mode 1))
+ (use-package ivy-rich
+   :after ivy
+   :init
+   (ivy-rich-mode 1))
+ #+end_src
+*** Which key
+#+begin_src emacs-lisp
+(use-package which-key
+  :init (which-key-mode)
+  :diminish which-key-mode
+  :config
+  (setq which-key-idle-delay 1))
+#+end_src
+*** Projectile
+#+begin_src emacs-lisp
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/github")
+    (setq projectile-project-search-path '("~/github")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+  :after projectile
+  :config (counsel-projectile-mode))
+#+end_src
+* Programing
+** General
+#+begin_src emacs-lisp
+
+(use-package magit
+  :commands magit-status
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
+  )
+
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
+
+#+end_src
