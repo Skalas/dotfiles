@@ -88,6 +88,7 @@ First we initialize the package manager, and then we install `use-package`, and 
 #+end_src
 * Programing
 ** General
+
 #+begin_src emacs-lisp
 
 (use-package magit
