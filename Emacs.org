@@ -100,3 +100,11 @@ First we initialize the package manager, and then we install `use-package`, and 
   :hook (prog-mode . rainbow-delimiters-mode))
 
 #+end_src
+* [[https://orgmode.org][Org Mode]]
+#+begin_src emacs-lisp
+(require org-mode)
+#+end_src
+
+| Nombre       | Apellido  | Edad  | Usa    |
+| --------     | -------   | ----- | -----  |
+| Miguel Angel | Escalante | 31    | Emacs! |
