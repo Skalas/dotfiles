@@ -1,5 +1,7 @@
 #+Author: Miguel Escalante
 #+Title: My emacs Config
+#+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yest
+
 * Set everything up
 ** First Basics
 #+begin_src emacs-lisp
@@ -12,20 +14,36 @@
 (setq visible-bell t) ; I don't like my errors being screamed at to me
 #+end_src
 ** Themes
+*** Visual Themes
 #+begin_src emacs-lisp
-(set-face-attribute 'default nil :font "Source Code Pro")
+
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
 (use-package doom-themes
   :init (load-theme 'doom-oceanic-next t))
 (use-package all-the-icons)
 #+end_src
+*** Pretty fonts per different environments
+Make sure you have the font installed beforehand: 
+#+begin_src shell :noeval 
+sudo apt install fonts-firacode
+#+end_src
+
+#+begin_src emacs-lisp
+(set-face-attribute 'default nil :font "Fira Code Retina")
+
+;; Set the fixed pitch face
+(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina")
+
+;; Set the variable pitch face
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular)
+#+end_src
 ** Initialize use-package
 First we initialize the package manager, and then we install `use-package`, and we make sure that every time it ensures the packages it wants to use.
 #+begin_src emacs-lisp
 (package-initialize)
 (unless package-archive-contents
-  (package-refresh-contents))
+(package-refresh-contents))
 
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
@@ -88,7 +106,7 @@ First we initialize the package manager, and then we install `use-package`, and 
 #+end_src
 * Programing
 ** General
-
+*** Magit
 #+begin_src emacs-lisp
 
 (use-package magit
@@ -96,16 +114,64 @@ First we initialize the package manager, and then we install `use-package`, and 
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
   )
+#+end_src
+*** Rainbow delimiters
+#+begin_src emacs-lisp
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
 #+end_src
-* [[https://orgmode.org][Org Mode]]
-#+begin_src emacs-lisp
-(require org-mode)
-#+end_src
+* [[https://orgmode.org][Org Mode]] 
+The best package ever!!! :) 
 
-| Nombre       | Apellido  | Edad  | Usa    |
-| --------     | -------   | ----- | -----  |
-| Miguel Angel | Escalante | 31    | Emacs! |
+#+begin_src emacs-lisp
+
+(defun skls/org-mode-setup ()
+  (org-indent-mode)
+  (variable-pitch-mode 1)
+  (visual-line-mode 1))
+
+(use-package org
+  :pin org
+  :commands (org-capture org-agenda)
+  :hook
+  (org-mode . skls/org-mode-setup)
+  :config
+  (setq org-ellipsis " ▾")
+  )
+
+(with-eval-after-load 'org-faces
+  (dolist (face '((org-level-1 . 1.2)
+                  (org-level-2 . 1.1)
+                  (org-level-3 . 1.05)
+                  (org-level-4 . 1.0)
+                  (org-level-5 . 1.1)
+                  (org-level-6 . 1.1)
+                  (org-level-7 . 1.1)
+                  (org-level-8 . 1.1)))
+    (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face))
+    (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+    (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+    (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+    (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+    (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+    (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)))
+
+(use-package org-bullets
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+(defun skls/org-font-setup ()
+  ;; Replace list hyphen with dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))
+			  ))
+#+end_src
