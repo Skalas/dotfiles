@@ -1,4 +1,3 @@
-
 #+Author: Miguel Escalante
 #+Title: My emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
@@ -33,7 +32,6 @@ better package management for emacs.
 (setq use-package-always-ensure t)
 #+end_src
 ** Themes
-
 *** Visual Themes
 #+begin_src emacs-lisp
 (use-package doom-modeline
@@ -158,6 +156,28 @@ sudo apt install fonts-firacode
 #+end_src
 * [[https://orgmode.org][Org Mode]] 
 The best package ever!!! :) 
+** Babel
+The best for writing Literate programing
+#+begin_src emacs-lisp
+  (defun skls/org-mode-babel ()
+    (require 'org-tempo)
+    (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+    (add-to-list 'org-structure-template-alist '("py" . "src python"))
+    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+    (add-to-list 'org-structure-template-alist '("R" . "src R"))
+    (add-to-list 'org-structure-template-alist '("sql" . "src sql"))
+    (setq org-confirm-babel-evaluate nil)
+    (setq org-src-tab-acts-natively t)
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (R . t)
+       (python . t)
+       (sql . t)
+       (shell . t)
+       )))
+#+end_src
+
 ** Agenda
 First we setup the agenda it's kidna messy so I put it in a different place
 #+begin_src emacs-lisp
@@ -276,46 +296,30 @@ First we setup the agenda it's kidna messy so I put it in a different place
         (lambda () (interactive) (org-capture nil "jj")))
     )
 #+end_src
-** Babel
-The best for writing Literate programing
-#+begin_src emacs-lisp
-  (defun skls/org-mode-babel ()
-    (require 'org-tempo)
-    (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-    (add-to-list 'org-structure-template-alist '("py" . "src python"))
-    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-    (add-to-list 'org-structure-template-alist '("R" . "src R"))
-    (add-to-list 'org-structure-template-alist '("sql" . "src sql"))
-    (setq org-confirm-babel-evaluate nil)
-    (setq org-src-tab-acts-natively t)
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((emacs-lisp . t)
-       (R . t)
-       (python . t)
-       (sql . t)
-       (shell . t)
-       )))
-#+end_src
-
 ** Basic Setup
 #+begin_src emacs-lisp
-  (defun skls/org-font-setup ()
-    ;; Replace list hyphen with dot
-    (font-lock-add-keywords 'org-mode
-                            '(("^ *\\([-]\\) "
-                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
+    (defun skls/org-font-setup ()
+      ;; Replace list hyphen with dot
+      (font-lock-add-keywords 'org-mode
+                              '(("^ *\\([-]\\) "
+                                 (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
+    (defun skls/org-mode-setup ()
+      (org-indent-mode)
+      (variable-pitch-mode 1)
+      (visual-line-mode 1))
 
-  (defun skls/org-mode-setup ()
-    (org-indent-mode)
-    (variable-pitch-mode 1)
-    (visual-line-mode 1))
+    (defun skls/org-mode-visual-fill ()
+      (use-package visual-fill-column)
+      (setq visual-fill-column-width 100
+            visual-fill-column-center-text t)
+      (visual-fill-column-mode 1))
 
     (use-package org
       :pin org
       :commands (org-capture org-agenda)
       :hook ((org-mode . skls/org-mode-babel)
-             (org-mode . skls/org-mode-setup))
+             (org-mode . skls/org-mode-setup)
+             (org-mode . skls/org-mode-visual-fill))
       :config
       (setq org-ellipsis " ▾")
       (skls/org-agenda-setup)
@@ -346,4 +350,17 @@ The best for writing Literate programing
     (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
     (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
     (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)))
+#+end_src
+* Autosave to init.el
+This automatically saves all the elisp code chunks to init.el
+#+begin_src emacs-lisp
+  ;; Automatically tangle our Emacs.org config file when we save it
+  (defun skls/org-babel-tangle-config ()
+    (when (string-equal (file-name-directory (buffer-file-name))
+                        (expand-file-name user-emacs-directory))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (org-babel-tangle))))
+
+  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'skls/org-babel-tangle-config)))
 #+end_src

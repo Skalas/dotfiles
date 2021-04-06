@@ -110,6 +110,24 @@
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
 
+(defun skls/org-mode-babel ()
+  (require 'org-tempo)
+  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("R" . "src R"))
+  (add-to-list 'org-structure-template-alist '("sql" . "src sql"))
+  (setq org-confirm-babel-evaluate nil)
+  (setq org-src-tab-acts-natively t)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (R . t)
+     (python . t)
+     (sql . t)
+     (shell . t)
+     )))
+
 (defun skls/org-agenda-setup ()
   (setq org-agenda-start-with-log-mode t)
   (setq org-log-done 'time)
@@ -225,45 +243,33 @@
       (lambda () (interactive) (org-capture nil "jj")))
   )
 
-(defun skls/org-mode-babel ()
-  (require 'org-tempo)
-  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-  (add-to-list 'org-structure-template-alist '("py" . "src python"))
-  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-  (add-to-list 'org-structure-template-alist '("R" . "src R"))
-  (add-to-list 'org-structure-template-alist '("sql" . "src sql"))
-  (setq org-confirm-babel-evaluate nil)
-  (setq org-src-tab-acts-natively t)
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (R . t)
-     (python . t)
-     (sql . t)
-     (shell . t)
-     )))
-
 (defun skls/org-font-setup ()
   ;; Replace list hyphen with dot
   (font-lock-add-keywords 'org-mode
                           '(("^ *\\([-]\\) "
                              (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
-
 (defun skls/org-mode-setup ()
   (org-indent-mode)
   (variable-pitch-mode 1)
   (visual-line-mode 1))
 
-  (use-package org
-    :pin org
-    :commands (org-capture org-agenda)
-    :hook ((org-mode . skls/org-mode-babel)
-           (org-mode . skls/org-mode-setup))
-    :config
-    (setq org-ellipsis " ▾")
-    (skls/org-agenda-setup)
-    (skls/org-font-setup)
-    )
+(defun skls/org-mode-visual-fill ()
+  (use-package visual-fill-column)
+  (setq visual-fill-column-width 100
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package org
+  :pin org
+  :commands (org-capture org-agenda)
+  :hook ((org-mode . skls/org-mode-babel)
+         (org-mode . skls/org-mode-setup)
+         (org-mode . skls/org-mode-visual-fill))
+  :config
+  (setq org-ellipsis " ▾")
+  (skls/org-agenda-setup)
+  (skls/org-font-setup)
+  )
 
 (with-eval-after-load 'org-faces
   (dolist (face '((org-level-1 . 1.2)
