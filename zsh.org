@@ -1,7 +1,8 @@
 #+Title: Configuration for my zsh
 #+PROPERTY: header-args :mkdirp y
+* Preamble: 
+Love this snippet 
 
-I love my fortune told to me :3 
 #+begin_src conf :tangle ./.zshrc
 fortune -s
 #+end_src
