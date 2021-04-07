@@ -422,39 +422,45 @@ First we setup the agenda it's kidna messy so I put it in a different place
         (lambda () (interactive) (org-capture nil "jj")))
     )
 #+end_src
+** Org-superstar
+#+begin_src emacs-lisp
+  (defun skls/org-superstar ()
+    (use-package org-superstar)
+    (org-superstar-mode 1))
+#+end_src
 ** Basic Setup
 #+begin_src emacs-lisp
-    (defun skls/org-font-setup ()
-      ;; Replace list hyphen with dot
-      (font-lock-add-keywords 'org-mode
-                              '(("^ *\\([-]\\) "
-                                 (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
-    (defun skls/org-mode-setup ()
-      (org-indent-mode)
-      (variable-pitch-mode 1)
-      (visual-line-mode 1))
+  (defun skls/org-font-setup ()
+    ;; Replace list hyphen with dot
+    (font-lock-add-keywords 'org-mode
+                            '(("^ *\\([-]\\) "
+                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
+  (defun skls/org-mode-setup ()
+    (org-indent-mode)
+    (variable-pitch-mode 1)
+    (visual-line-mode 1))
 
-    (defun skls/org-mode-visual-fill ()
-      (use-package visual-fill-column)
-      (setq visual-fill-column-width 100
-            visual-fill-column-center-text t)
-      (visual-fill-column-mode 1))
+  (defun skls/org-mode-visual-fill ()
+    (use-package visual-fill-column)
+    (setq visual-fill-column-width 100
+          visual-fill-column-center-text t)
+    (visual-fill-column-mode 1))
 
-    (use-package org
-      :pin org
-      :commands (org-capture org-agenda)
-      :hook ((org-mode . skls/org-mode-babel)
-             (org-mode . skls/org-mode-setup)
-             (org-mode . skls/org-mode-visual-fill))
-      :config
-      (setq org-ellipsis " ▾")
-      (skls/org-agenda-setup)
-      (skls/org-font-setup)
-      )
+  (use-package org
+    :pin org
+    :commands (org-capture org-agenda)
+    :hook ((org-mode . skls/org-mode-babel)
+           (org-mode . skls/org-mode-setup)
+           (org-mode . skls/org-mode-visual-fill)
+           (org-mode . skls/org-superstar))
+    :config
+    (setq org-ellipsis " ▾")
+    (skls/org-agenda-setup)
+    (skls/org-font-setup)
+    )
 #+end_src
 
 #+RESULTS:
-| org-tempo-setup | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | (lambda nil (add-hook 'after-save-hook #'skls/org-babel-tangle-config)) | skls/org-mode-visual-fill | skls/org-mode-setup | skls/org-mode-babel | (lambda nil (display-line-numbers-mode 0)) |
 
 ** Faces 
 #+begin_src emacs-lisp
@@ -479,6 +485,26 @@ First we setup the agenda it's kidna messy so I put it in a different place
     (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
     (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
     (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)))
+#+end_src
+
+* File Management
+** Dired
+#+begin_src emacs-lisp
+  (setq dired-listing-switches "-agho --group-directories-first")
+
+  (use-package all-the-icons-dired
+    :hook (dired-mode . all-the-icons-dired-mode))
+
+  (use-package dired-single
+    :commands (dired dired-jump))
+
+  (use-package dired-hide-dotfiles
+    :hook (dired-mode . dired-hide-dotfiles-mode)
+    :config
+    ;; (evil-collection-define-key 'normal 'dired-mode-map
+    ;;   "H" 'dired-hide-dotfiles-mode)
+    )
+
 #+end_src
 * Autosave to init.el
 This automatically saves all the elisp code chunks to init.el

@@ -353,6 +353,10 @@
       (lambda () (interactive) (org-capture nil "jj")))
   )
 
+(defun skls/org-superstar ()
+  (use-package org-superstar)
+  (org-superstar-mode 1))
+
 (defun skls/org-font-setup ()
   ;; Replace list hyphen with dot
   (font-lock-add-keywords 'org-mode
@@ -374,7 +378,8 @@
   :commands (org-capture org-agenda)
   :hook ((org-mode . skls/org-mode-babel)
          (org-mode . skls/org-mode-setup)
-         (org-mode . skls/org-mode-visual-fill))
+         (org-mode . skls/org-mode-visual-fill)
+         (org-mode . skls/org-superstar))
   :config
   (setq org-ellipsis " ▾")
   (skls/org-agenda-setup)
@@ -402,6 +407,21 @@
     (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
     (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
     (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)))
+
+(setq dired-listing-switches "-agho --group-directories-first")
+
+(use-package all-the-icons-dired
+  :hook (dired-mode . all-the-icons-dired-mode))
+
+(use-package dired-single
+  :commands (dired dired-jump))
+
+(use-package dired-hide-dotfiles
+  :hook (dired-mode . dired-hide-dotfiles-mode)
+  :config
+  ;; (evil-collection-define-key 'normal 'dired-mode-map
+  ;;   "H" 'dired-hide-dotfiles-mode)
+  )
 
 ;; Automatically tangle our Emacs.org config file when we save it
 (defun skls/org-babel-tangle-config ()
