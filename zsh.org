@@ -1,0 +1,153 @@
+#+Title: Configuration for my zsh
+#+PROPERTY: header-args :mkdirp y
+
+I love my fortune told to me :3 
+#+begin_src conf :tangle ./.zshrc
+fortune -s
+#+end_src
+
+* Configure Antigen
+
+
+#+begin_src conf :tangle ./.zshrc
+source ~/src/antigen.zsh
+# Load the oh-my-zsh's library.
+antigen use oh-my-zsh
+
+# Bundles from the default repo (robbyrussell's oh-my-zsh).
+antigen bundle git
+antigen bundle pip
+antigen bundle lein
+antigen bundle command-not-found
+antigen bundle docker
+antigen bundle dirhistory
+antigen bundle git-extras
+antigen bundle tmux
+antigen bundle httpie
+antigen bundle jsontools
+antigen bundle pep8
+antigen bundle python
+antigen bundle aws
+antigen bundle esc/conda-zsh-completion
+
+# Syntax highlighting bundle.
+antigen bundle zsh-users/zsh-autosuggestions
+antigen bundle zsh-users/zsh-completions
+antigen bundle zsh-users/zsh-syntax-highlighting
+antigen bundle ssh-agent
+
+if [[ $CURRENT_OS == 'OS X' ]]; then
+    antigen bundle brew
+    antigen bundle brew-cask
+    antigen bundle gem
+    antigen bundle osx
+elif [[ $CURRENT_OS == 'Linux' ]]; then
+
+    if [[ $DISTRO == 'CentOS' ]]; then
+        antigen bundle centos
+    fi
+elif [[ $CURRENT_OS == 'Cygwin' ]]; then
+    antigen bundle cygwin
+fi
+# Load the theme.
+antigen theme juanghurtado
+
+# Tell Antigen that you're done.
+antigen apply
+
+source ~/src/skls/wsl.zsh
+source ~/src/skls/vterm.zsh
+source ~/src/skls/python/poetry.zsh
+source ~/src/skls/aliases
+source ~/src/livenation.sh
+source ~/.env_vars
+#source ~/src/skls/python/conda_initialize.zsh
+source ~/src/skls/python/pyenv.zsh
+# Alias
+source ~/src/skls/aliases
+
+#+end_src
+* Vterm
+#+begin_src conf :tangle src/skls/vterm.zsh
+if [[ "$INSIDE_EMACS" = 'vterm' ]]; then
+    alias clear='vterm_printf "51;Evterm-clear-scrollback";tput clear'
+fi	
+#+end_src
+* Python Config
+** Anaconda initialize
+  #+begin_src conf :tangle :tangle src/skls/python/conda_initialize.zsh
+  # >>> conda initialize >>>
+  # !! Contents within this block are managed by 'conda init' !!
+  __conda_setup="$('/home/skalas/src/skls/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+  if [ $? -eq 0 ]; then
+      eval "$__conda_setup"
+  else
+      if [ -f "/home/skalas/src/skls/miniconda3/etc/profile.d/conda.sh" ]; then
+          . "/home/skalas/src/skls/miniconda3/etc/profile.d/conda.sh"
+      else
+          export PATH="/home/skalas/src/skls/miniconda3/bin:$PATH"
+      fi
+  fi
+  unset __conda_setup
+  # <<< conda initialize <<<
+#+end_src
+** Pyenv
+#+begin_src conf :tangle src/skls/python/pyenv.zsh
+# Load pyenv automatically by adding
+# the following to ~/.bashrc:
+export PATH="/home/skalas/.pyenv/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+#+end_src
+** Poetry
+#+begin_src conf :tangle src/skls/python/poetry.zsh
+
+export PATH="$HOME/.poetry/bin:$PATH"
+	
+#+end_src
+* Aliases 
+#+begin_src conf :tangle src/skls/aliases
+  # SSH
+  # Para evitar el error "Error opening terminal:rxvt-unicode"
+  # que sucede al conectarse via ssh
+
+  # Git clone from GitHub
+  function gch() {
+    git clone git://github.com/skalas/$1.git
+  }
+
+  alias grm="git status | grep deleted | awk '{print \$3}' | xargs git rm"
+
+
+  # Quickly clobber a file and checkout
+  function grf() { 
+    rm $1
+    git checkout $1 
+  }
+
+  # General
+  alias h='history'
+  alias md='mkdir -p'
+
+
+  # Crear directorio y un archivo
+  mkpfile() { mkdir -p "$(dirname "$1")" || return; touch "$1"; }
+
+  alias install="sudo apt install"
+  alias update="sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y"
+
+  SHELL=/bin/zsh
+
+  # Install Ruby Gems to ~/gems
+  export GEM_HOME="$HOME/gems"
+  export PATH="$HOME/gems/bin:$PATH"
+
+#+end_src
+* Wsl Fix (figure out a way to not use this on ubuntu)
+#+begin_src conf :tangle src/skls/wsl.zsh
+export DISPLAY=$(ip route | awk '{print $3; exit}'):0
+export LIBGL_ALWAYS_INDIRECT=1
+export GDK_SCALE=1
+setxkbmap us -variant intl
+
+#+end_src
