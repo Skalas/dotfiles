@@ -1,0 +1,22 @@
+#+Title: Config for ssh
+#+PROPERTY: header-args
+
+#+begin_src conf :mkdirp yes :tangle ./.ssh/config
+  # Default github account: skls
+  Host github.com
+     HostName github.com
+     IdentityFile ~/.ssh/id_ed25519
+     IdentitiesOnly yes
+   
+  # Deepsee Account 
+  Host github-deepsee
+     HostName github.com
+     IdentityFile ~/.ssh/deepsee
+     IdentitiesOnly yes
+
+  # TM Account
+  Host Gitlab
+     Hostname git.tmaws.io
+     IdentityFile ~/.ssh/id_ed25519
+     IdentitiesOnly yes
+#+end_src
