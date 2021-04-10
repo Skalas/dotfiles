@@ -1,12 +1,12 @@
-
 #+Author: Miguel Escalante
-#+Title: My emacs Config
-#+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
-#+PROPERTY: header-args:shell :tangle ./install_packages.sh :mkdirp yes
+#+Title:  My emacs Config
+#+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes
 
 * Set everything up
 ** First Basics
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp 
+;; The default is 800 kilobytes.  Measured in bytes.
+(setq gc-cons-threshold (* 50 1000 1000))
 (setq inhibit-startup-message t) ; No emacs init paga
 (menu-bar-mode -1) ; I don't like the menus
 (scroll-bar-mode -1) ; I don't like the menus
@@ -15,23 +15,45 @@
 (set-fringe-mode -1) ; I don't like the menus
 (setq visible-bell t) ; I don't like my errors being screamed at to me
 #+end_src
+** directories
+#+begin_src emacs-lisp
+(setq default-directory "~/github/")
+#+end_src
+** Electric Pair mode
+#+begin_src emacs-lisp
+  (electric-pair-mode 1)
+  (add-hook
+   'electric-pair-mode-hook
+   (lambda ()
+     (setq-local electric-pair-inhibit-predicate
+                 `(lambda (c)
+                    (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))
+                    (if (char-equal c ?\") t (,electric-pair-inhibit-predicate c)
+                        ))))) 
+#+end_src
 ** Use-package
 better package management for emacs.
 #+begin_src emacs-lisp
-(require 'package)
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ;("melpa-stable" . "https://stable.melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")))
-(package-initialize)
-(unless package-archive-contents
-  (package-refresh-contents))
+  (require 'package)
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                             ("melpa-stable" . "https://stable.melpa.org/packages/")
+                             ("org" . "https://orgmode.org/elpa/")
+                             ("elpa" . "https://elpa.gnu.org/packages/")))
+  (package-initialize)
+  (unless package-archive-contents
+    (package-refresh-contents))
 
-(unless (package-installed-p 'use-package) 
-  (package-install 'use-package))
-
-(require 'use-package)
-(setq use-package-always-ensure t)
+  (unless (package-installed-p 'use-package) 
+    (package-install 'use-package))
+  (require 'use-package)
+  (setq use-package-always-ensure t)
+  (use-package auto-package-update
+    :custom
+    (auto-package-update-interval 7)
+    (auto-package-update-prompt-before-update t)
+    (auto-package-update-hide-results t)
+    :config
+    (auto-package-update-maybe))
 #+end_src
 ** Themes
 *** Visual Themes
@@ -126,11 +148,60 @@ sudo apt install fonts-firacode fonts-cantarell
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
 #+end_src
+** Dashboard 
+#+begin_src emacs-lisp
+(defun skls/dashboard-banner ()
+  """Set a dashboard banner including information on package initialization
+   time and garbage collections."""
+  (setq dashboard-banner-logo-title
+        (format "Emacs ready in %.2f seconds with %d garbage collections."
+                (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
+
+(use-package dashboard
+  :init
+  (add-hook 'after-init-hook 'dashboard-refresh-buffer)
+  (add-hook 'dashboard-mode-hook 'skls/dashboard-banner)
+  :config
+  (setq dashboard-startup-banner 'logo)
+  (dashboard-setup-startup-hook))
+
+#+end_src
+** Text Scale
+#+begin_src emacs-lisp
+(define-key global-map (kbd "C-+") 'text-scale-increase)
+(define-key global-map (kbd "C--") 'text-scale-decrease)
+(global-set-key "\C-x\C-b" 'ibuffer)
+#+end_src
+** Backup
+I don't like emacs littering my working folders
+#+begin_src emacs-lisp
+(use-package no-littering)
+
+;; no-littering doesn't set this by default so we must place
+;; auto save files in the same path as it uses for sessions
+(setq auto-save-file-name-transforms
+      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+;; Old config
+;; (setq backup-directory-alist '(("" . "~/.emacs.d/backup")))
+#+end_src
+** Multiple cursors
+#+begin_src emacs-lisp
+  (dolist (key '("\C-d" "\C-\M-b"))
+    (global-unset-key key))
+  ;; Multiple lines editing 
+  (use-package multiple-cursors
+    :diminish multiple-cursors-mode
+    :defer t
+    :init
+    (global-set-key (kbd "C-d") 'mc/mark-next-like-this)
+    (global-set-key (kbd "C-M-d") 'mc/mark-previous-like-this)
+    (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+    )
+#+end_src
 * Programing
 ** General
 *** Line display and colnum
 #+begin_src emacs-lisp
-
   (column-number-mode)
   (global-display-line-numbers-mode t)
   (dolist (mode '(org-mode-hook
@@ -144,7 +215,6 @@ sudo apt install fonts-firacode fonts-cantarell
 
 *** Magit
 #+begin_src emacs-lisp
-
 (use-package magit
   :commands magit-status
   :custom
@@ -173,10 +243,10 @@ sudo apt install fonts-firacode fonts-cantarell
     :config
     (lsp-enable-which-key-integration t))
 
-  (use-package lsp-ui
-    :hook (lsp-mode . lsp-ui-mode)
-    :custom
-    (lsp-ui-doc-position 'bottom))
+  ;; (use-package lsp-ui
+  ;;   :hook (lsp-mode . lsp-ui-mode)
+  ;;   :custom
+  ;;   (lsp-ui-doc-position 'bottom))
 
   (use-package lsp-treemacs
     :after lsp)
@@ -221,6 +291,7 @@ sudo apt install fonts-firacode fonts-cantarell
 #+end_src
 *** Python-mode
 #+begin_src emacs-lisp
+(setq tab-width 4)
 (use-package python-mode
   :ensure t
   :hook (python-mode . lsp-deferred)
@@ -237,6 +308,105 @@ sudo apt install fonts-firacode fonts-cantarell
   :config
   (pyvenv-mode 1))
 #+end_src
+
+*** R ess
+#+begin_src emacs-lisp
+  ;; (defun spa/rmd-render (arg)
+  ;;   "Render the current Rmd file to PDF output.
+  ;;    With a prefix arg, edit the R command in the minibuffer"
+  ;;   (interactive "P")
+  ;;   ;; Build the default R render command
+  ;;   (setq rcmd (concat "rmarkdown::render('" buffer-file-name "',"
+  ;;                      "output_dir = './')"))
+  ;;   ;; Check for prefix argument
+  ;;   (if arg
+  ;;       (progn
+  ;;         ;; Use last command as the default (if non-nil)
+  ;;         (setq prev-history (car rmd-render-history))
+  ;;         (if prev-history
+  ;;             (setq rcmd prev-history)
+  ;;           nil)
+  ;;         ;; Allow the user to modify rcmd
+  ;;         (setq rcmd
+  ;;               (read-from-minibuffer "Run: " rcmd nil nil 'rmd-render-history))
+  ;;         )
+  ;;     ;; With no prefix arg, add default rcmd to history
+  ;;     (setq rmd-render-history (add-to-history 'rmd-render-history rcmd)))
+  ;;   ;; Build and evaluate the shell command
+  ;;   (setq command (concat "echo \"" rcmd "\" | R --vanilla"))
+  ;;   (compile command))
+
+
+  (use-package ess
+    :bind
+    (:map ess-mode-map
+          ("C-<" . ess-insert-assign))
+    (:map inferior-ess-mode-map
+          ("C-<" . ess-insert-assign))
+    :defer t
+    :init
+    (load "ess-site"))
+
+  ;; (use-package poly-markdown
+  ;;   :defer t
+  ;;   :init
+  ;;   (add-to-list 'auto-mode-alist '("\\.md" . poly-markdown+-mode))
+  ;;   (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
+  ;;   (define-key polymode-minor-mode-map (kbd "C-c r")  'spa/rmd-render)
+  ;;   )
+  ;; spa/rmd-render
+  ;; Global history list allows Emacs to "remember" the last
+  ;; render commands and propose as suggestions in the minibuffer.
+  (defvar rmd-render-history nil "History list for spa/rmd-render.")
+  (use-package poly-R)
+
+  (defun then_R_operator ()
+    "R - %>% operator or 'then' pipe operator"
+    (interactive)
+    (just-one-space 1)
+    (insert "%>%")
+    (reindent-then-newline-and-indent))
+  (define-key ess-mode-map (kbd "C->") 'then_R_operator)
+  (define-key inferior-ess-mode-map (kbd "C->") 'then_R_operator)
+#+end_src
+
+#+RESULTS:
+: then_R_operator
+
+*** Docker
+#+BEGIN_SRC emacs-lisp
+  (use-package docker :ensure t)
+  (use-package docker-tramp :ensure t)
+  (use-package dockerfile-mode :ensure t)
+#+END_SRC
+*** SQL
+I used polymode in order to use jinja between the two braces, while still using sql indentation and everything else .
+#+BEGIN_SRC emacs-lisp
+
+  (use-package sql-indent)
+  (eval-after-load "sql"
+      '(load-library "sql-indent"))
+
+
+  (use-package polymode
+    :mode ("\\.sql.j2$" . poly-sql-jinja2-mode)
+    :config
+    (use-package jinja2-mode)
+    (setq polymode-prefix-key (kbd "C-c n"))
+    (define-hostmode poly-sql-hostmode :mode 'sql-mode)
+    (define-innermode poly-jinja2-expr-sql-innermode
+      :mode 'jinja2-mode
+      :head-matcher "{{"
+      :tail-matcher "}}"
+      :head-mode 'host
+      :tail-mode 'host)
+    (define-polymode poly-sql-jinja2-mode
+      :hostmode 'poly-sql-hostmode
+      :innermodes '(poly-jinja2-expr-sql-innermode)
+      )
+    )
+
+#+END_SRC
 
 ** Vterm
 #+begin_src emacs-lisp
@@ -321,78 +491,60 @@ First we setup the agenda it's kidna messy so I put it in a different place
 
     (setq org-todo-keywords
           '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
-            (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVE(a)" "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)" "|" "COMPLETED(c)" "CANC(k@)")))
+            (sequence "|" "WAIT(w)" "BACK(b)")))
 
     (setq org-refile-targets
           '(("Archive.org" :maxlevel . 1)
             ("Tasks.org" :maxlevel . 1)))
+    ;; TODO: org-todo-keyword-faces
+    (setq org-todo-keyword-faces
+          '(("NEXT" . (:foreground "orange red" :weight bold))
+            ("WAIT" . (:foreground "HotPink2" :weight bold))
+            ("BACK" . (:foreground "MediumPurple3" :weight bold))))
+    ;; Save Org buffers after refiling!
+    (advice-add 'org-refile :after 'org-save-all-org-buffers)
 
-      ;; Save Org buffers after refiling!
-      (advice-add 'org-refile :after 'org-save-all-org-buffers)
-
-      (setq org-tag-alist
-            '((:startgroup)
+    (setq org-tag-alist
+          '((:startgroup)
                                           ; Put mutually exclusive tags here
-              (:endgroup)
-              ("@errand" . ?E)
-              ("@home" . ?H)
-              ("@work" . ?W)
-              ("agenda" . ?a)
-              ("planning" . ?p)
-              ("publish" . ?P)
-              ("batch" . ?b)
-              ("note" . ?n)
-              ("idea" . ?i)))
+            (:endgroup)
+            ("@errand" . ?E)
+            ("@home" . ?H)
+            ("@work" . ?W)
+            ("@Globant" . ?G)
+            ("@ITAM" . ?I)
+            ("@Deepsee" . D)
+            ("@LiveNation" . ?L)
+            ("note" . ?n)
+            ("idea" . ?i)))
 
-      ;; Configure custom agenda views
-      (setq org-agenda-custom-commands
-            '(("d" "Dashboard"
-               ((agenda "" ((org-deadline-warning-days 7)))
-                (todo "NEXT"
-                      ((org-agenda-overriding-header "Next Tasks")))
-                (tags-todo "agenda/ACTIVE" ((org-agenda-overriding-header "Active Projects")))))
+    (setq org-agenda-custom-commands
+          `(("d" "Dashboard"
+             ((agenda "" ((org-deadline-warning-days 7)))
+              (tags-todo "+PRIORITY=\"A\""
+                         ((org-agenda-overriding-header "High Priority")))
+              (tags-todo "+followup" ((org-agenda-overriding-header "Needs Follow Up")))
+              (todo "NEXT"
+                    ((org-agenda-overriding-header "Next Actions")
+                     (org-agenda-max-todos nil)))
+              (todo "TODO"
+                    ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
+                     (org-agenda-files '(,(dw/org-path "Inbox.org")))
+                     (org-agenda-text-search-extra-files nil)))))
 
-              ("n" "Next Tasks"
-               ((todo "NEXT"
-                      ((org-agenda-overriding-header "Next Tasks")))))
+            ("n" "Next Tasks"
+             ((agenda "" ((org-deadline-warning-days 7)))
+              (todo "NEXT"
+                    ((org-agenda-overriding-header "Next Tasks")))))
+	  
+            ;; Low-effort next actions
+            ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
+             ((org-agenda-overriding-header "Low Effort Tasks")
+              (org-agenda-max-todos 20)
+              (org-agenda-files org-agenda-files)))))
 
-              ("W" "Work Tasks" tags-todo "+work-email")
 
-              ;; Low-effort next actions
-              ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
-               ((org-agenda-overriding-header "Low Effort Tasks")
-                (org-agenda-max-todos 20)
-                (org-agenda-files org-agenda-files)))
-
-              ("w" "Workflow Status"
-               ((todo "WAIT"
-                      ((org-agenda-overriding-header "Waiting on External")
-                       (org-agenda-files org-agenda-files)))
-                (todo "REVIEW"
-                      ((org-agenda-overriding-header "In Review")
-                       (org-agenda-files org-agenda-files)))
-                (todo "PLAN"
-                      ((org-agenda-overriding-header "In Planning")
-                       (org-agenda-todo-list-sublevels nil)
-                       (org-agenda-files org-agenda-files)))
-                (todo "BACKLOG"
-                      ((org-agenda-overriding-header "Project Backlog")
-                       (org-agenda-todo-list-sublevels nil)
-                       (org-agenda-files org-agenda-files)))
-                (todo "READY"
-                      ((org-agenda-overriding-header "Ready for Work")
-                       (org-agenda-files org-agenda-files)))
-                (todo "ACTIVE"
-                      ((org-agenda-overriding-header "Active Projects")
-                       (org-agenda-files org-agenda-files)))
-                (todo "COMPLETED"
-                      ((org-agenda-overriding-header "Completed Projects")
-                       (org-agenda-files org-agenda-files)))
-                (todo "CANC"
-                      ((org-agenda-overriding-header "Cancelled Projects")
-                       (org-agenda-files org-agenda-files)))))))
-
-      (setq org-capture-templates
+    (setq org-capture-templates
             `(("t" "Tasks / Projects")
               ("tt" "Task" entry (file+olp "~/Dropbox/org/Tasks.org" "Inbox")
                "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
@@ -422,6 +574,10 @@ First we setup the agenda it's kidna messy so I put it in a different place
         (lambda () (interactive) (org-capture nil "jj")))
     )
 #+end_src
+
+#+RESULTS:
+: skls/org-agenda-setup
+
 ** Org-superstar
 #+begin_src emacs-lisp
   (defun skls/org-superstar ()
@@ -436,6 +592,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
                             '(("^ *\\([-]\\) "
                                (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
   (defun skls/org-mode-setup ()
+    (toggle-truncate-lines)
     (org-indent-mode)
     (variable-pitch-mode 1)
     (visual-line-mode 1))
@@ -455,12 +612,13 @@ First we setup the agenda it's kidna messy so I put it in a different place
            (org-mode . skls/org-superstar))
     :config
     (setq org-ellipsis " ▾")
-    (skls/org-agenda-setup)
+                                        ;    (skls/org-agenda-setup)
     (skls/org-font-setup)
     )
 #+end_src
 
 #+RESULTS:
+| org-tempo-setup | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | (lambda nil (add-hook 'after-save-hook #'skls/org-babel-tangle-config)) | skls/org-superstar | skls/org-mode-visual-fill | skls/org-mode-setup | skls/org-mode-babel | (lambda nil (display-line-numbers-mode 0)) |
 
 ** Faces 
 #+begin_src emacs-lisp
@@ -526,3 +684,186 @@ for the actual config file !
 
 #+end_src
 
+* Essh.el
+#+begin_src emacs-lisp :tangle .emacs.d/packages/essh.el
+;;; essh.el --- a set of commands that emulate for bash what ESS is to R.
+
+;; Filename: essh.el
+
+
+;; ------------------------------------------------------------------ ;;
+;; TO INSTALL:                                                        ;;
+;; 1. add essh.el in your load-path.                                  ;;
+;;                                                                    ;;
+;; 2. add to your .emacs file:                                        ;;
+;;                                                                    ;;
+;; (require 'essh)                                                    ;;
+;; (defun essh-sh-hook ()                                             ;;
+;;   (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        ;;
+;;   (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)        ;;
+;;   (define-key sh-mode-map "\C-c\C-j" 'pipe-line-to-shell)          ;;
+;;   (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step) ;;
+;;   (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      ;;
+;;   (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory)) ;;
+;; (add-hook 'sh-mode-hook 'essh-sh-hook)                             ;;
+;; ------------------------------------------------------------------ ;;
+
+;; function taken from ess package
+(defun essh-next-code-line (&optional arg)
+  "Move ARG lines of code forward (backward if ARG is negative).
+Skips past all empty and comment lines.	 Default for ARG is 1.
+
+On success, return 0.  Otherwise, go as far as possible and return -1."
+  (interactive "p")
+  (or arg (setq arg 1))
+  (beginning-of-line)
+  (let ((n 0)
+	(inc (if (> arg 0) 1 -1)))
+    (while (and (/= arg 0) (= n 0))
+      (setq n (forward-line inc)); n=0 is success
+      (while (and (= n 0)
+		  (looking-at "\\s-*\\($\\|\\s<\\)"))
+	(setq n (forward-line inc)))
+      (setq arg (- arg inc)))
+    n))
+
+(defun process-shell ()
+  "returns a list with existing shell process."
+  (interactive)
+  (setq listpr (process-list))
+  (setq lengthpr (length listpr))
+  (setq i 0)
+  (setq listshellp '())
+  (while (< i lengthpr)
+    (setq pos (string-match "shell" (prin1-to-string (elt listpr i))))
+    (if pos (add-to-list 'listshellp (process-name (get-process (elt listpr i)))))
+    (setq i (+ 1 i)))
+  listshellp)
+
+
+(defun process-shell-choose ()
+  "returns which process to use."
+(interactive)
+(setq outpr 0)
+(setq cbuf (current-buffer))
+(setq shelllist (process-shell))
+(setq shelln (length shelllist))
+(if (eq shelln 0)
+    (progn (shell)
+	   (switch-to-buffer cbuf)
+	   (setq outpr (get-process "shell"))
+	   (sleep-for 0.5)))
+(if (eq shelln 1)
+    (setq outpr (get-process (elt shelllist 0))))
+(if (> shelln 1)
+(progn
+(setq proc (completing-read "Send code to:" shelllist nil t (elt shelllist 0)))
+(setq outpr (get-process proc))))
+outpr)
+
+
+(defun shell-eval-line (sprocess command)
+  "Evaluates a single command into the shell process."
+  (setq sbuffer (process-buffer sprocess))
+  (setq command (concat command "\n"))
+  (accept-process-output sprocess 0 10)
+  (with-current-buffer sbuffer 
+    (end-of-buffer) ;point is not seen being moved (unless sbuffer is focused)
+    (insert command)			;pastes the command to shell
+    (set-marker (process-mark sprocess) (point-max))
+    (process-send-string sprocess command)
+    ;; (accept-process-output sprocess 0 10)
+    ))
+
+(defun shell-cd-current-directory ()
+  "Changes the shell working directory to the current buffer's one."
+  (interactive)
+  (setq sprocess (process-shell-choose))
+  (setq com (format "cd %s" (file-name-directory default-directory)))
+  (shell-eval-line sprocess com))
+
+
+(defun pipe-line-to-shell (&optional step)
+  "Evaluates the current line to the shell."
+  (interactive ())
+  (setq com (buffer-substring (point-at-bol) (point-at-eol)))
+  (if (> (length com) 0)
+      (progn
+	(setq sprocess (process-shell-choose))
+	(shell-eval-line sprocess com)
+	(when step (essh-next-code-line)))
+    (message "No command in this line")))
+
+(defun pipe-line-to-shell-and-step ()
+  "Evaluates the current line to the shell and goes to next line."
+  (interactive)
+  (pipe-line-to-shell t))
+
+(defun pipe-region-to-shell (start end)
+  "Sends a region to the shell."
+  (interactive "r")
+  (setq com (buffer-substring start end))	       ;reads command
+  (setq lcom (length com))		       ;count chars
+  (setq lastchar (substring com (1- lcom) lcom)) ;get last char
+  (unless (string-match "\n" lastchar) ;if last char is not "\n", then...
+    (setq com (concat com "\n")))	     ;...add it!
+  (setq sprocess (process-shell-choose))
+  (setq sbuffer (process-buffer sprocess))
+  (while (> (length com) 0) 
+    (setq pos (string-match "\n" com)) 
+    (setq scom (substring com 0 pos))
+    (setq com (substring com (min (length com) (1+ pos))))
+    (shell-eval-line sprocess scom)
+    (accept-process-output sprocess 0 10)
+    )) 
+
+
+(defun pipe-buffer-to-shell ()
+  "Evaluate whole buffer to the shell."
+  (interactive)
+  (pipe-region-to-shell (point-min) (point-max)))
+
+(defun pipe-function-to-shell ()
+"Evaluate function to the shell."
+(interactive)
+(setq beg-end (essh-beg-end-of-function))
+(if beg-end
+    (save-excursion
+      (setq beg (nth 0 beg-end))
+      (setq end (nth 1 beg-end))
+      (goto-line beg)
+      (setq origin (point-at-bol))
+      (goto-line end)
+      (setq terminal (point-at-eol))
+      (pipe-region-to-shell origin terminal))
+  (message "No function at current point.")))
+
+(defun essh-beg-end-of-function ()
+  "Returns the lines where the function starts and ends. If there is no function at current line, it returns nil."
+  (interactive)
+  (setq curline (line-number-at-pos))	;current line
+  (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
+  (setq pos (string-match "function" curcom))
+  (save-excursion 
+    (if pos 
+	(progn
+	  (setq beg curline))
+      (progn
+	(while (not pos)
+	  (setq curline (1- curline))	;current line
+	  (previous-line)			;go to previous line
+	  (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
+	  (setq pos (string-match "function" curcom)))
+      (setq beg curline)))
+    (beginning-of-line)
+    (forward-list)			; move pointer to first matching brace
+    (setq end (line-number-at-pos)))
+  ;; (message (format  "%d %d" beg end))
+  (if (and (<= (line-number-at-pos) end) (>= (line-number-at-pos) beg))
+      (list beg end)
+    nil))
+  
+
+(provide 'essh)
+
+#+end_src
