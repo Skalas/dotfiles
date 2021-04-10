@@ -66,6 +66,7 @@ source ~/.env_vars
 source ~/src/skls/python/pyenv.zsh
 # Alias
 source ~/src/skls/aliases
+source ~/src/deepsee.zsh
 
 #+end_src
 * Vterm

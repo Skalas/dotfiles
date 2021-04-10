@@ -15,7 +15,7 @@
      IdentitiesOnly yes
 
   # TM Account
-  Host Gitlab
+  Host git.tmaws.io
      Hostname git.tmaws.io
      IdentityFile ~/.ssh/id_ed25519
      IdentitiesOnly yes
