@@ -2,12 +2,8 @@
 #+PROPERTY: header-args :mkdirp y
 
 Basic User info
-#+begin_src conf :tangle ./gitconfig
-  [user]
-          mail = miguel.escalante@itam.mx
-          name = Miguel Escalante
-  [github]
-          user = Skalas
-  [gitlab]
-          user = Skalas
+#+begin_src conf :tangle ./.gitconfig
+[user]
+        mail = miguel.escalante@itam.mx
+        name = Miguel Escalante
 #+end_src

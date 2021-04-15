@@ -1,4 +1,4 @@
-#+Author: Miguel Escalante
+u#+Author: Miguel Escalante
 #+Title:  My emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes
 
@@ -15,22 +15,20 @@
 (set-fringe-mode -1) ; I don't like the menus
 (setq visible-bell t) ; I don't like my errors being screamed at to me
 #+end_src
+
 ** directories
 #+begin_src emacs-lisp
-(setq default-directory "~/github/")
+  (setq org-directory "~/Dropbox/org")
+  (defun skls/org-path (path)
+    (expand-file-name path org-directory))
+
+  (setq org-default-notes-file (skls/org-path "Tasks.org"))
+  (setq default-directory "~/github/")
+  (custom-set-variables
+   '(org-directory "~/Dropbox/org")
+   '(org-agenda-files (list org-directory)))
 #+end_src
-** Electric Pair mode
-#+begin_src emacs-lisp
-  (electric-pair-mode 1)
-  (add-hook
-   'electric-pair-mode-hook
-   (lambda ()
-     (setq-local electric-pair-inhibit-predicate
-                 `(lambda (c)
-                    (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))
-                    (if (char-equal c ?\") t (,electric-pair-inhibit-predicate c)
-                        ))))) 
-#+end_src
+
 ** Use-package
 better package management for emacs.
 #+begin_src emacs-lisp
@@ -55,15 +53,24 @@ better package management for emacs.
     :config
     (auto-package-update-maybe))
 #+end_src
+
 ** Themes
 *** Visual Themes
 #+begin_src emacs-lisp
 (use-package doom-modeline
-  :init (doom-modeline-mode 1))
-(use-package doom-themes
-  :init (load-theme 'doom-oceanic-next t))
-(use-package all-the-icons)
+:init (doom-modeline-mode 1))
+  (use-package doom-themes
+    :init (load-theme 'doom-oceanic-next t))
+  ;; (use-package material-theme
+  ;;   :init
+  ;;   (load-theme 'material t)
+
+  ;;   )
+  (use-package all-the-icons)
 #+end_src
+
+#+RESULTS:
+
 *** Pretty fonts per different environments
 Make sure you have the font installed beforehand: 
 #+begin_src shell :noeval 
@@ -148,22 +155,31 @@ sudo apt install fonts-firacode
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
 #+end_src
+*** Ace-window
+#+begin_src emacs-lisp
+
+(use-package ace-window
+:config 
+(global-set-key (kbd "M-o") 'ace-window))
+
+
+#+end_src
 ** Dashboard 
 #+begin_src emacs-lisp
-(defun skls/dashboard-banner ()
-  """Set a dashboard banner including information on package initialization
-   time and garbage collections."""
-  (setq dashboard-banner-logo-title
-        (format "Emacs ready in %.2f seconds with %d garbage collections."
-                (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
+  (defun skls/dashboard-banner ()
+    """Set a dashboard banner including information on package initialization
+     time and garbage collections."""
+     (setq dashboard-banner-logo-title
+           (format "Emacs ready in %.2f seconds with %d garbage collections."
+                   (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
 
-(use-package dashboard
-  :init
-  (add-hook 'after-init-hook 'dashboard-refresh-buffer)
-  (add-hook 'dashboard-mode-hook 'skls/dashboard-banner)
-  :config
-  (setq dashboard-startup-banner 'logo)
-  (dashboard-setup-startup-hook))
+  (use-package dashboard
+    :init
+    (add-hook 'after-init-hook 'dashboard-refresh-buffer)
+    (add-hook 'dashboard-mode-hook 'skls/dashboard-banner)
+    :config
+    (setq dashboard-startup-banner 'logo)
+    (dashboard-setup-startup-hook))
 
 #+end_src
 ** Text Scale
@@ -198,6 +214,20 @@ I don't like emacs littering my working folders
     (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
     )
 #+end_src
+** General
+#+begin_src emacs-lisp
+
+  (use-package general)
+  (general-define-key
+   :prefix "C-c"
+   ;; bind "C-c a" to 'org-agenda
+   "a" 'org-agenda
+   "b" 'counsel-bookmark
+   "c" 'org-capture)
+#+end_src
+
+#+RESULTS:
+
 * Programing
 ** General
 *** Line display and colnum
@@ -212,7 +242,6 @@ I don't like emacs littering my working folders
                   shell-mode-hook))
     (add-hook mode (lambda() (display-line-numbers-mode 0))))
 #+end_src
-
 *** Magit
 #+begin_src emacs-lisp
 (use-package magit
@@ -224,9 +253,19 @@ I don't like emacs littering my working folders
 *** Rainbow delimiters
 #+begin_src emacs-lisp
 
-(use-package rainbow-delimiters
-  :hook (prog-mode . rainbow-delimiters-mode))
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
 
+#+end_src
+*** Electric Pair mode
+#+begin_src emacs-lisp
+  (electric-pair-mode 1)
+  (add-hook 'electric-pair-mode-hook
+            (lambda ()
+              (setq-local electric-pair-inhibit-predicate
+                          `(lambda (c)
+                             (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))
+                             (if (char-equal c ?\") t (,electric-pair-inhibit-predicate c))))))
 #+end_src
 ** Languages
 *** Lsp-mode
@@ -291,52 +330,26 @@ I don't like emacs littering my working folders
 #+end_src
 *** Python-mode
 #+begin_src emacs-lisp
-(setq tab-width 4)
-(use-package python-mode
-  :ensure t
-  :hook (python-mode . lsp-deferred)
-  :custom
-  ;; NOTE: Set these if Python 3 is called "python3" on your system!
-  ;; (python-shell-interpreter "python3")
-  ;; (dap-python-executable "python3")
-  (dap-python-debugger 'debugpy)
-  :config
-  (require 'dap-python))
+  (setq tab-width 4)
+  (use-package python-mode
+    :ensure t
+    :hook (python-mode . lsp-deferred)
+    :custom
+    ;; NOTE: Set these if Python 3 is called "python3" on your system!
+    ;; (python-shell-interpreter "python3")
+    ;; (dap-python-executable "python3")
+    (dap-python-debugger 'debugpy)
+    :config
+    (require 'dap-python))
 
-(use-package pyvenv
-  :after python-mode
-  :config
-  (pyvenv-mode 1))
+  (use-package pyvenv
+    :after python-mode
+    :config
+    (pyvenv-mode 1))
 #+end_src
 
 *** R ess
 #+begin_src emacs-lisp
-  ;; (defun spa/rmd-render (arg)
-  ;;   "Render the current Rmd file to PDF output.
-  ;;    With a prefix arg, edit the R command in the minibuffer"
-  ;;   (interactive "P")
-  ;;   ;; Build the default R render command
-  ;;   (setq rcmd (concat "rmarkdown::render('" buffer-file-name "',"
-  ;;                      "output_dir = './')"))
-  ;;   ;; Check for prefix argument
-  ;;   (if arg
-  ;;       (progn
-  ;;         ;; Use last command as the default (if non-nil)
-  ;;         (setq prev-history (car rmd-render-history))
-  ;;         (if prev-history
-  ;;             (setq rcmd prev-history)
-  ;;           nil)
-  ;;         ;; Allow the user to modify rcmd
-  ;;         (setq rcmd
-  ;;               (read-from-minibuffer "Run: " rcmd nil nil 'rmd-render-history))
-  ;;         )
-  ;;     ;; With no prefix arg, add default rcmd to history
-  ;;     (setq rmd-render-history (add-to-history 'rmd-render-history rcmd)))
-  ;;   ;; Build and evaluate the shell command
-  ;;   (setq command (concat "echo \"" rcmd "\" | R --vanilla"))
-  ;;   (compile command))
-
-
   (use-package ess
     :bind
     (:map ess-mode-map
@@ -347,17 +360,6 @@ I don't like emacs littering my working folders
     :init
     (load "ess-site"))
 
-  ;; (use-package poly-markdown
-  ;;   :defer t
-  ;;   :init
-  ;;   (add-to-list 'auto-mode-alist '("\\.md" . poly-markdown+-mode))
-  ;;   (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
-  ;;   (define-key polymode-minor-mode-map (kbd "C-c r")  'spa/rmd-render)
-  ;;   )
-  ;; spa/rmd-render
-  ;; Global history list allows Emacs to "remember" the last
-  ;; render commands and propose as suggestions in the minibuffer.
-  (defvar rmd-render-history nil "History list for spa/rmd-render.")
   (use-package poly-R)
 
   (defun then_R_operator ()
@@ -369,9 +371,6 @@ I don't like emacs littering my working folders
   (define-key ess-mode-map (kbd "C->") 'then_R_operator)
   (define-key inferior-ess-mode-map (kbd "C->") 'then_R_operator)
 #+end_src
-
-#+RESULTS:
-: then_R_operator
 
 *** Docker
 #+BEGIN_SRC emacs-lisp
@@ -408,9 +407,42 @@ I used polymode in order to use jinja between the two braces, while still using 
 
 #+END_SRC
 
+*** Bash
+**** TODO fix this in order to get what you need (the keys are not working)
+#+BEGIN_SRC emacs-lisp
+  (load "~/.emacs.d/packages/essh.el")
+  (require 'essh)                                                    
+
+  (defun essh-sh-hook ()                                             
+    (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        
+    (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)        
+    (define-key sh-mode-map "\C-c <return>" 'pipe-line-to-shell)          
+    (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step) 
+    (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      
+    (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory)) 
+  (add-hook 'sh-mode-hook 'essh-sh-hook)                             
+
+  ;(global-set-key [f1] 'shell)
+
+  (setq explicit-shell-file-name "/bin/zsh")
+  ;(setq shell-file-name "bash")
+  (setq explicit-bash-args '("--noediting" "--login" "-i"))
+  (setenv "SHELL" shell-file-name)
+
+  (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
+#+END_SRC 
+*** Terraform
+#+begin_src emacs-lisp
+  (use-package terraform-mode
+    :defer t 
+    :init
+    (add-to-list 'auto-mode-alist '("\\.tf" . terraform-mode))
+    )
+#+end_src
 ** Vterm
 #+begin_src emacs-lisp
   (use-package vterm
+    :defer t
     :commands vterm
     :config
     (setq vterm-always-compile-module t)
@@ -449,6 +481,29 @@ I used polymode in order to use jinja between the two braces, while still using 
   ;;   (eshell-git-prompt-use-theme 'powerline))
 #+end_src
 
+* File Types
+*** Csv's
+#+BEGIN_SRC emacs-lisp
+  (use-package csv-mode
+    :mode "\\.[PpTtCc][Ss][Vv]\\'"
+    :defer t
+    :config
+    (progn
+      (setq csv-separators '("," ";" "|" " " "\t"))
+      )
+    )
+#+END_SRC
+*** JSON
+#+BEGIN_SRC emacs-lisp
+  (use-package json-mode
+    :defer t)
+#+END_SRC
+*** Yaml
+#+BEGIN_SRC emacs-lisp
+  (use-package yaml-mode
+    :defer t 
+    :mode ("\\.yml$" . yaml-mode))
+#+END_SRC
 * Org Mode
 The best package ever!!! :) see [[https://orgmode.org][OrgMode]]
 ** Babel
@@ -482,9 +537,6 @@ First we setup the agenda it's kidna messy so I put it in a different place
     (setq org-log-done 'time)
     (setq org-log-into-drawer t)
 
-    (setq org-agenda-files
-          (directory-files-recursively "~/Dropbox/org" "\\.org$" ))
-
     (require 'org-habit)
     (add-to-list 'org-modules 'org-habit)
     (setq org-habit-graph-column 60)
@@ -510,10 +562,10 @@ First we setup the agenda it's kidna messy so I put it in a different place
             (:endgroup)
             ("@errand" . ?E)
             ("@home" . ?H)
-            ("@work" . ?W)
+            ("@work" . ?H)
             ("@Globant" . ?G)
             ("@ITAM" . ?I)
-            ("@Deepsee" . D)
+            ("@Deepsee" . ?D)
             ("@LiveNation" . ?L)
             ("note" . ?n)
             ("idea" . ?i)))
@@ -529,14 +581,14 @@ First we setup the agenda it's kidna messy so I put it in a different place
                      (org-agenda-max-todos nil)))
               (todo "TODO"
                     ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
-                     (org-agenda-files '(,(dw/org-path "Inbox.org")))
+                     (org-agenda-files '(,(skls/org-path "Tasks.org")))
                      (org-agenda-text-search-extra-files nil)))))
 
             ("n" "Next Tasks"
              ((agenda "" ((org-deadline-warning-days 7)))
               (todo "NEXT"
                     ((org-agenda-overriding-header "Next Tasks")))))
-	  
+
             ;; Low-effort next actions
             ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
              ((org-agenda-overriding-header "Low Effort Tasks")
@@ -545,20 +597,20 @@ First we setup the agenda it's kidna messy so I put it in a different place
 
 
     (setq org-capture-templates
-            `(("t" "Tasks / Projects")
-              ("tt" "Task" entry (file+olp "~/Dropbox/org/Tasks.org" "Inbox")
-               "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
+          `(("t" "Tasks / Projects")
+            ("tt" "Task" entry (file+olp "~/Dropbox/org/Tasks.org" "Inbox")
+             "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
 
-              ("j" "Journal Entries")
-              ("jj" "Journal" entry
-               (file+olp+datetree "~/Dropbox/org/Journal.org")
-               "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
-               ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
-               :clock-in :clock-resume
-               :empty-lines 1)
-              ("jm" "Meeting" entry
-               (file+olp+datetree "~/Dropbox/org/Journal.org")
-               "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
+            ("j" "Journal Entries")
+            ("jj" "Journal" entry
+             (file+olp+datetree "~/Dropbox/org/Journal.org")
+             "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
+             ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
+             :clock-in :clock-resume
+             :empty-lines 1)
+            ("jm" "Meeting" entry
+             (file+olp+datetree "~/Dropbox/org/Journal.org")
+             "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
                :clock-in :clock-resume
                :empty-lines 1)
 
@@ -612,13 +664,13 @@ First we setup the agenda it's kidna messy so I put it in a different place
            (org-mode . skls/org-superstar))
     :config
     (setq org-ellipsis " ▾")
-                                        ;    (skls/org-agenda-setup)
+    (skls/org-agenda-setup)
     (skls/org-font-setup)
     )
 #+end_src
 
 #+RESULTS:
-| org-tempo-setup | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | (lambda nil (add-hook 'after-save-hook #'skls/org-babel-tangle-config)) | skls/org-superstar | skls/org-mode-visual-fill | skls/org-mode-setup | skls/org-mode-babel | (lambda nil (display-line-numbers-mode 0)) |
+| org-tempo-setup | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | (lambda nil (add-hook 'after-save-hook #'skls/org-babel-tangle-config)) | skls/org-superstar | skls/org-mode-visual-fill | skls/org-mode-setup | skls/org-mode-babel | (lambda nil (display-line-numbers-mode 0)) |
 
 ** Faces 
 #+begin_src emacs-lisp
@@ -645,6 +697,23 @@ First we setup the agenda it's kidna messy so I put it in a different place
     (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)))
 #+end_src
 
+* Writing
+** Latex
+#+BEGIN_SRC emacs-lisp
+(use-package auctex
+  :defer t
+  :ensure t)
+#+END_SRC
+** Markdown
+#+BEGIN_SRC emacs-lisp 
+  (use-package markdown-mode
+    :defer t
+    :commands (markdown-mode gfm-mode)
+    :mode (("README\\.md\\'" . gfm-mode)
+           ("\\.md\\'" . markdown-mode)
+           ("\\.markdown\\'" . markdown-mode))
+    :init (setq markdown-command "multimarkdown"))
+#+END_SRC
 * File Management
 ** Dired
 #+begin_src emacs-lisp
@@ -867,3 +936,38 @@ outpr)
 (provide 'essh)
 
 #+end_src
+* Mac OS
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+  (cond
+   ((string-equal system-type "darwin") ; Mac OS X
+    (progn
+      (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims"))
+    (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
+    (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
+    (global-set-key (kbd "M-º") '(lambda () (interactive) (insert "\\")))
+    (global-set-key (kbd "M-2") '(lambda () (interactive) (insert "@")))
+    (global-set-key (kbd "M-1") '(lambda () (interactive) (insert "|")))
+    (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
+    (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
+    (set-terminal-coding-system 'utf-8)
+    (set-keyboard-coding-system 'utf-8)
+    (prefer-coding-system 'utf-8)
+    (message "Mac OS X")
+    ))
+   )
+  ;; window jump
+  (cond
+   ((string-equal system-type "darwin") ; Mac OS X
+    (progn
+      (defvar my-keys-minor-mode-map
+        (let ((map (make-sparse-keymap)))
+          (define-key map (kbd "<C-s-up>") 'window-jump-up) 
+          (define-key map (kbd "<C-s-right>") 'window-jump-right)
+          (define-key map (kbd "<C-s-down>") 'window-jump-down)
+          (define-key map (kbd "<C-s-left>") 'window-jump-left)
+          map)
+        "my-keys-minor-mode keymap.")
+      )))
+
+#+END_SRC
