@@ -1,19 +1,29 @@
-u#+Author: Miguel Escalante
+#+Author: Miguel Escalante
 #+Title:  My emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes
 
 * Set everything up
 ** First Basics
 #+begin_src emacs-lisp 
-;; The default is 800 kilobytes.  Measured in bytes.
-(setq gc-cons-threshold (* 50 1000 1000))
-(setq inhibit-startup-message t) ; No emacs init paga
-(menu-bar-mode -1) ; I don't like the menus
-(scroll-bar-mode -1) ; I don't like the menus
-(tool-bar-mode -1) ; I don't like the menus
-(tooltip-mode -1) ; I don't like the menus
-(set-fringe-mode -1) ; I don't like the menus
-(setq visible-bell t) ; I don't like my errors being screamed at to me
+  ;; The default is 800 kilobytes.  Measured in bytes.
+  (setq gc-cons-threshold 402653184
+        gc-cons-percentage 0.6)
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+              (message "*** Emacs loaded in %s with %d garbage collections."
+                       (format "%.2f seconds"
+                               (float-time
+                                (time-subtract after-init-time before-init-time)))
+                       gcs-done)))
+  (setq inhibit-startup-message t) ; No emacs init paga
+  (menu-bar-mode -1) ; I don't like the menus
+  (scroll-bar-mode -1) ; I don't like the menus
+  (tool-bar-mode -1) ; I don't like the menus
+  (tooltip-mode -1) ; I don't like the menus
+  (set-fringe-mode -1) ; I don't like the menus
+  (setq visible-bell t) ; I don't like my errors being screamed at to me
+  (global-auto-revert-mode 1)
+  (defalias 'yes-or-no-p 'y-or-n-p)
 #+end_src
 
 ** directories
@@ -34,9 +44,9 @@ better package management for emacs.
 #+begin_src emacs-lisp
   (require 'package)
   (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                             ("melpa-stable" . "https://stable.melpa.org/packages/")
-                             ("org" . "https://orgmode.org/elpa/")
-                             ("elpa" . "https://elpa.gnu.org/packages/")))
+                           ("melpa-stable" . "https://stable.melpa.org/packages/")
+                           ("org" . "https://orgmode.org/elpa/")
+                           ("elpa" . "https://elpa.gnu.org/packages/")))
   (package-initialize)
   (unless package-archive-contents
     (package-refresh-contents))
@@ -52,20 +62,16 @@ better package management for emacs.
     (auto-package-update-hide-results t)
     :config
     (auto-package-update-maybe))
+  (setq use-package-verbose t)
 #+end_src
 
 ** Themes
 *** Visual Themes
 #+begin_src emacs-lisp
-(use-package doom-modeline
-:init (doom-modeline-mode 1))
+  (use-package doom-modeline
+    :init (doom-modeline-mode 1))
   (use-package doom-themes
     :init (load-theme 'doom-oceanic-next t))
-  ;; (use-package material-theme
-  ;;   :init
-  ;;   (load-theme 'material t)
-
-  ;;   )
   (use-package all-the-icons)
 #+end_src
 
@@ -91,114 +97,116 @@ sudo apt install fonts-firacode fonts-cantarell
 *** Ivy
  Package for enhance the experience, along with swiper its a marvel.
  #+begin_src emacs-lisp
- (use-package ivy
-   :diminish
-   :bind (("C-s" . swiper)
-	  ("M-x" . counsel-M-x)
-	  :map ivy-minibuffer-map
-          ("TAB" . ivy-alt-done)
-          ("C-f" . ivy-alt-done)
-          ("C-j" . ivy-next-line)
-          ("C-k" . ivy-previous-line)
-          :map ivy-switch-buffer-map
-          ("C-k" . ivy-previous-line)
-          ("C-l" . ivy-done)
-          ("C-d" . ivy-switch-buffer-kill)
-          :map ivy-reverse-i-search-map
-          ("C-k" . ivy-previous-line)
-          ("C-d" . ivy-reverse-i-search-kill))
-   :init
-   (ivy-mode 1))
- (use-package ivy-rich
-   :after ivy
-   :init
-   (ivy-rich-mode 1))
-   
- (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+   (use-package ivy
+     :diminish
+     :bind (("C-s" . swiper)
+            ("M-x" . counsel-M-x)
+            :map ivy-minibuffer-map
+            ("TAB" . ivy-alt-done)
+            ("C-f" . ivy-alt-done)
+            ("C-j" . ivy-next-line)
+            ("C-k" . ivy-previous-line)
+            :map ivy-switch-buffer-map
+            ("C-k" . ivy-previous-line)
+            ("C-l" . ivy-done)
+            ("C-d" . ivy-switch-buffer-kill)
+            :map ivy-reverse-i-search-map
+            ("C-k" . ivy-previous-line)
+            ("C-d" . ivy-reverse-i-search-kill))
+     :init
+     (ivy-mode 1))
+   (use-package ivy-rich
+     :after ivy
+     :init
+     (ivy-rich-mode 1))
+
+   (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
  #+end_src
+*** General
+#+begin_src emacs-lisp
+  (use-package general
+    :config 
+    ;; for frequently used prefix keys, the user can create a custom definer with a
+    ;; default :prefix
+    ;; using a variable is not necessary, but it may be useful if you want to
+    ;; experiment with different prefix keys and aren't using `general-create-definer'
+    (defconst my-leader "C-c")
+    (general-create-definer my-leader-def
+      :prefix "C-c")
+    (my-leader-def
+       ;; bind "C-c a" to 'org-agenda
+       "a" 'org-agenda
+       "b" 'counsel-bookmark
+       "c" 'org-capture))
+#+end_src
+
+#+RESULTS:
+: t
+
 *** Which key
 #+begin_src emacs-lisp
-(use-package which-key
-  :init (which-key-mode)
-  :diminish which-key-mode
-  :config
-  (setq which-key-idle-delay 1))
+  (use-package which-key
+    :defer t
+;;    :init (which-key-mode)
+    :diminish which-key-mode
+    :config
+    (setq which-key-idle-delay 1))
 #+end_src
 *** Projectile
 #+begin_src emacs-lisp
-(use-package projectile
-  :diminish projectile-mode
-  :config (projectile-mode)
-  :custom ((projectile-completion-system 'ivy))
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
-  :init
-  ;; NOTE: Set this to the folder where you keep your Git repos!
-  (when (file-directory-p "~/github")
-    (setq projectile-project-search-path '("~/github")))
-  (setq projectile-switch-project-action #'projectile-dired))
+  (use-package projectile
+    :diminish projectile-mode
+    :config (projectile-mode)
+    :custom ((projectile-completion-system 'ivy))
+    :bind-keymap
+    ("C-c p" . projectile-command-map)
+    :init
+    ;; NOTE: Set this to the folder where you keep your Git repos!
+    (when (file-directory-p "~/github")
+      (setq projectile-project-search-path '("~/github")))
+    (setq projectile-switch-project-action #'projectile-dired))
 
-(use-package counsel-projectile
-  :after projectile
-  :config (counsel-projectile-mode))
+  (use-package counsel-projectile
+    :after projectile
+    :config (counsel-projectile-mode))
+
 #+end_src
 *** Helpful
 #+begin_src emacs-lisp
-(use-package helpful
-  :commands (helpful-callable helpful-variable helpful-command helpful-key)
-  :custom
-  (counsel-describe-function-function #'helpful-callable)
-  (counsel-describe-variable-function #'helpful-variable)
-  :bind
-  ([remap describe-function] . counsel-describe-function)
-  ([remap describe-command] . helpful-command)
-  ([remap describe-variable] . counsel-describe-variable)
-  ([remap describe-key] . helpful-key))
+  (use-package helpful
+    :commands (helpful-callable helpful-variable helpful-command helpful-key)
+    :custom
+    (counsel-describe-function-function #'helpful-callable)
+    (counsel-describe-variable-function #'helpful-variable)
+    :bind
+    ([remap describe-function] . counsel-describe-function)
+    ([remap describe-command] . helpful-command)
+    ([remap describe-variable] . counsel-describe-variable)
+    ([remap describe-key] . helpful-key))
 #+end_src
 *** Ace-window
 #+begin_src emacs-lisp
-
-(use-package ace-window
-:config 
-(global-set-key (kbd "M-o") 'ace-window))
-
-
+  (use-package ace-window
+    :bind ("M-o" . ace-window))
 #+end_src
-** Dashboard 
-#+begin_src emacs-lisp
-  (defun skls/dashboard-banner ()
-    """Set a dashboard banner including information on package initialization
-     time and garbage collections."""
-     (setq dashboard-banner-logo-title
-           (format "Emacs ready in %.2f seconds with %d garbage collections."
-                   (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
 
-  (use-package dashboard
-    :init
-    (add-hook 'after-init-hook 'dashboard-refresh-buffer)
-    (add-hook 'dashboard-mode-hook 'skls/dashboard-banner)
-    :config
-    (setq dashboard-startup-banner 'logo)
-    (dashboard-setup-startup-hook))
-
-#+end_src
 ** Text Scale
 #+begin_src emacs-lisp
-(define-key global-map (kbd "C-+") 'text-scale-increase)
-(define-key global-map (kbd "C--") 'text-scale-decrease)
-(global-set-key "\C-x\C-b" 'ibuffer)
+  (define-key global-map (kbd "C-+") 'text-scale-increase)
+  (define-key global-map (kbd "C--") 'text-scale-decrease)
+  (global-set-key "\C-x\C-b" 'ibuffer)
 #+end_src
 ** Backup
 I don't like emacs littering my working folders
 #+begin_src emacs-lisp
-(use-package no-littering)
+  (use-package no-littering)
 
-;; no-littering doesn't set this by default so we must place
-;; auto save files in the same path as it uses for sessions
-(setq auto-save-file-name-transforms
-      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
-;; Old config
-;; (setq backup-directory-alist '(("" . "~/.emacs.d/backup")))
+  ;; no-littering doesn't set this by default so we must place
+  ;; auto save files in the same path as it uses for sessions
+  (setq auto-save-file-name-transforms
+        `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+  ;; Old config
+  ;; (setq backup-directory-alist '(("" . "~/.emacs.d/backup")))
 #+end_src
 ** Multiple cursors
 #+begin_src emacs-lisp
@@ -214,20 +222,6 @@ I don't like emacs littering my working folders
     (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
     )
 #+end_src
-** General
-#+begin_src emacs-lisp
-
-  (use-package general)
-  (general-define-key
-   :prefix "C-c"
-   ;; bind "C-c a" to 'org-agenda
-   "a" 'org-agenda
-   "b" 'counsel-bookmark
-   "c" 'org-capture)
-#+end_src
-
-#+RESULTS:
-
 * Programing
 ** General
 *** Line display and colnum
@@ -303,7 +297,7 @@ I don't like emacs littering my working folders
     :config
     ;; Set up Node debugging
     (require 'dap-node)
-    (dap-node-setup) ;; Automatically installs Node debug adapter if needed
+    (dap-node-setup) ;; Automatically installs Node debug adapter if need3ed
 
     ;; Bind `C-c l d` to `dap-hydra` for easy access
     (general-define-key
@@ -312,7 +306,6 @@ I don't like emacs littering my working folders
       "d" '(dap-hydra t :wk "debugger")))
 #+end_src
 *** Company-mode
-
 #+begin_src emacs-lisp
 (use-package company
   :after lsp-mode
@@ -350,48 +343,48 @@ I don't like emacs littering my working folders
 
 *** R ess
 #+begin_src emacs-lisp
-  (use-package ess
-    :bind
-    (:map ess-mode-map
-          ("C-<" . ess-insert-assign))
-    (:map inferior-ess-mode-map
-          ("C-<" . ess-insert-assign))
-    :defer t
-    :init
-    (load "ess-site"))
-
-  (use-package poly-R)
-
-  (defun then_R_operator ()
+  (defun skls/insert-r-pipe ()
     "R - %>% operator or 'then' pipe operator"
     (interactive)
     (just-one-space 1)
     (insert "%>%")
     (reindent-then-newline-and-indent))
-  (define-key ess-mode-map (kbd "C->") 'then_R_operator)
-  (define-key inferior-ess-mode-map (kbd "C->") 'then_R_operator)
+
+  (use-package ess
+    :bind (
+           :map ess-mode-map
+                ("C-<" . ess-insert-assign)
+                ("C->" . skls/insert-r-pipe)
+                :map inferior-ess-mode-map
+                ("C-<" . ess-insert-assign)
+                ("C->" . skls/insert-r-pipe) )
+    :init
+    (load "ess-site"))
+
+  (use-package poly-R
+    :defer t)
+
 #+end_src
 
 *** Docker
 #+BEGIN_SRC emacs-lisp
-  (use-package docker :ensure t)
-  (use-package docker-tramp :ensure t)
-  (use-package dockerfile-mode :ensure t)
+  (use-package docker
+    :defer t)
+  (use-package docker-tramp
+    :defer t)
+  (use-package dockerfile-mode
+    :defer t)
 #+END_SRC
 *** SQL
 I used polymode in order to use jinja between the two braces, while still using sql indentation and everything else .
 #+BEGIN_SRC emacs-lisp
-
-  (use-package sql-indent)
   (eval-after-load "sql"
-      '(load-library "sql-indent"))
+    '(use-package sql-indent))
 
-
-  (use-package polymode
-    :mode ("\\.sql.j2$" . poly-sql-jinja2-mode)
-    :config
-    (use-package jinja2-mode)
-    (setq polymode-prefix-key (kbd "C-c n"))
+  (defun skls/create-poly-jinja ()
+    (use-package jinja2-mode 
+      :defer t)
+    ;; (setq polymode-prefix-key (kbd "C-c n"))
     (define-hostmode poly-sql-hostmode :mode 'sql-mode)
     (define-innermode poly-jinja2-expr-sql-innermode
       :mode 'jinja2-mode
@@ -402,35 +395,54 @@ I used polymode in order to use jinja between the two braces, while still using 
     (define-polymode poly-sql-jinja2-mode
       :hostmode 'poly-sql-hostmode
       :innermodes '(poly-jinja2-expr-sql-innermode)
-      )
-    )
+      ))
+  (use-package polymode
+    :defer t
+    :mode ("\.sql.j2$" . poly-sql-jinja2-mode)
+    :config 
+    (skls/create-poly-jinja))
 
 #+END_SRC
+
+#+RESULTS:
+: ((\.markdown\' . markdown-mode) (\.md\' . markdown-mode) (README\.md\' . gfm-mode) (\.yml$ . yaml-mode) (\.[PpTtCc][Ss][Vv]\' . csv-mode) (\.tf . terraform-mode) (.sql.j2$ . poly-sql-jinja2-mode) (\.gpg\(~\|\.~[0-9]+~\)?\' nil epa-file) (\.hva\' . latex-mode) (\.tsv\' . tsv-mode) (\.[Cc][Ss][Vv]\' . csv-mode) (\.dockerfile\' . dockerfile-mode) (/Dockerfile\(?:\.[^/\]*\)?\' . dockerfile-mode) (\.ipynb\' . ein:ipynb-mode) (\.[Ss][Aa][Ss]\' . SAS-mode) (\.Sout . S-transcript-mode) (\.[Ss]t\' . S-transcript-mode) (\.Rd\' . Rd-mode) (DESCRIPTION\' . conf-colon-mode) (/Makevars\(\.win\)?\' . makefile-mode) (\.[Rr]out . ess-r-transcript-mode) (CITATION\' . ess-r-mode) (NAMESPACE\' . ess-r-mode) (\.[rR]profile\' . ess-r-mode) (\.[rR]\' . ess-r-mode) (/R/.*\.q\' . ess-r-mode) (\.[Jj][Aa][Gg]\' . ess-jags-mode) (\.[Bb][Mm][Dd]\' . ess-bugs-mode) (\.[Bb][Oo][Gg]\' . ess-bugs-mode) (\.[Bb][Uu][Gg]\' . ess-bugs-mode) (\.j2\' . jinja2-mode) (\.jinja2\' . jinja2-mode) (\(?:\(?:\.\(?:b\(?:\(?:abel\|ower\)rc\)\|json\(?:ld\)?\)\|composer\.lock\)\'\) . json-mode) (/git-rebase-todo\' . git-rebase-mode) (\.cpp[rR]\' . poly-c++r-mode) (\.[Rr]cpp\' . poly-r+c++-mode) (\.[rR]brew\' . poly-brew+r-mode) (\.[rR]html\' . poly-html+r-mode) (\.rapport\' . poly-rapport-mode) (\.[rR]md\' . poly-markdown+r-mode) (\.[rR]nw\' . poly-noweb+r-mode) (\.Snw\' . poly-noweb+r-mode) (\.md\' . poly-markdown-mode) (\.\(?:md\|markdown\|mkd\|mdown\|mkdn\|mdwn\)\' . markdown-mode) (\.nw\' . poly-noweb-mode) (\.tf\(vars\)?\' . terraform-mode) (\.nomad\' . hcl-mode) (\.hcl\' . hcl-mode) (\.\(e?ya?\|ra\)ml\' . yaml-mode) (\.elc\' . elisp-byte-code-mode) (\.zst\' nil jka-compr) (\.dz\' nil jka-compr) (\.xz\' nil jka-compr) (\.lzma\' nil jka-compr) (\.lz\' nil jka-compr) (\.g?z\' nil jka-compr) (\.bz2\' nil jka-compr) (\.Z\' nil jka-compr) (\.vr[hi]?\' . vera-mode) (\(?:\.\(?:rbw?\|ru\|rake\|thor\|jbuilder\|rabl\|gemspec\|podspec\)\|/\(?:Gem\|Rake\|Cap\|Thor\|Puppet\|Berks\|Vagrant\|Guard\|Pod\)file\)\' . ruby-mode) (\.re?st\' . rst-mode) (\.py[iw]?\' . python-mode) (\.m\' . octave-maybe-mode) (\.less\' . less-css-mode) (\.scss\' . scss-mode) (\.awk\' . awk-mode) (\.\(u?lpc\|pike\|pmod\(\.in\)?\)\' . pike-mode) (\.idl\' . idl-mode) (\.java\' . java-mode) (\.m\' . objc-mode) (\.ii\' . c++-mode) (\.i\' . c-mode) (\.lex\' . c-mode) (\.y\(acc\)?\' . c-mode) (\.h\' . c-or-c++-mode) (\.c\' . c-mode) (\.\(CC?\|HH?\)\' . c++-mode) (\.[ch]\(pp\|xx\|\+\+\)\' . c++-mode) (\.\(cc\|hh\)\' . c++-mode) (\.\(bat\|cmd\)\' . bat-mode) (\.[sx]?html?\(\.[a-zA-Z_]+\)?\' . mhtml-mode) (\.svgz?\' . image-mode) (\.svgz?\' . xml-mode) (\.x[bp]m\' . image-mode) (\.x[bp]m\' . c-mode) (\.p[bpgn]m\' . image-mode) (\.tiff?\' . image-mode) (\.gif\' . image-mode) (\.png\' . image-mode) (\.jpe?g\' . image-mode) (\.te?xt\' . text-mode) (\.[tT]e[xX]\' . tex-mode) (\.ins\' . tex-mode) (\.ltx\' . latex-mode) (\.dtx\' . doctex-mode) (\.org\' . org-mode) (\.el\' . emacs-lisp-mode) (Project\.ede\' . emacs-lisp-mode) (\.\(scm\|stk\|ss\|sch\)\' . scheme-mode) (\.l\' . lisp-mode) (\.li?sp\' . lisp-mode) (\.[fF]\' . fortran-mode) (\.for\' . fortran-mode) (\.p\' . pascal-mode) (\.pas\' . pascal-mode) (\.\(dpr\|DPR\)\' . delphi-mode) (\.ad[abs]\' . ada-mode) (\.ad[bs]\.dg\' . ada-mode) (\.\([pP]\([Llm]\|erl\|od\)\|al\)\' . perl-mode) (Imakefile\' . makefile-imake-mode) (Makeppfile\(?:\.mk\)?\' . makefile-makepp-mode) (\.makepp\' . makefile-makepp-mode) (\.mk\' . makefile-gmake-mode) (\.make\' . makefile-gmake-mode) ([Mm]akefile\' . makefile-gmake-mode) (\.am\' . makefile-automake-mode) (\.texinfo\' . texinfo-mode) (\.te?xi\' . texinfo-mode) (\.[sS]\' . asm-mode) (\.asm\' . asm-mode) (\.css\' . css-mode) (\.mixal\' . mixal-mode) (\.gcov\' . compilation-mode) (/\.[a-z0-9-]*gdbinit . gdb-script-mode) (-gdb\.gdb . gdb-script-mode) ([cC]hange\.?[lL]og?\' . change-log-mode) ([cC]hange[lL]og[-.][0-9]+\' . change-log-mode) (\$CHANGE_LOG\$\.TXT . change-log-mode) (\.scm\.[0-9]*\' . scheme-mode) (\.[ckz]?sh\'\|\.shar\'\|/\.z?profile\' . sh-mode) (\.bash\' . sh-mode) (\(/\|\`\)\.\(bash_\(profile\|history\|log\(in\|out\)\)\|z?log\(in\|out\)\)\' . sh-mode) (\(/\|\`\)\.\(shrc\|zshrc\|m?kshrc\|bashrc\|t?cshrc\|esrc\)\' . sh-mode) (\(/\|\`\)\.\([kz]shenv\|xinitrc\|startxrc\|xsession\)\' . sh-mode) (\.m?spec\' . sh-mode) (\.m[mes]\' . nroff-mode) (\.man\' . nroff-mode) (\.sty\' . latex-mode) (\.cl[so]\' . latex-mode) (\.bbl\' . latex-mode) (\.bib\' . bibtex-mode) (\.bst\' . bibtex-style-mode) (\.sql\' . sql-mode) (\(acinclude\|aclocal\|acsite\)\.m4\' . autoconf-mode) (\.m[4c]\' . m4-mode) (\.mf\' . metafont-mode) (\.mp\' . metapost-mode) (\.vhdl?\' . vhdl-mode) (\.article\' . text-mode) (\.letter\' . text-mode) (\.i?tcl\' . tcl-mode) (\.exp\' . tcl-mode) (\.itk\' . tcl-mode) (\.icn\' . icon-mode) (\.sim\' . simula-mode) (\.mss\' . scribe-mode) (\.f9[05]\' . f90-mode) (\.f0[38]\' . f90-mode) (\.indent\.pro\' . fundamental-mode) (\.\(pro\|PRO\)\' . idlwave-mode) (\.srt\' . srecode-template-mode) (\.prolog\' . prolog-mode) (\.tar\' . tar-mode) (\.\(arc\|zip\|lzh\|lha\|zoo\|[jew]ar\|xpi\|rar\|cbr\|7z\|ARC\|ZIP\|LZH\|LHA\|ZOO\|[JEW]AR\|XPI\|RAR\|CBR\|7Z\)\' . archive-mode) (\.oxt\' . archive-mode) (\.\(deb\|[oi]pk\)\' . archive-mode) (\`/tmp/Re . text-mode) (/Message[0-9]*\' . text-mode) (\`/tmp/fol/ . text-mode) (\.oak\' . scheme-mode) (\.sgml?\' . sgml-mode) (\.x[ms]l\' . xml-mode) (\.dbk\' . xml-mode) (\.dtd\' . sgml-mode) (\.ds\(ss\)?l\' . dsssl-mode) (\.js[mx]?\' . javascript-mode) (\.har\' . javascript-mode) (\.json\' . javascript-mode) (\.[ds]?va?h?\' . verilog-mode) (\.by\' . bovine-grammar-mode) (\.wy\' . wisent-grammar-mode) ([:/\]\..*\(emacs\|gnus\|viper\)\' . emacs-lisp-mode) (\`\..*emacs\' . emacs-lisp-mode) ([:/]_emacs\' . emacs-lisp-mode) (/crontab\.X*[0-9]+\' . shell-script-mode) (\.ml\' . lisp-mode) (\.ld[si]?\' . ld-script-mode) (ld\.?script\' . ld-script-mode) (\.xs\' . c-mode) (\.x[abdsru]?[cnw]?\' . ld-script-mode) (\.zone\' . dns-mode) (\.soa\' . dns-mode) (\.asd\' . lisp-mode) (\.\(asn\|mib\|smi\)\' . snmp-mode) (\.\(as\|mi\|sm\)2\' . snmpv2-mode) (\.\(diffs?\|patch\|rej\)\' . diff-mode) (\.\(dif\|pat\)\' . diff-mode) (\.[eE]?[pP][sS]\' . ps-mode) (\.\(?:PDF\|DVI\|OD[FGPST]\|DOCX\|XLSX?\|PPTX?\|pdf\|djvu\|dvi\|od[fgpst]\|docx\|xlsx?\|pptx?\)\' . doc-view-mode-maybe) (configure\.\(ac\|in\)\' . autoconf-mode) (\.s\(v\|iv\|ieve\)\' . sieve-mode) (BROWSE\' . ebrowse-tree-mode) (\.ebrowse\' . ebrowse-tree-mode) (#\*mail\* . mail-mode) (\.g\' . antlr-mode) (\.mod\' . m2-mode) (\.ses\' . ses-mode) (\.docbook\' . sgml-mode) (\.com\' . dcl-mode) (/config\.\(?:bat\|log\)\' . fundamental-mode) (/\.\(authinfo\|netrc\)\' . authinfo-mode) (\.\(?:[iI][nN][iI]\|[lL][sS][tT]\|[rR][eE][gG]\|[sS][yY][sS]\)\' . conf-mode) (\.la\' . conf-unix-mode) (\.ppd\' . conf-ppd-mode) (java.+\.conf\' . conf-javaprop-mode) (\.properties\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-javaprop-mode) (\.toml\' . conf-toml-mode) (\.desktop\' . conf-desktop-mode) (/\.redshift\.conf\' . conf-windows-mode) (\`/etc/\(?:DIR_COLORS\|ethers\|.?fstab\|.*hosts\|lesskey\|login\.?de\(?:fs\|vperm\)\|magic\|mtab\|pam\.d/.*\|permissions\(?:\.d/.+\)?\|protocols\|rpc\|services\)\' . conf-space-mode) (\`/etc/\(?:acpid?/.+\|aliases\(?:\.d/.+\)?\|default/.+\|group-?\|hosts\..+\|inittab\|ksysguarddrc\|opera6rc\|passwd-?\|shadow-?\|sysconfig/.+\)\' . conf-mode) ([cC]hange[lL]og[-.][-0-9a-z]+\' . change-log-mode) (/\.?\(?:gitconfig\|gnokiirc\|hgrc\|kde.*rc\|mime\.types\|wgetrc\)\' . conf-mode) (/\.\(?:asound\|enigma\|fetchmail\|gltron\|gtk\|hxplayer\|mairix\|mbsync\|msmtp\|net\|neverball\|nvidia-settings-\|offlineimap\|qt/.+\|realplayer\|reportbug\|rtorrent\.\|screen\|scummvm\|sversion\|sylpheed/.+\|xmp\)rc\' . conf-mode) (/\.\(?:gdbtkinit\|grip\|mpdconf\|notmuch-config\|orbital/.+txt\|rhosts\|tuxracer/options\)\' . conf-mode) (/\.?X\(?:default\|resource\|re\)s\> . conf-xdefaults-mode) (/X11.+app-defaults/\|\.ad\' . conf-xdefaults-mode) (/X11.+locale/.+/Compose\' . conf-colon-mode) (/X11.+locale/compose\.dir\' . conf-javaprop-mode) (\.~?[0-9]+\.[0-9][-.0-9]*~?\' nil t) (\.\(?:orig\|in\|[bB][aA][kK]\)\' nil t) ([/.]c\(?:on\)?f\(?:i?g\)?\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-mode-maybe) (\.[1-9]\' . nroff-mode) (\.art\' . image-mode) (\.avs\' . image-mode) (\.bmp\' . image-mode) (\.cmyk\' . image-mode) (\.cmyka\' . image-mode) (\.crw\' . image-mode) (\.dcr\' . image-mode) (\.dcx\' . image-mode) (\.dng\' . image-mode) (\.dpx\' . image-mode) (\.fax\' . image-mode) (\.hrz\' . image-mode) (\.icb\' . image-mode) (\.icc\' . image-mode) (\.icm\' . image-mode) (\.ico\' . image-mode) (\.icon\' . image-mode) (\.jbg\' . image-mode) (\.jbig\' . image-mode) (\.jng\' . image-mode) (\.jnx\' . image-mode) (\.miff\' . image-mode) (\.mng\' . image-mode) (\.mvg\' . image-mode) (\.otb\' . image-mode) (\.p7\' . image-mode) (\.pcx\' . image-mode) (\.pdb\' . image-mode) (\.pfa\' . image-mode) (\.pfb\' . image-mode) (\.picon\' . image-mode) (\.pict\' . image-mode) (\.rgb\' . image-mode) (\.rgba\' . image-mode) (\.tga\' . image-mode) (\.wbmp\' . image-mode) (\.webp\' . image-mode) (\.wmf\' . image-mode) (\.wpg\' . image-mode) (\.xcf\' . image-mode) (\.xmp\' . image-mode) (\.xwd\' . image-mode) (\.yuv\' . image-mode) (\.tgz\' . tar-mode) (\.tbz2?\' . tar-mode) (\.txz\' . tar-mode) (\.tzst\' . tar-mode) (\.drv\' . latex-mode))
 
 *** Bash
 **** TODO fix this in order to get what you need (the keys are not working)
 #+BEGIN_SRC emacs-lisp
-  (load "~/.emacs.d/packages/essh.el")
-  (require 'essh)                                                    
-
-  (defun essh-sh-hook ()                                             
-    (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        
-    (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)        
-    (define-key sh-mode-map "\C-c <return>" 'pipe-line-to-shell)          
-    (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step) 
-    (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      
-    (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory)) 
-  (add-hook 'sh-mode-hook 'essh-sh-hook)                             
-
-  ;(global-set-key [f1] 'shell)
-
-  (setq explicit-shell-file-name "/bin/zsh")
-  ;(setq shell-file-name "bash")
-  (setq explicit-bash-args '("--noediting" "--login" "-i"))
-  (setenv "SHELL" shell-file-name)
-
-  (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)
+  ;; (load "~/.emacs.d/packages/essh.el")
+  ;;   (require 'essh)  
+  (defun skls/essh-sh-hook () 
+    (my-leader-def
+      :keymaps 'sh-mode-map
+      "C-r" 'pipe-region-to-shell
+      "C-b" 'pipe-buffer-to-shell
+      "C-c" 'pipe-line-to-shell
+      "C-n" 'pipe-line-to-shell-and-step
+      "C-f" 'pipe-function-to-shell
+      "C-d" 'shell-cd-current-directory
+      ))
+  (use-package essh
+    :load-path "packages/"
+    :config
+    (skls/essh-sh-hook)
+    ;; (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        
+    ;; (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)        
+    ;; (define-key sh-mode-map "\C-c <return>" 'pipe-line-to-shell)          
+    ;; (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step) 
+    ;; (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      
+    ;; (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory)) 
+    ;; (add-hook 'sh-mode-hook 'skls/essh-sh-hook)                             
+    (setq explicit-shell-file-name "/bin/zsh")
+    ;; (setq shell-file-name "bash")
+    (setq explicit-bash-args '("--noediting" "--login" "-i"))
+    (setenv "SHELL" shell-file-name)
+    (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
 #+END_SRC 
+
+#+RESULTS:
+: t
+
 *** Terraform
 #+begin_src emacs-lisp
   (use-package terraform-mode
@@ -528,7 +540,6 @@ The best for writing Literate programing
        (shell . t)
        )))
 #+end_src
-
 ** Agenda
 First we setup the agenda it's kidna messy so I put it in a different place
 #+begin_src emacs-lisp
@@ -554,7 +565,10 @@ First we setup the agenda it's kidna messy so I put it in a different place
             ("WAIT" . (:foreground "HotPink2" :weight bold))
             ("BACK" . (:foreground "MediumPurple3" :weight bold))))
     ;; Save Org buffers after refiling!
-    (advice-add 'org-refile :after 'org-save-all-org-buffers)
+    ;; (advice-add 'org-refile :after 'org-save-all-org-buffers)
+    (advice-add 'org-refile :after
+                (lambda (&rest _)
+                  (org-save-all-org-buffers)))
 
     (setq org-tag-alist
           '((:startgroup)
@@ -562,7 +576,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
             (:endgroup)
             ("@errand" . ?E)
             ("@home" . ?H)
-            ("@work" . ?H)
+            ("@work" . ?W)
             ("@Globant" . ?G)
             ("@ITAM" . ?I)
             ("@Deepsee" . ?D)
@@ -626,10 +640,6 @@ First we setup the agenda it's kidna messy so I put it in a different place
         (lambda () (interactive) (org-capture nil "jj")))
     )
 #+end_src
-
-#+RESULTS:
-: skls/org-agenda-setup
-
 ** Org-superstar
 #+begin_src emacs-lisp
   (defun skls/org-superstar ()
@@ -668,9 +678,6 @@ First we setup the agenda it's kidna messy so I put it in a different place
     (skls/org-font-setup)
     )
 #+end_src
-
-#+RESULTS:
-| org-tempo-setup | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | #[0 \301\211\207 [imenu-create-index-function org-imenu-get-tree] 2] | (lambda nil (add-hook 'after-save-hook #'skls/org-babel-tangle-config)) | skls/org-superstar | skls/org-mode-visual-fill | skls/org-mode-setup | skls/org-mode-babel | (lambda nil (display-line-numbers-mode 0)) |
 
 ** Faces 
 #+begin_src emacs-lisp
@@ -971,3 +978,21 @@ outpr)
       )))
 
 #+END_SRC
+* Dashboard 
+#+begin_src emacs-lisp
+  ;; (defun skls/dashboard-banner ()
+  ;;   """Set a dashboard banner including information on package initialization
+  ;;    time and garbage collections."""
+  ;;    (setq dashboard-banner-logo-title
+  ;;          (format "Emacs ready in %.2f seconds with %d garbage collections."
+  ;;                  (float-time (time-subtract after-init-time before-init-time)) gs-done)))
+
+  ;; (use-package dashboard
+  ;;   :init
+  ;;   (add-hook 'after-init-hook 'dashboard-refresh-buffer)
+  ;;   (add-hook 'dashboard-mode-hook 'skls/dashboard-banner)
+  ;;   :config
+  ;;   (setq dashboard-startup-banner 'logo)
+  ;;   (dashboard-setup-startup-hook))
+
+#+end_src
