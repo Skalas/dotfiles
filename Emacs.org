@@ -5,25 +5,25 @@
 * Set everything up
 ** First Basics
 #+begin_src emacs-lisp 
-  ;; The default is 800 kilobytes.  Measured in bytes.
-  (setq gc-cons-threshold 402653184
-        gc-cons-percentage 0.6)
-  (add-hook 'emacs-startup-hook
-            (lambda ()
-              (message "*** Emacs loaded in %s with %d garbage collections."
-                       (format "%.2f seconds"
-                               (float-time
-                                (time-subtract after-init-time before-init-time)))
-                       gcs-done)))
-  (setq inhibit-startup-message t) ; No emacs init paga
-  (menu-bar-mode -1) ; I don't like the menus
-  (scroll-bar-mode -1) ; I don't like the menus
-  (tool-bar-mode -1) ; I don't like the menus
-  (tooltip-mode -1) ; I don't like the menus
-  (set-fringe-mode -1) ; I don't like the menus
-  (setq visible-bell t) ; I don't like my errors being screamed at to me
-  (global-auto-revert-mode 1)
-  (defalias 'yes-or-no-p 'y-or-n-p)
+    ;; The default is 800 kilobytes.  Measured in bytes.
+    (setq gc-cons-threshold (* 50 1024 1024))
+          ;;        gc-cons-percentage 0.6)
+    (add-hook 'emacs-startup-hook
+              (lambda ()
+                (message "*** Emacs loaded in %s with %d garbage collections."
+                         (format "%.2f seconds"
+                                 (float-time
+                                  (time-subtract after-init-time before-init-time)))
+                         gcs-done)))
+    (setq inhibit-startup-message t) ; No emacs init paga
+    (menu-bar-mode -1) ; I don't like the menus
+    (scroll-bar-mode -1) ; I don't like the menus
+    (tool-bar-mode -1) ; I don't like the menus
+    (tooltip-mode -1) ; I don't like the menus
+    (set-fringe-mode -1) ; I don't like the menus
+    (setq visible-bell t) ; I don't like my errors being screamed at to me
+    (global-auto-revert-mode 1)
+    (defalias 'yes-or-no-p 'y-or-n-p)
 #+end_src
 
 ** directories
@@ -55,6 +55,7 @@ better package management for emacs.
     (package-install 'use-package))
   (require 'use-package)
   (setq use-package-always-ensure t)
+  (setq use-package-always-defer t)
   (use-package auto-package-update
     :custom
     (auto-package-update-interval 7)
@@ -62,9 +63,8 @@ better package management for emacs.
     (auto-package-update-hide-results t)
     :config
     (auto-package-update-maybe))
-  (setq use-package-verbose t)
+  ;;(setq use-package-verbose t)
 #+end_src
-
 ** Themes
 *** Visual Themes
 #+begin_src emacs-lisp
@@ -72,11 +72,8 @@ better package management for emacs.
     :init (doom-modeline-mode 1))
   (use-package doom-themes
     :init (load-theme 'doom-oceanic-next t))
-  (use-package all-the-icons)
+  (use-package all-the-icons )
 #+end_src
-
-#+RESULTS:
-
 *** Pretty fonts per different environments
 Make sure you have the font installed beforehand: 
 #+begin_src shell :noeval 
@@ -146,12 +143,12 @@ sudo apt install fonts-firacode fonts-cantarell
 *** Which key
 #+begin_src emacs-lisp
   (use-package which-key
-    :defer t
-;;    :init (which-key-mode)
+    :init (which-key-mode)
     :diminish which-key-mode
     :config
-    (setq which-key-idle-delay 1))
+    (setq which-key-idle-delay 0.7))
 #+end_src
+
 *** Projectile
 #+begin_src emacs-lisp
   (use-package projectile
@@ -215,7 +212,6 @@ I don't like emacs littering my working folders
   ;; Multiple lines editing 
   (use-package multiple-cursors
     :diminish multiple-cursors-mode
-    :defer t
     :init
     (global-set-key (kbd "C-d") 'mc/mark-next-like-this)
     (global-set-key (kbd "C-M-d") 'mc/mark-previous-like-this)
@@ -258,8 +254,8 @@ I don't like emacs littering my working folders
             (lambda ()
               (setq-local electric-pair-inhibit-predicate
                           `(lambda (c)
-                             (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))
-                             (if (char-equal c ?\") t (,electric-pair-inhibit-predicate c))))))
+                             (if (char-equal c ?<) t (electric-pair-inhibit-predicate c))
+                             (if (char-equal c ?\") t (electric-pair-inhibit-predicate c))))))
 #+end_src
 ** Languages
 *** Lsp-mode
@@ -325,7 +321,6 @@ I don't like emacs littering my working folders
 #+begin_src emacs-lisp
   (setq tab-width 4)
   (use-package python-mode
-    :ensure t
     :hook (python-mode . lsp-deferred)
     :custom
     ;; NOTE: Set these if Python 3 is called "python3" on your system!
@@ -351,29 +346,41 @@ I don't like emacs littering my working folders
     (reindent-then-newline-and-indent))
 
   (use-package ess
+    :disabled
+    :commands R
     :bind (
            :map ess-mode-map
                 ("C-<" . ess-insert-assign)
                 ("C->" . skls/insert-r-pipe)
                 :map inferior-ess-mode-map
                 ("C-<" . ess-insert-assign)
-                ("C->" . skls/insert-r-pipe) )
+                ("C->" . skls/insert-r-pipe) 
+                )
     :init
-    (load "ess-site"))
+    (load "ess-site")
+    )
 
+#+end_src
+
+*** Poly-r
+This package helps me to build 
+#+begin_src emacs-lisp
   (use-package poly-R
-    :defer t)
-
+    :config
+    (defun skls/insert-rmd-chunk (language) 
+      "Insert an r-chunk in markdown mode. Necessary due to interactions between polymode and yas snippet" 
+      (interactive "sLanguage: ") 
+      (insert (concat "```{" language "}\n\n```")) 
+      (forward-line -1))
+    (define-key poly-markdown+r-mode-map (kbd "M-n M-i") #'skls/insert-rmd-chunk)
+    )
 #+end_src
 
 *** Docker
 #+BEGIN_SRC emacs-lisp
-  (use-package docker
-    :defer t)
-  (use-package docker-tramp
-    :defer t)
-  (use-package dockerfile-mode
-    :defer t)
+  (use-package docker)
+  (use-package docker-tramp)
+  (use-package dockerfile-mode)
 #+END_SRC
 *** SQL
 I used polymode in order to use jinja between the two braces, while still using sql indentation and everything else .
@@ -382,8 +389,7 @@ I used polymode in order to use jinja between the two braces, while still using 
     '(use-package sql-indent))
 
   (defun skls/create-poly-jinja ()
-    (use-package jinja2-mode 
-      :defer t)
+    (use-package jinja2-mode)
     ;; (setq polymode-prefix-key (kbd "C-c n"))
     (define-hostmode poly-sql-hostmode :mode 'sql-mode)
     (define-innermode poly-jinja2-expr-sql-innermode
@@ -396,22 +402,19 @@ I used polymode in order to use jinja between the two braces, while still using 
       :hostmode 'poly-sql-hostmode
       :innermodes '(poly-jinja2-expr-sql-innermode)
       ))
+
   (use-package polymode
-    :defer t
-    :mode ("\.sql.j2$" . poly-sql-jinja2-mode)
-    :config 
+    :commands poly-sql-jinja2-mode
+    :mode ("\\.sql\\.j2\\'" . poly-sql-jinja2-mode)
+    :config
     (skls/create-poly-jinja))
 
 #+END_SRC
 
-#+RESULTS:
-: ((\.markdown\' . markdown-mode) (\.md\' . markdown-mode) (README\.md\' . gfm-mode) (\.yml$ . yaml-mode) (\.[PpTtCc][Ss][Vv]\' . csv-mode) (\.tf . terraform-mode) (.sql.j2$ . poly-sql-jinja2-mode) (\.gpg\(~\|\.~[0-9]+~\)?\' nil epa-file) (\.hva\' . latex-mode) (\.tsv\' . tsv-mode) (\.[Cc][Ss][Vv]\' . csv-mode) (\.dockerfile\' . dockerfile-mode) (/Dockerfile\(?:\.[^/\]*\)?\' . dockerfile-mode) (\.ipynb\' . ein:ipynb-mode) (\.[Ss][Aa][Ss]\' . SAS-mode) (\.Sout . S-transcript-mode) (\.[Ss]t\' . S-transcript-mode) (\.Rd\' . Rd-mode) (DESCRIPTION\' . conf-colon-mode) (/Makevars\(\.win\)?\' . makefile-mode) (\.[Rr]out . ess-r-transcript-mode) (CITATION\' . ess-r-mode) (NAMESPACE\' . ess-r-mode) (\.[rR]profile\' . ess-r-mode) (\.[rR]\' . ess-r-mode) (/R/.*\.q\' . ess-r-mode) (\.[Jj][Aa][Gg]\' . ess-jags-mode) (\.[Bb][Mm][Dd]\' . ess-bugs-mode) (\.[Bb][Oo][Gg]\' . ess-bugs-mode) (\.[Bb][Uu][Gg]\' . ess-bugs-mode) (\.j2\' . jinja2-mode) (\.jinja2\' . jinja2-mode) (\(?:\(?:\.\(?:b\(?:\(?:abel\|ower\)rc\)\|json\(?:ld\)?\)\|composer\.lock\)\'\) . json-mode) (/git-rebase-todo\' . git-rebase-mode) (\.cpp[rR]\' . poly-c++r-mode) (\.[Rr]cpp\' . poly-r+c++-mode) (\.[rR]brew\' . poly-brew+r-mode) (\.[rR]html\' . poly-html+r-mode) (\.rapport\' . poly-rapport-mode) (\.[rR]md\' . poly-markdown+r-mode) (\.[rR]nw\' . poly-noweb+r-mode) (\.Snw\' . poly-noweb+r-mode) (\.md\' . poly-markdown-mode) (\.\(?:md\|markdown\|mkd\|mdown\|mkdn\|mdwn\)\' . markdown-mode) (\.nw\' . poly-noweb-mode) (\.tf\(vars\)?\' . terraform-mode) (\.nomad\' . hcl-mode) (\.hcl\' . hcl-mode) (\.\(e?ya?\|ra\)ml\' . yaml-mode) (\.elc\' . elisp-byte-code-mode) (\.zst\' nil jka-compr) (\.dz\' nil jka-compr) (\.xz\' nil jka-compr) (\.lzma\' nil jka-compr) (\.lz\' nil jka-compr) (\.g?z\' nil jka-compr) (\.bz2\' nil jka-compr) (\.Z\' nil jka-compr) (\.vr[hi]?\' . vera-mode) (\(?:\.\(?:rbw?\|ru\|rake\|thor\|jbuilder\|rabl\|gemspec\|podspec\)\|/\(?:Gem\|Rake\|Cap\|Thor\|Puppet\|Berks\|Vagrant\|Guard\|Pod\)file\)\' . ruby-mode) (\.re?st\' . rst-mode) (\.py[iw]?\' . python-mode) (\.m\' . octave-maybe-mode) (\.less\' . less-css-mode) (\.scss\' . scss-mode) (\.awk\' . awk-mode) (\.\(u?lpc\|pike\|pmod\(\.in\)?\)\' . pike-mode) (\.idl\' . idl-mode) (\.java\' . java-mode) (\.m\' . objc-mode) (\.ii\' . c++-mode) (\.i\' . c-mode) (\.lex\' . c-mode) (\.y\(acc\)?\' . c-mode) (\.h\' . c-or-c++-mode) (\.c\' . c-mode) (\.\(CC?\|HH?\)\' . c++-mode) (\.[ch]\(pp\|xx\|\+\+\)\' . c++-mode) (\.\(cc\|hh\)\' . c++-mode) (\.\(bat\|cmd\)\' . bat-mode) (\.[sx]?html?\(\.[a-zA-Z_]+\)?\' . mhtml-mode) (\.svgz?\' . image-mode) (\.svgz?\' . xml-mode) (\.x[bp]m\' . image-mode) (\.x[bp]m\' . c-mode) (\.p[bpgn]m\' . image-mode) (\.tiff?\' . image-mode) (\.gif\' . image-mode) (\.png\' . image-mode) (\.jpe?g\' . image-mode) (\.te?xt\' . text-mode) (\.[tT]e[xX]\' . tex-mode) (\.ins\' . tex-mode) (\.ltx\' . latex-mode) (\.dtx\' . doctex-mode) (\.org\' . org-mode) (\.el\' . emacs-lisp-mode) (Project\.ede\' . emacs-lisp-mode) (\.\(scm\|stk\|ss\|sch\)\' . scheme-mode) (\.l\' . lisp-mode) (\.li?sp\' . lisp-mode) (\.[fF]\' . fortran-mode) (\.for\' . fortran-mode) (\.p\' . pascal-mode) (\.pas\' . pascal-mode) (\.\(dpr\|DPR\)\' . delphi-mode) (\.ad[abs]\' . ada-mode) (\.ad[bs]\.dg\' . ada-mode) (\.\([pP]\([Llm]\|erl\|od\)\|al\)\' . perl-mode) (Imakefile\' . makefile-imake-mode) (Makeppfile\(?:\.mk\)?\' . makefile-makepp-mode) (\.makepp\' . makefile-makepp-mode) (\.mk\' . makefile-gmake-mode) (\.make\' . makefile-gmake-mode) ([Mm]akefile\' . makefile-gmake-mode) (\.am\' . makefile-automake-mode) (\.texinfo\' . texinfo-mode) (\.te?xi\' . texinfo-mode) (\.[sS]\' . asm-mode) (\.asm\' . asm-mode) (\.css\' . css-mode) (\.mixal\' . mixal-mode) (\.gcov\' . compilation-mode) (/\.[a-z0-9-]*gdbinit . gdb-script-mode) (-gdb\.gdb . gdb-script-mode) ([cC]hange\.?[lL]og?\' . change-log-mode) ([cC]hange[lL]og[-.][0-9]+\' . change-log-mode) (\$CHANGE_LOG\$\.TXT . change-log-mode) (\.scm\.[0-9]*\' . scheme-mode) (\.[ckz]?sh\'\|\.shar\'\|/\.z?profile\' . sh-mode) (\.bash\' . sh-mode) (\(/\|\`\)\.\(bash_\(profile\|history\|log\(in\|out\)\)\|z?log\(in\|out\)\)\' . sh-mode) (\(/\|\`\)\.\(shrc\|zshrc\|m?kshrc\|bashrc\|t?cshrc\|esrc\)\' . sh-mode) (\(/\|\`\)\.\([kz]shenv\|xinitrc\|startxrc\|xsession\)\' . sh-mode) (\.m?spec\' . sh-mode) (\.m[mes]\' . nroff-mode) (\.man\' . nroff-mode) (\.sty\' . latex-mode) (\.cl[so]\' . latex-mode) (\.bbl\' . latex-mode) (\.bib\' . bibtex-mode) (\.bst\' . bibtex-style-mode) (\.sql\' . sql-mode) (\(acinclude\|aclocal\|acsite\)\.m4\' . autoconf-mode) (\.m[4c]\' . m4-mode) (\.mf\' . metafont-mode) (\.mp\' . metapost-mode) (\.vhdl?\' . vhdl-mode) (\.article\' . text-mode) (\.letter\' . text-mode) (\.i?tcl\' . tcl-mode) (\.exp\' . tcl-mode) (\.itk\' . tcl-mode) (\.icn\' . icon-mode) (\.sim\' . simula-mode) (\.mss\' . scribe-mode) (\.f9[05]\' . f90-mode) (\.f0[38]\' . f90-mode) (\.indent\.pro\' . fundamental-mode) (\.\(pro\|PRO\)\' . idlwave-mode) (\.srt\' . srecode-template-mode) (\.prolog\' . prolog-mode) (\.tar\' . tar-mode) (\.\(arc\|zip\|lzh\|lha\|zoo\|[jew]ar\|xpi\|rar\|cbr\|7z\|ARC\|ZIP\|LZH\|LHA\|ZOO\|[JEW]AR\|XPI\|RAR\|CBR\|7Z\)\' . archive-mode) (\.oxt\' . archive-mode) (\.\(deb\|[oi]pk\)\' . archive-mode) (\`/tmp/Re . text-mode) (/Message[0-9]*\' . text-mode) (\`/tmp/fol/ . text-mode) (\.oak\' . scheme-mode) (\.sgml?\' . sgml-mode) (\.x[ms]l\' . xml-mode) (\.dbk\' . xml-mode) (\.dtd\' . sgml-mode) (\.ds\(ss\)?l\' . dsssl-mode) (\.js[mx]?\' . javascript-mode) (\.har\' . javascript-mode) (\.json\' . javascript-mode) (\.[ds]?va?h?\' . verilog-mode) (\.by\' . bovine-grammar-mode) (\.wy\' . wisent-grammar-mode) ([:/\]\..*\(emacs\|gnus\|viper\)\' . emacs-lisp-mode) (\`\..*emacs\' . emacs-lisp-mode) ([:/]_emacs\' . emacs-lisp-mode) (/crontab\.X*[0-9]+\' . shell-script-mode) (\.ml\' . lisp-mode) (\.ld[si]?\' . ld-script-mode) (ld\.?script\' . ld-script-mode) (\.xs\' . c-mode) (\.x[abdsru]?[cnw]?\' . ld-script-mode) (\.zone\' . dns-mode) (\.soa\' . dns-mode) (\.asd\' . lisp-mode) (\.\(asn\|mib\|smi\)\' . snmp-mode) (\.\(as\|mi\|sm\)2\' . snmpv2-mode) (\.\(diffs?\|patch\|rej\)\' . diff-mode) (\.\(dif\|pat\)\' . diff-mode) (\.[eE]?[pP][sS]\' . ps-mode) (\.\(?:PDF\|DVI\|OD[FGPST]\|DOCX\|XLSX?\|PPTX?\|pdf\|djvu\|dvi\|od[fgpst]\|docx\|xlsx?\|pptx?\)\' . doc-view-mode-maybe) (configure\.\(ac\|in\)\' . autoconf-mode) (\.s\(v\|iv\|ieve\)\' . sieve-mode) (BROWSE\' . ebrowse-tree-mode) (\.ebrowse\' . ebrowse-tree-mode) (#\*mail\* . mail-mode) (\.g\' . antlr-mode) (\.mod\' . m2-mode) (\.ses\' . ses-mode) (\.docbook\' . sgml-mode) (\.com\' . dcl-mode) (/config\.\(?:bat\|log\)\' . fundamental-mode) (/\.\(authinfo\|netrc\)\' . authinfo-mode) (\.\(?:[iI][nN][iI]\|[lL][sS][tT]\|[rR][eE][gG]\|[sS][yY][sS]\)\' . conf-mode) (\.la\' . conf-unix-mode) (\.ppd\' . conf-ppd-mode) (java.+\.conf\' . conf-javaprop-mode) (\.properties\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-javaprop-mode) (\.toml\' . conf-toml-mode) (\.desktop\' . conf-desktop-mode) (/\.redshift\.conf\' . conf-windows-mode) (\`/etc/\(?:DIR_COLORS\|ethers\|.?fstab\|.*hosts\|lesskey\|login\.?de\(?:fs\|vperm\)\|magic\|mtab\|pam\.d/.*\|permissions\(?:\.d/.+\)?\|protocols\|rpc\|services\)\' . conf-space-mode) (\`/etc/\(?:acpid?/.+\|aliases\(?:\.d/.+\)?\|default/.+\|group-?\|hosts\..+\|inittab\|ksysguarddrc\|opera6rc\|passwd-?\|shadow-?\|sysconfig/.+\)\' . conf-mode) ([cC]hange[lL]og[-.][-0-9a-z]+\' . change-log-mode) (/\.?\(?:gitconfig\|gnokiirc\|hgrc\|kde.*rc\|mime\.types\|wgetrc\)\' . conf-mode) (/\.\(?:asound\|enigma\|fetchmail\|gltron\|gtk\|hxplayer\|mairix\|mbsync\|msmtp\|net\|neverball\|nvidia-settings-\|offlineimap\|qt/.+\|realplayer\|reportbug\|rtorrent\.\|screen\|scummvm\|sversion\|sylpheed/.+\|xmp\)rc\' . conf-mode) (/\.\(?:gdbtkinit\|grip\|mpdconf\|notmuch-config\|orbital/.+txt\|rhosts\|tuxracer/options\)\' . conf-mode) (/\.?X\(?:default\|resource\|re\)s\> . conf-xdefaults-mode) (/X11.+app-defaults/\|\.ad\' . conf-xdefaults-mode) (/X11.+locale/.+/Compose\' . conf-colon-mode) (/X11.+locale/compose\.dir\' . conf-javaprop-mode) (\.~?[0-9]+\.[0-9][-.0-9]*~?\' nil t) (\.\(?:orig\|in\|[bB][aA][kK]\)\' nil t) ([/.]c\(?:on\)?f\(?:i?g\)?\(?:\.[a-zA-Z0-9._-]+\)?\' . conf-mode-maybe) (\.[1-9]\' . nroff-mode) (\.art\' . image-mode) (\.avs\' . image-mode) (\.bmp\' . image-mode) (\.cmyk\' . image-mode) (\.cmyka\' . image-mode) (\.crw\' . image-mode) (\.dcr\' . image-mode) (\.dcx\' . image-mode) (\.dng\' . image-mode) (\.dpx\' . image-mode) (\.fax\' . image-mode) (\.hrz\' . image-mode) (\.icb\' . image-mode) (\.icc\' . image-mode) (\.icm\' . image-mode) (\.ico\' . image-mode) (\.icon\' . image-mode) (\.jbg\' . image-mode) (\.jbig\' . image-mode) (\.jng\' . image-mode) (\.jnx\' . image-mode) (\.miff\' . image-mode) (\.mng\' . image-mode) (\.mvg\' . image-mode) (\.otb\' . image-mode) (\.p7\' . image-mode) (\.pcx\' . image-mode) (\.pdb\' . image-mode) (\.pfa\' . image-mode) (\.pfb\' . image-mode) (\.picon\' . image-mode) (\.pict\' . image-mode) (\.rgb\' . image-mode) (\.rgba\' . image-mode) (\.tga\' . image-mode) (\.wbmp\' . image-mode) (\.webp\' . image-mode) (\.wmf\' . image-mode) (\.wpg\' . image-mode) (\.xcf\' . image-mode) (\.xmp\' . image-mode) (\.xwd\' . image-mode) (\.yuv\' . image-mode) (\.tgz\' . tar-mode) (\.tbz2?\' . tar-mode) (\.txz\' . tar-mode) (\.tzst\' . tar-mode) (\.drv\' . latex-mode))
-
 *** Bash
 Essh.el The best package so far for editing shell files as pipelines
 #+BEGIN_SRC emacs-lisp
-  ;; (load "~/.emacs.d/packages/essh.el")
-  ;;   (require 'essh)  
+  (global-set-key [f12] 'shell)
   (defun skls/essh-sh-hook () 
     (my-leader-def
       :keymaps 'sh-mode-map
@@ -421,36 +424,31 @@ Essh.el The best package so far for editing shell files as pipelines
       "C-n" 'pipe-line-to-shell-and-step
       "C-f" 'pipe-function-to-shell
       "C-d" 'shell-cd-current-directory
-      ))
-  (use-package essh
-    :load-path "packages/"
-    :config
-    (skls/essh-sh-hook)
-    ;; (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        
-    ;; (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)        
-    ;; (define-key sh-mode-map "\C-c <return>" 'pipe-line-to-shell)          
-    ;; (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step) 
-    ;; (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      
-    ;; (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory)) 
-    ;; (add-hook 'sh-mode-hook 'skls/essh-sh-hook)                             
+      )
     (setq explicit-shell-file-name "/bin/zsh")
-    ;; (setq shell-file-name "bash")
     (setq explicit-bash-args '("--noediting" "--login" "-i"))
     (setenv "SHELL" shell-file-name)
     (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
+
+  (use-package essh
+    :hook sh-mode
+    :load-path "packages/"
+    :config (skls/essh-sh-hook)
+    )
 #+END_SRC 
+
+#+RESULTS:
+| essh |
+
 *** Terraform
 #+begin_src emacs-lisp
   (use-package terraform-mode
-    :defer t 
-    :init
-    (add-to-list 'auto-mode-alist '("\\.tf" . terraform-mode))
-    )
+    :commands terraform-mode
+    :mode "\\.tf\\'")
 #+end_src
 ** Vterm
 #+begin_src emacs-lisp
   (use-package vterm
-    :defer t
     :commands vterm
     :config
     (setq vterm-always-compile-module t)
@@ -494,7 +492,6 @@ Essh.el The best package so far for editing shell files as pipelines
 #+BEGIN_SRC emacs-lisp
   (use-package csv-mode
     :mode "\\.[PpTtCc][Ss][Vv]\\'"
-    :defer t
     :config
     (progn
       (setq csv-separators '("," ";" "|" " " "\t"))
@@ -503,13 +500,12 @@ Essh.el The best package so far for editing shell files as pipelines
 #+END_SRC
 *** JSON
 #+BEGIN_SRC emacs-lisp
-  (use-package json-mode
-    :defer t)
+  (use-package json-mode)
 #+END_SRC
 *** Yaml
 #+BEGIN_SRC emacs-lisp
   (use-package yaml-mode
-    :defer t 
+    :commands yaml-mode
     :mode ("\\.yml$" . yaml-mode))
 #+END_SRC
 * Org Mode
@@ -549,8 +545,8 @@ First we setup the agenda it's kidna messy so I put it in a different place
     (setq org-habit-graph-column 60)
 
     (setq org-todo-keywords
-          '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
-            (sequence "|" "WAIT(w)" "BACK(b)")))
+          '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)" "CANCELED(c)")
+            (sequence  "WAIT(w)" "BACK(b)" "|")))
 
     (setq org-refile-targets
           '(("Archive.org" :maxlevel . 1)
@@ -583,13 +579,16 @@ First we setup the agenda it's kidna messy so I put it in a different place
     (setq org-agenda-custom-commands
           `(("d" "Dashboard"
              ((agenda "" ((org-deadline-warning-days 7)))
-              (tags-todo "+PRIORITY=\"A\""
-                         ((org-agenda-overriding-header "High Priority")))
-              (tags-todo "+followup" ((org-agenda-overriding-header "Needs Follow Up")))
               (todo "NEXT"
                     ((org-agenda-overriding-header "Next Actions")
                      (org-agenda-max-todos nil)))
-              (todo "TODO"
+              (tags-todo "+@ITAM/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes ITAM")))
+              (tags-todo "+@Globant/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes Globant")))
+              (tags-todo "+@home/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes Casa")))
+              (tags-todo "-@ITAM-@Globant-@home/!-NEXT"
                     ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
                      (org-agenda-files '(,(skls/org-path "Tasks.org")))
                      (org-agenda-text-search-extra-files nil)))))
@@ -605,12 +604,10 @@ First we setup the agenda it's kidna messy so I put it in a different place
               (org-agenda-max-todos 20)
               (org-agenda-files org-agenda-files)))))
 
-
     (setq org-capture-templates
           `(("t" "Tasks / Projects")
             ("tt" "Task" entry (file+olp "~/Dropbox/org/Tasks.org" "Inbox")
              "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
-
             ("j" "Journal Entries")
             ("jj" "Journal" entry
              (file+olp+datetree "~/Dropbox/org/Journal.org")
@@ -623,7 +620,6 @@ First we setup the agenda it's kidna messy so I put it in a different place
              "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
                :clock-in :clock-resume
                :empty-lines 1)
-
               ("w" "Workflows")
               ("we" "Checking Email" entry (file+olp+datetree "~/Dropbox/org/Journal.org")
                "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
@@ -631,11 +627,12 @@ First we setup the agenda it's kidna messy so I put it in a different place
               ("m" "Metrics Capture")
               ("mw" "Weight" table-line (file+headline "~/Dropbox/org/Metrics.org" "Weight")
                "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)))
-
-      (define-key global-map (kbd "C-c j")
-        (lambda () (interactive) (org-capture nil "jj")))
     )
 #+end_src
+
+#+RESULTS:
+: skls/org-agenda-setup
+
 ** Org-superstar
 #+begin_src emacs-lisp
   (defun skls/org-superstar ()
@@ -675,6 +672,9 @@ First we setup the agenda it's kidna messy so I put it in a different place
     )
 #+end_src
 
+#+RESULTS:
+| org-tempo-setup | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | (lambda nil (add-hook 'after-save-hook #'skls/org-babel-tangle-config)) | skls/org-superstar | skls/org-mode-visual-fill | skls/org-mode-setup | skls/org-mode-babel | (lambda nil (display-line-numbers-mode 0)) |
+
 ** Faces 
 #+begin_src emacs-lisp
 (with-eval-after-load 'org-faces
@@ -703,14 +703,11 @@ First we setup the agenda it's kidna messy so I put it in a different place
 * Writing
 ** Latex
 #+BEGIN_SRC emacs-lisp
-(use-package auctex
-  :defer t
-  :ensure t)
+(use-package auctex)
 #+END_SRC
 ** Markdown
 #+BEGIN_SRC emacs-lisp 
   (use-package markdown-mode
-    :defer t
     :commands (markdown-mode gfm-mode)
     :mode (("README\\.md\\'" . gfm-mode)
            ("\\.md\\'" . markdown-mode)
@@ -758,185 +755,186 @@ for the actual config file !
 
 * Essh.el
 #+begin_src emacs-lisp :tangle .emacs.d/packages/essh.el
-;;; essh.el --- a set of commands that emulate for bash what ESS is to R.
+    ;;; essh.el --- a set of commands that emulate for bash what ESS is to R.
 
-;; Filename: essh.el
-
-
-;; ------------------------------------------------------------------ ;;
-;; TO INSTALL:                                                        ;;
-;; 1. add essh.el in your load-path.                                  ;;
-;;                                                                    ;;
-;; 2. add to your .emacs file:                                        ;;
-;;                                                                    ;;
-;; (require 'essh)                                                    ;;
-;; (defun essh-sh-hook ()                                             ;;
-;;   (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        ;;
-;;   (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)        ;;
-;;   (define-key sh-mode-map "\C-c\C-j" 'pipe-line-to-shell)          ;;
-;;   (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step) ;;
-;;   (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      ;;
-;;   (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory)) ;;
-;; (add-hook 'sh-mode-hook 'essh-sh-hook)                             ;;
-;; ------------------------------------------------------------------ ;;
-
-;; function taken from ess package
-(defun essh-next-code-line (&optional arg)
-  "Move ARG lines of code forward (backward if ARG is negative).
-Skips past all empty and comment lines.	 Default for ARG is 1.
-
-On success, return 0.  Otherwise, go as far as possible and return -1."
-  (interactive "p")
-  (or arg (setq arg 1))
-  (beginning-of-line)
-  (let ((n 0)
-	(inc (if (> arg 0) 1 -1)))
-    (while (and (/= arg 0) (= n 0))
-      (setq n (forward-line inc)); n=0 is success
-      (while (and (= n 0)
-		  (looking-at "\\s-*\\($\\|\\s<\\)"))
-	(setq n (forward-line inc)))
-      (setq arg (- arg inc)))
-    n))
-
-(defun process-shell ()
-  "returns a list with existing shell process."
-  (interactive)
-  (setq listpr (process-list))
-  (setq lengthpr (length listpr))
-  (setq i 0)
-  (setq listshellp '())
-  (while (< i lengthpr)
-    (setq pos (string-match "shell" (prin1-to-string (elt listpr i))))
-    (if pos (add-to-list 'listshellp (process-name (get-process (elt listpr i)))))
-    (setq i (+ 1 i)))
-  listshellp)
+    ;; Filename: essh.el
 
 
-(defun process-shell-choose ()
-  "returns which process to use."
-(interactive)
-(setq outpr 0)
-(setq cbuf (current-buffer))
-(setq shelllist (process-shell))
-(setq shelln (length shelllist))
-(if (eq shelln 0)
-    (progn (shell)
-	   (switch-to-buffer cbuf)
-	   (setq outpr (get-process "shell"))
-	   (sleep-for 0.5)))
-(if (eq shelln 1)
-    (setq outpr (get-process (elt shelllist 0))))
-(if (> shelln 1)
-(progn
-(setq proc (completing-read "Send code to:" shelllist nil t (elt shelllist 0)))
-(setq outpr (get-process proc))))
-outpr)
+    ;; ------------------------------------------------------------------ ;;
+    ;; TO INSTALL:                                                        ;;
+    ;; 1. add essh.el in your load-path.                                  ;;
+    ;;                                                                    ;;
+    ;; 2. add to your .emacs file:                                        ;;
+    ;;                                                                    ;;
+    ;; (require 'essh)                                                    ;;
+    ;; (defun essh-sh-hook ()                                             ;;
+    ;;   (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        ;;
+    ;;   (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)        ;;
+    ;;   (define-key sh-mode-map "\C-c\C-j" 'pipe-line-to-shell)          ;;
+    ;;   (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step) ;;
+    ;;   (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      ;;
+    ;;   (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory)) ;;
+    ;; (add-hook 'sh-mode-hook 'essh-sh-hook)                             ;;
+    ;; ------------------------------------------------------------------ ;;
+
+    ;; function taken from ess package
+    (defun essh-next-code-line (&optional arg)
+      "Move ARG lines of code forward (backward if ARG is negative).
+    Skips past all empty and comment lines.	 Default for ARG is 1.
+
+    On success, return 0.  Otherwise, go as far as possible and return -1."
+      (interactive "p")
+      (or arg (setq arg 1))
+      (beginning-of-line)
+      (let ((n 0)
+            (inc (if (> arg 0) 1 -1)))
+        (while (and (/= arg 0) (= n 0))
+          (setq n (forward-line inc)); n=0 is success
+          (while (and (= n 0)
+                      (looking-at "\\s-*\\($\\|\\s<\\)"))
+            (setq n (forward-line inc)))
+          (setq arg (- arg inc)))
+        n))
+
+    (defun process-shell ()
+      "returns a list with existing shell process."
+      (interactive)
+      (setq listpr (process-list))
+      (setq lengthpr (length listpr))
+      (setq i 0)
+      (setq listshellp '())
+      (while (< i lengthpr)
+        (setq pos (string-match "shell" (prin1-to-string (elt listpr i))))
+        (if pos (add-to-list 'listshellp (process-name (get-process (elt listpr i)))))
+        (setq i (+ 1 i)))
+      listshellp)
 
 
-(defun shell-eval-line (sprocess command)
-  "Evaluates a single command into the shell process."
-  (setq sbuffer (process-buffer sprocess))
-  (setq command (concat command "\n"))
-  (accept-process-output sprocess 0 10)
-  (with-current-buffer sbuffer 
-    (end-of-buffer) ;point is not seen being moved (unless sbuffer is focused)
-    (insert command)			;pastes the command to shell
-    (set-marker (process-mark sprocess) (point-max))
-    (process-send-string sprocess command)
-    ;; (accept-process-output sprocess 0 10)
-    ))
-
-(defun shell-cd-current-directory ()
-  "Changes the shell working directory to the current buffer's one."
-  (interactive)
-  (setq sprocess (process-shell-choose))
-  (setq com (format "cd %s" (file-name-directory default-directory)))
-  (shell-eval-line sprocess com))
-
-
-(defun pipe-line-to-shell (&optional step)
-  "Evaluates the current line to the shell."
-  (interactive ())
-  (setq com (buffer-substring (point-at-bol) (point-at-eol)))
-  (if (> (length com) 0)
-      (progn
-	(setq sprocess (process-shell-choose))
-	(shell-eval-line sprocess com)
-	(when step (essh-next-code-line)))
-    (message "No command in this line")))
-
-(defun pipe-line-to-shell-and-step ()
-  "Evaluates the current line to the shell and goes to next line."
-  (interactive)
-  (pipe-line-to-shell t))
-
-(defun pipe-region-to-shell (start end)
-  "Sends a region to the shell."
-  (interactive "r")
-  (setq com (buffer-substring start end))	       ;reads command
-  (setq lcom (length com))		       ;count chars
-  (setq lastchar (substring com (1- lcom) lcom)) ;get last char
-  (unless (string-match "\n" lastchar) ;if last char is not "\n", then...
-    (setq com (concat com "\n")))	     ;...add it!
-  (setq sprocess (process-shell-choose))
-  (setq sbuffer (process-buffer sprocess))
-  (while (> (length com) 0) 
-    (setq pos (string-match "\n" com)) 
-    (setq scom (substring com 0 pos))
-    (setq com (substring com (min (length com) (1+ pos))))
-    (shell-eval-line sprocess scom)
-    (accept-process-output sprocess 0 10)
-    )) 
+    (defun process-shell-choose ()
+      "returns which process to use."
+    (interactive)
+    (setq outpr 0)
+    (setq cbuf (current-buffer))
+    (setq shelllist (process-shell))
+    (setq shelln (length shelllist))
+    (if (eq shelln 0)
+        (progn (shell)
+               (switch-to-buffer cbuf)
+               (setq outpr (get-process "shell"))
+               (sleep-for 0.5)))
+    (if (eq shelln 1)
+        (setq outpr (get-process (elt shelllist 0))))
+    (if (> shelln 1)
+    (progn
+    (setq proc (completing-read "Send code to:" shelllist nil t (elt shelllist 0)))
+    (setq outpr (get-process proc))))
+    outpr)
 
 
-(defun pipe-buffer-to-shell ()
-  "Evaluate whole buffer to the shell."
-  (interactive)
-  (pipe-region-to-shell (point-min) (point-max)))
+    (defun shell-eval-line (sprocess command)
+      "Evaluates a single command into the shell process."
+      (setq sbuffer (process-buffer sprocess))
+      (setq command (concat command "\n"))
+      (accept-process-output sprocess 0 10)
+      (with-current-buffer sbuffer 
+        (end-of-buffer) ;point is not seen being moved (unless sbuffer is focused)
+        (insert command)			;pastes the command to shell
+        (set-marker (process-mark sprocess) (point-max))
+        (process-send-string sprocess command)
+        ;; (accept-process-output sprocess 0 10)
+        ))
 
-(defun pipe-function-to-shell ()
-"Evaluate function to the shell."
-(interactive)
-(setq beg-end (essh-beg-end-of-function))
-(if beg-end
-    (save-excursion
-      (setq beg (nth 0 beg-end))
-      (setq end (nth 1 beg-end))
-      (goto-line beg)
-      (setq origin (point-at-bol))
-      (goto-line end)
-      (setq terminal (point-at-eol))
-      (pipe-region-to-shell origin terminal))
-  (message "No function at current point.")))
+    (defun shell-cd-current-directory ()
+      "Changes the shell working directory to the current buffer's one."
+      (interactive)
+      (setq sprocess (process-shell-choose))
+      (setq com (format "cd %s" (file-name-directory default-directory)))
+      (shell-eval-line sprocess com))
 
-(defun essh-beg-end-of-function ()
-  "Returns the lines where the function starts and ends. If there is no function at current line, it returns nil."
-  (interactive)
-  (setq curline (line-number-at-pos))	;current line
-  (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
-  (setq pos (string-match "function" curcom))
-  (save-excursion 
-    (if pos 
-	(progn
-	  (setq beg curline))
-      (progn
-	(while (not pos)
-	  (setq curline (1- curline))	;current line
-	  (previous-line)			;go to previous line
-	  (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
-	  (setq pos (string-match "function" curcom)))
-      (setq beg curline)))
-    (beginning-of-line)
-    (forward-list)			; move pointer to first matching brace
-    (setq end (line-number-at-pos)))
-  ;; (message (format  "%d %d" beg end))
-  (if (and (<= (line-number-at-pos) end) (>= (line-number-at-pos) beg))
-      (list beg end)
-    nil))
-  
 
-(provide 'essh)
+    (defun pipe-line-to-shell (&optional step)
+      "Evaluates the current line to the shell."
+      (interactive ())
+      (setq com (buffer-substring (point-at-bol) (point-at-eol)))
+      (if (> (length com) 0)
+          (progn
+            (setq sprocess (process-shell-choose))
+            (shell-eval-line sprocess com)
+            (when step (essh-next-code-line)))
+        (message "No command in this line")))
+
+    (defun pipe-line-to-shell-and-step ()
+      "Evaluates the current line to the shell and goes to next line."
+      (interactive)
+      (pipe-line-to-shell t))
+
+    (defun pipe-region-to-shell (start end)
+      "Sends a region to the shell."
+      (interactive "r")
+      (setq com (buffer-substring start end))	       ;reads command
+      (setq lcom (length com))		       ;count chars
+      (setq lastchar (substring com (1- lcom) lcom)) ;get last char
+      (unless (string-match "\n" lastchar) ;if last char is not "\n", then...
+        (setq com (concat com "\n")))	     ;...add it!
+      (setq sprocess (process-shell-choose))
+      (setq sbuffer (process-buffer sprocess))
+      (while (> (length com) 0) 
+        (setq pos (string-match "\n" com)) 
+        (setq scom (substring com 0 pos))
+        (setq com (substring com (min (length com) (1+ pos))))
+        (shell-eval-line sprocess scom)
+        (accept-process-output sprocess 0 10)
+        )) 
+
+
+    (defun pipe-buffer-to-shell ()
+      "Evaluate whole buffer to the shell."
+      (interactive)
+      (pipe-region-to-shell (point-min) (point-max)))
+
+    (defun pipe-function-to-shell ()
+    "Evaluate function to the shell."
+    (interactive)
+    (setq beg-end (essh-beg-end-of-function))
+    (if beg-end
+        (save-excursion
+          (setq beg (nth 0 beg-end))
+          (setq end (nth 1 beg-end))
+          (goto-line beg)
+          (setq origin (point-at-bol))
+          (goto-line end)
+          (setq terminal (point-at-eol))
+          (pipe-region-to-shell origin terminal))
+      (message "No function at current point.")))
+
+    (defun essh-beg-end-of-function ()
+      "Returns the lines where the function starts and ends. If there is no function at current line, it returns nil."
+      (interactive)
+      (setq curline (line-number-at-pos))	;current line
+      (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
+      (setq pos (string-match "function" curcom))
+      (save-excursion 
+        (if pos 
+            (progn
+              (setq beg curline))
+          (progn
+            (while (not pos)
+              (setq curline (1- curline))	;current line
+              (previous-line)			;go to previous line
+              (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
+              (setq pos (string-match "function" curcom)))
+          (setq beg curline)))
+        (beginning-of-line)
+        (forward-list)			; move pointer to first matching brace
+        (setq end (line-number-at-pos)))
+      ;; (message (format  "%d %d" beg end))
+      (if (and (<= (line-number-at-pos) end) (>= (line-number-at-pos) beg))
+          (list beg end)
+        nil))
+
+  ;;;###autoload
+  (defun essh ())
+  (provide 'essh)
 
 #+end_src
 * Mac OS
@@ -974,6 +972,12 @@ outpr)
       )))
 
 #+END_SRC
+* Cleanup 
+Dial down GC thershold so it runs frequently but in less time. 
+#+begin_src emacs-lisp
+;; Make gc pauses faster by decreasing the threshold.
+(setq gc-cons-threshold (* 5 1024 1024))
+#+end_src
 * Dashboard 
 #+begin_src emacs-lisp
   ;; (defun skls/dashboard-banner ()
