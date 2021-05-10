@@ -4,7 +4,7 @@
 
 * Set everything up
 ** First Basics
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp
     ;; The default is 800 kilobytes.  Measured in bytes.
     (setq gc-cons-threshold (* 50 1024 1024))
           ;;        gc-cons-percentage 0.6)
@@ -51,7 +51,7 @@ better package management for emacs.
   (unless package-archive-contents
     (package-refresh-contents))
 
-  (unless (package-installed-p 'use-package) 
+  (unless (package-installed-p 'use-package)
     (package-install 'use-package))
   (require 'use-package)
   (setq use-package-always-ensure t)
@@ -75,8 +75,8 @@ better package management for emacs.
   (use-package all-the-icons )
 #+end_src
 *** Pretty fonts per different environments
-Make sure you have the font installed beforehand: 
-#+begin_src shell :noeval 
+Make sure you have the font installed beforehand:
+#+begin_src shell :noeval
 sudo apt install fonts-firacode fonts-cantarell
 #+end_src
 
@@ -122,7 +122,7 @@ sudo apt install fonts-firacode fonts-cantarell
 *** General
 #+begin_src emacs-lisp
   (use-package general
-    :config 
+    :config
     ;; for frequently used prefix keys, the user can create a custom definer with a
     ;; default :prefix
     ;; using a variable is not necessary, but it may be useful if you want to
@@ -209,7 +209,7 @@ I don't like emacs littering my working folders
 #+begin_src emacs-lisp
   (dolist (key '("\C-d" "\C-\M-b"))
     (global-unset-key key))
-  ;; Multiple lines editing 
+  ;; Multiple lines editing
   (use-package multiple-cursors
     :diminish multiple-cursors-mode
     :init
@@ -338,38 +338,38 @@ I don't like emacs littering my working folders
 
 *** R ess
 #+begin_src emacs-lisp
-  (defun skls/insert-r-pipe ()
-    "R - %>% operator or 'then' pipe operator"
-    (interactive)
-    (just-one-space 1)
-    (insert "%>%")
-    (reindent-then-newline-and-indent))
+    (defun skls/insert-r-pipe ()
+      "R - %>% operator or 'then' pipe operator"
+      (interactive)
+      (just-one-space 1)
+      (insert "%>%")
+      (reindent-then-newline-and-indent))
 
-  (use-package ess
-    :commands R
-    :bind (
-           :map ess-mode-map
-                ("C-<" . ess-insert-assign)
-                ("C->" . skls/insert-r-pipe)
-                :map inferior-ess-mode-map
-                ("C-<" . ess-insert-assign)
-                ("C->" . skls/insert-r-pipe) 
-                )
-    :init
-    (load "ess-site")
-    )
-
+    (use-package ess
+      :disabled
+      :commands R
+      :bind (
+             :map ess-mode-map
+                  ("C-<" . ess-insert-assign)
+                  ("C->" . skls/insert-r-pipe)
+                  :map inferior-ess-mode-map
+                  ("C-<" . ess-insert-assign)
+                  ("C->" . skls/insert-r-pipe)
+                  )
+      :init
+      (load "ess-site")
+      )
 #+end_src
 
 *** Poly-r
-This package helps me to build 
+This package helps me to build
 #+begin_src emacs-lisp
   (use-package poly-R
     :config
-    (defun skls/insert-rmd-chunk (language) 
-      "Insert an r-chunk in markdown mode. Necessary due to interactions between polymode and yas snippet" 
-      (interactive "sLanguage: ") 
-      (insert (concat "```{" language "}\n\n```")) 
+    (defun skls/insert-rmd-chunk (language)
+      "Insert an r-chunk in markdown mode. Necessary due to interactions between polymode and yas snippet"
+      (interactive "sLanguage: ")
+      (insert (concat "```{" language "}\n\n```"))
       (forward-line -1))
     (define-key poly-markdown+r-mode-map (kbd "M-n M-i") #'skls/insert-rmd-chunk)
     )
@@ -414,7 +414,7 @@ I used polymode in order to use jinja between the two braces, while still using 
 Essh.el The best package so far for editing shell files as pipelines
 #+BEGIN_SRC emacs-lisp
   (global-set-key [f12] 'shell)
-  (defun skls/essh-sh-hook () 
+  (defun skls/essh-sh-hook ()
     (my-leader-def
       :keymaps 'sh-mode-map
       "C-r" 'pipe-region-to-shell
@@ -434,7 +434,7 @@ Essh.el The best package so far for editing shell files as pipelines
     :load-path "packages/"
     :config (skls/essh-sh-hook)
     )
-#+END_SRC 
+#+END_SRC
 
 #+RESULTS:
 | essh |
@@ -454,7 +454,7 @@ Essh.el The best package so far for editing shell files as pipelines
     (setq vterm-shell "zsh")                       ;; Set this to customize the shell to launch
     (setq vterm-max-scrollback 10000))
 #+end_src
-** Eshell 
+** Eshell
 #+begin_src emacs-lisp
   ;; (defun skls/configure-eshell ()
   ;;   ;; Save command history when commands are entered
@@ -507,6 +507,7 @@ Essh.el The best package so far for editing shell files as pipelines
     :commands yaml-mode
     :mode ("\\.yml$" . yaml-mode))
 #+END_SRC
+
 * Org Mode
 The best package ever!!! :) see [[https://orgmode.org][OrgMode]]
 ** Babel
@@ -629,52 +630,62 @@ First we setup the agenda it's kidna messy so I put it in a different place
     )
 #+end_src
 
-#+RESULTS:
-: skls/org-agenda-setup
-
 ** Org-superstar
 #+begin_src emacs-lisp
   (defun skls/org-superstar ()
     (use-package org-superstar)
     (org-superstar-mode 1))
 #+end_src
+** Org reveal
+#+begin_src emacs-lisp
+  (defun skls/org-reveal ()
+    (use-package ox-reveal
+      :ensure t
+      :pin org
+      :custom
+      (org-reveal-note-key-char nil)
+      (org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js")
+      (setq org-reveal-mathjax t)
+      )
+    (use-package htmlize)
+    (require 'ox-reveal)
+    )
+
+ #+end_src
 ** Basic Setup
 #+begin_src emacs-lisp
-  (defun skls/org-font-setup ()
-    ;; Replace list hyphen with dot
-    (font-lock-add-keywords 'org-mode
-                            '(("^ *\\([-]\\) "
-                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
-  (defun skls/org-mode-setup ()
-    (toggle-truncate-lines)
-    (org-indent-mode)
-    (variable-pitch-mode 1)
-    (visual-line-mode 1))
+    (defun skls/org-font-setup ()
+      ;; Replace list hyphen with dot
+      (font-lock-add-keywords 'org-mode
+                              '(("^ *\\([-]\\) "
+                                 (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
+    (defun skls/org-mode-setup ()
+      (toggle-truncate-lines)
+      (org-indent-mode)
+      (variable-pitch-mode 1)
+      (visual-line-mode 1))
 
-  (defun skls/org-mode-visual-fill ()
-    (use-package visual-fill-column)
-    (setq visual-fill-column-width 100
-          visual-fill-column-center-text t)
-    (visual-fill-column-mode 1))
+    (defun skls/org-mode-visual-fill ()
+      (use-package visual-fill-column)
+      (setq visual-fill-column-width 100
+            visual-fill-column-center-text t)
+      (visual-fill-column-mode 1))
 
-  (use-package org
-    :pin org
-    :commands (org-capture org-agenda)
-    :hook ((org-mode . skls/org-mode-babel)
-           (org-mode . skls/org-mode-setup)
-           (org-mode . skls/org-mode-visual-fill)
-           (org-mode . skls/org-superstar))
-    :config
-    (setq org-ellipsis " ▾")
-    (skls/org-agenda-setup)
-    (skls/org-font-setup)
-    )
+    (use-package org
+      :pin org
+      :commands (org-capture org-agenda)
+      :hook ((org-mode . skls/org-mode-babel)
+             (org-mode . skls/org-mode-setup)
+             (org-mode . skls/org-mode-visual-fill)
+             (org-mode . skls/org-superstar)
+             (org-mode . skls/org-reveal))
+      :config
+      (setq org-ellipsis " ▾")
+      (skls/org-agenda-setup)
+      (skls/org-font-setup)
+      )
 #+end_src
-
-#+RESULTS:
-| org-tempo-setup | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-show-all append local] 5] | #[0 \300\301\302\303\304$\207 [add-hook change-major-mode-hook org-babel-show-result-all append local] 5] | org-babel-result-hide-spec | org-babel-hide-all-hashes | (lambda nil (add-hook 'after-save-hook #'skls/org-babel-tangle-config)) | skls/org-superstar | skls/org-mode-visual-fill | skls/org-mode-setup | skls/org-mode-babel | (lambda nil (display-line-numbers-mode 0)) |
-
-** Faces 
+** Faces
 #+begin_src emacs-lisp
 (with-eval-after-load 'org-faces
   (dolist (face '((org-level-1 . 1.2)
@@ -705,7 +716,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
 (use-package auctex)
 #+END_SRC
 ** Markdown
-#+BEGIN_SRC emacs-lisp 
+#+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
     :commands (markdown-mode gfm-mode)
     :mode (("README\\.md\\'" . gfm-mode)
@@ -745,7 +756,7 @@ This automatically saves all the elisp code chunks to init.el
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'skls/org-babel-tangle-config)))
 #+end_src
-for the actual config file ! 
+for the actual config file !
 #+begin_src emacs-lisp
   ;; (when (string-equal (file-name-directory (buffer-file-name))
   ;;                     (expand-file-name user-emacs-directory))
@@ -835,7 +846,7 @@ for the actual config file !
       (setq sbuffer (process-buffer sprocess))
       (setq command (concat command "\n"))
       (accept-process-output sprocess 0 10)
-      (with-current-buffer sbuffer 
+      (with-current-buffer sbuffer
         (end-of-buffer) ;point is not seen being moved (unless sbuffer is focused)
         (insert command)			;pastes the command to shell
         (set-marker (process-mark sprocess) (point-max))
@@ -877,13 +888,13 @@ for the actual config file !
         (setq com (concat com "\n")))	     ;...add it!
       (setq sprocess (process-shell-choose))
       (setq sbuffer (process-buffer sprocess))
-      (while (> (length com) 0) 
-        (setq pos (string-match "\n" com)) 
+      (while (> (length com) 0)
+        (setq pos (string-match "\n" com))
         (setq scom (substring com 0 pos))
         (setq com (substring com (min (length com) (1+ pos))))
         (shell-eval-line sprocess scom)
         (accept-process-output sprocess 0 10)
-        )) 
+        ))
 
 
     (defun pipe-buffer-to-shell ()
@@ -912,8 +923,8 @@ for the actual config file !
       (setq curline (line-number-at-pos))	;current line
       (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
       (setq pos (string-match "function" curcom))
-      (save-excursion 
-        (if pos 
+      (save-excursion
+        (if pos
             (progn
               (setq beg curline))
           (progn
@@ -962,7 +973,7 @@ for the actual config file !
     (progn
       (defvar my-keys-minor-mode-map
         (let ((map (make-sparse-keymap)))
-          (define-key map (kbd "<C-s-up>") 'window-jump-up) 
+          (define-key map (kbd "<C-s-up>") 'window-jump-up)
           (define-key map (kbd "<C-s-right>") 'window-jump-right)
           (define-key map (kbd "<C-s-down>") 'window-jump-down)
           (define-key map (kbd "<C-s-left>") 'window-jump-left)
@@ -971,13 +982,13 @@ for the actual config file !
       )))
 
 #+END_SRC
-* Cleanup 
-Dial down GC thershold so it runs frequently but in less time. 
+* Cleanup
+Dial down GC thershold so it runs frequently but in less time.
 #+begin_src emacs-lisp
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 5 1024 1024))
 #+end_src
-* Dashboard 
+* Dashboard
 #+begin_src emacs-lisp
   ;; (defun skls/dashboard-banner ()
   ;;   """Set a dashboard banner including information on package initialization
