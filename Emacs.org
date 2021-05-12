@@ -1,29 +1,30 @@
+
 #+Author: Miguel Escalante
 #+Title:  My emacs Config
-#+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes
+#+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
 
 * Set everything up
 ** First Basics
 #+begin_src emacs-lisp
-    ;; The default is 800 kilobytes.  Measured in bytes.
-    (setq gc-cons-threshold (* 50 1024 1024))
-          ;;        gc-cons-percentage 0.6)
-    (add-hook 'emacs-startup-hook
-              (lambda ()
-                (message "*** Emacs loaded in %s with %d garbage collections."
-                         (format "%.2f seconds"
-                                 (float-time
-                                  (time-subtract after-init-time before-init-time)))
-                         gcs-done)))
-    (setq inhibit-startup-message t) ; No emacs init paga
-    (menu-bar-mode -1) ; I don't like the menus
-    (scroll-bar-mode -1) ; I don't like the menus
-    (tool-bar-mode -1) ; I don't like the menus
-    (tooltip-mode -1) ; I don't like the menus
-    (set-fringe-mode -1) ; I don't like the menus
-    (setq visible-bell t) ; I don't like my errors being screamed at to me
-    (global-auto-revert-mode 1)
-    (defalias 'yes-or-no-p 'y-or-n-p)
+      ;; The default is 800 kilobytes.  Measured in bytes.
+  (setq gc-cons-threshold (* 50 1024 1024))
+  ;;        gc-cons-percentage 0.6)
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+              (message "*** Emacs loaded in %s with %d garbage collections."
+                       (format "%.2f seconds"
+                               (float-time
+                                (time-subtract after-init-time before-init-time)))
+                       gcs-done)))
+  (setq inhibit-startup-message t) ; No emacs init paga
+  (menu-bar-mode -1) ; I don't like the menus
+  (scroll-bar-mode -1) ; I don't like the menus
+  (tool-bar-mode -1) ; I don't like the menus
+  (tooltip-mode -1) ; I don't like the menus
+  (set-fringe-mode -1) ; I don't like the menus
+  (setq visible-bell t) ; I don't like my errors being screamed at to me
+  (global-auto-revert-mode 1)
+  (defalias 'yes-or-no-p 'y-or-n-p)
 #+end_src
 
 ** directories
@@ -63,7 +64,7 @@ better package management for emacs.
     (auto-package-update-hide-results t)
     :config
     (auto-package-update-maybe))
-  ;;(setq use-package-verbose t)
+  (setq use-package-verbose t)
 #+end_src
 ** Themes
 *** Visual Themes
@@ -240,8 +241,12 @@ I don't like emacs littering my working folders
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
   )
 #+end_src
-*** Rainbow delimiters
+*** Parens
 #+begin_src emacs-lisp
+  (use-package paren
+    :hook (prog-mode . show-paren-mode)
+    :config
+    (show-paren-mode 1))
 
   (use-package rainbow-delimiters
     :hook (prog-mode . rainbow-delimiters-mode))
@@ -256,6 +261,12 @@ I don't like emacs littering my working folders
                           `(lambda (c)
                              (if (char-equal c ?<) t (electric-pair-inhibit-predicate c))
                              (if (char-equal c ?\") t (electric-pair-inhibit-predicate c))))))
+#+end_src
+*** whitespace
+#+begin_src emacs-lisp
+(use-package ws-butler
+  :hook ((text-mode . ws-butler-mode)
+         (prog-mode . ws-butler-mode)))
 #+end_src
 ** Languages
 *** Lsp-mode
@@ -283,23 +294,14 @@ I don't like emacs littering my working folders
   (use-package lsp-ivy
     :after lsp)
 
-  (use-package dap-mode
-    ;; Uncomment the config below if you want all UI panes to be hidden by default!
-    ;; :custom
-    ;; (lsp-enable-dap-auto-configure nil)
-    ;; :config
-    ;; (dap-ui-mode 1)
-    :commands dap-debug
-    :config
-    ;; Set up Node debugging
-    (require 'dap-node)
-    (dap-node-setup) ;; Automatically installs Node debug adapter if need3ed
+  (use-package flycheck
+    :hook (lsp-mode . flycheck-mode))
 
-    ;; Bind `C-c l d` to `dap-hydra` for easy access
-    (general-define-key
-      :keymaps 'lsp-mode-map
-      :prefix lsp-keymap-prefix
-      "d" '(dap-hydra t :wk "debugger")))
+  (use-package yasnippet
+    :hook (prog-mode . yas-minor-mode)
+    :config
+    (yas-reload-all))
+
 #+end_src
 *** Company-mode
 #+begin_src emacs-lisp
@@ -320,45 +322,70 @@ I don't like emacs littering my working folders
 *** Python-mode
 #+begin_src emacs-lisp
   (setq tab-width 4)
+  (use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+  (require 'lsp-pyright)
+  (setq-default py-split-windows-on-execute-function 'split-window-horizontally)
+  (lsp))))  ; or lsp-deferred
+  ;; (use-package python-mode
+  ;; :hook (python-mode . lsp-deferred))
   (use-package python-mode
-    :hook (python-mode . lsp-deferred)
-    :custom
-    ;; NOTE: Set these if Python 3 is called "python3" on your system!
-    ;; (python-shell-interpreter "python3")
-    ;; (dap-python-executable "python3")
-    (dap-python-debugger 'debugpy)
-    :config
-    (require 'dap-python))
+  :ensure t
+  :hook (python-mode . lsp-deferred)
+  :custom
+  ;; NOTE: Set these if Python 3 is called "python3" on your system!
+  ;; (python-shell-interpreter "python3")
+  ;; (dap-python-executable "python3")
+  (dap-python-debugger 'debugpy)
+  :config
+  (require 'dap-python))
 
-  (use-package pyvenv
-    :after python-mode
+  (use-package dap-mode
+  ;; Uncomment the config below if you want all UI panes to be hidden by default!
+    ;; :custom
+    ;; (lsp-enable-dap-auto-configure nil)
+    ;; :config
+    ;; (dap-ui-mode 1)
+    :commands dap-debug
     :config
-    (pyvenv-mode 1))
+    ;; Bind `C-c l d` to `dap-hydra` for easy access
+    (general-define-key
+      :keymaps 'lsp-mode-map
+      :prefix lsp-keymap-prefix
+      "d" '(dap-hydra t :wk "debugger")))
+
+    (use-package pyvenv
+      :after python-mode
+      :config
+      (pyvenv-mode 1)
+      (setenv "WORKON_HOME" "~/.pyenv/versions/")
+      (pyvenv-activate "~/.pyvenv/versions/"))
 #+end_src
 
 *** R ess
 #+begin_src emacs-lisp
-    (defun skls/insert-r-pipe ()
-      "R - %>% operator or 'then' pipe operator"
-      (interactive)
-      (just-one-space 1)
-      (insert "%>%")
-      (reindent-then-newline-and-indent))
+  (defun skls/insert-r-pipe ()
+    "R - %>% operator or 'then' pipe operator"
+    (interactive)
+    (just-one-space 1)
+    (insert "%>%")
+    (reindent-then-newline-and-indent))
 
-    (use-package ess
-      :disabled
-      :commands R
-      :bind (
-             :map ess-mode-map
-                  ("C-<" . ess-insert-assign)
-                  ("C->" . skls/insert-r-pipe)
-                  :map inferior-ess-mode-map
-                  ("C-<" . ess-insert-assign)
-                  ("C->" . skls/insert-r-pipe)
-                  )
-      :init
-      (load "ess-site")
-      )
+  (use-package ess
+    :disabled
+    :commands R
+    :bind (
+           :map ess-mode-map
+                ("C-<" . ess-insert-assign)
+                ("C->" . skls/insert-r-pipe)
+                :map inferior-ess-mode-map
+                ("C-<" . ess-insert-assign)
+                ("C->" . skls/insert-r-pipe)
+                )
+    :init
+    (load "ess-site")
+    )
 
 #+end_src
 
@@ -641,8 +668,6 @@ First we setup the agenda it's kidna messy so I put it in a different place
 #+begin_src emacs-lisp
   (defun skls/org-reveal ()
     (use-package ox-reveal
-      :ensure t
-      :pin org
       :custom
       (org-reveal-note-key-char nil)
       (org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js")
@@ -653,6 +678,11 @@ First we setup the agenda it's kidna messy so I put it in a different place
     )
 
  #+end_src
+** Org -> Md
+#+begin_src emacs-lisp
+  (use-package ox-gfm
+    :after org)
+#+end_src
 ** Basic Setup
 #+begin_src emacs-lisp
     (defun skls/org-font-setup ()
