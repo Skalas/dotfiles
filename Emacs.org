@@ -373,7 +373,6 @@ I don't like emacs littering my working folders
     (reindent-then-newline-and-indent))
 
   (use-package ess
-    :disabled
     :commands R
     :bind (
            :map ess-mode-map
