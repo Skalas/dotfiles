@@ -1,4 +1,3 @@
-
 #+Author: Miguel Escalante
 #+Title:  My emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
@@ -42,8 +41,9 @@
 
 ** Use-package
 better package management for emacs.
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp 
   (require 'package)
+
   (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                            ("melpa-stable" . "https://stable.melpa.org/packages/")
                            ("org" . "https://orgmode.org/elpa/")
@@ -65,14 +65,63 @@ better package management for emacs.
     :config
     (auto-package-update-maybe))
   (setq use-package-verbose t)
+
+#+end_src
+** Sraight.el
+#+begin_src emacs-lisp :tangle no
+;; Bootstrap straight.el
+(defvar bootstrap-version)
+(let ((bootstrap-file
+      (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+        "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+        'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+;; Always use straight to install on systems other than Linux
+(setq straight-use-package-by-default (not (eq system-type 'gnu/linux)))
+
+;; Use straight.el for use-package expressions
+(straight-use-package 'use-package)
+
+;; Load the helper package for commands like `straight-x-clean-unused-repos'
+(require 'straight-x)
 #+end_src
 ** Themes
 *** Visual Themes
 #+begin_src emacs-lisp
+
+  ;; You must run (all-the-icons-install-fonts) one time after
+  ;; installing this package!
+
+  (use-package minions
+    :hook (doom-modeline-mode . minions-mode))
+
   (use-package doom-modeline
-    :init (doom-modeline-mode 1))
-  (use-package doom-themes
-    :init (load-theme 'doom-oceanic-next t))
+    :after eshell     ;; Make sure it gets hooked after eshell
+    :hook (after-init . doom-modeline-init)
+    :custom-face
+    (mode-line ((t (:height 0.85))))
+    (mode-line-inactive ((t (:height 0.85))))
+    :custom
+    (doom-modeline-height 15)
+    (doom-modeline-bar-width 6)
+    (doom-modeline-lsp t)
+    (doom-modeline-github nil)
+    (doom-modeline-mu4e nil)
+    (doom-modeline-irc nil)
+    (doom-modeline-minor-modes t)
+    (doom-modeline-persp-name nil)
+    (doom-modeline-buffer-file-name-style 'truncate-except-project)
+    (doom-modeline-major-mode-icon nil))
+    (use-package doom-themes
+  :ensure t
+  :init (load-theme 'doom-oceanic-next t))
   (use-package all-the-icons )
 #+end_src
 *** Pretty fonts per different environments
@@ -219,6 +268,10 @@ I don't like emacs littering my working folders
     (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
     )
 #+end_src
+** Ripgrep
+#+begin_src emacs-lisp
+(use-package ripgrep)
+#+end_src
 * Programing
 ** General
 *** Line display and colnum
@@ -254,13 +307,13 @@ I don't like emacs littering my working folders
 #+end_src
 *** Electric Pair mode
 #+begin_src emacs-lisp
-  (electric-pair-mode 1)
-  (add-hook 'electric-pair-mode-hook
-            (lambda ()
-              (setq-local electric-pair-inhibit-predicate
-                          `(lambda (c)
-                             (if (char-equal c ?<) t (electric-pair-inhibit-predicate c))
-                             (if (char-equal c ?\") t (electric-pair-inhibit-predicate c))))))
+  ;; (electric-pair-mode 1)
+  ;; (add-hook 'electric-pair-mode-hook
+  ;;           (lambda ()
+  ;;             (setq-local electric-pair-inhibit-predicate
+  ;;                         `(lambda (c)
+  ;;                            (if (char-equal c ?<) t (electric-pair-inhibit-predicate c))
+  ;;                            (if (char-equal c ?\") t (electric-pair-inhibit-predicate c))))))
 #+end_src
 *** whitespace
 #+begin_src emacs-lisp
@@ -361,6 +414,7 @@ I don't like emacs littering my working folders
       (pyvenv-mode 1)
       (setenv "WORKON_HOME" "~/.pyenv/versions/")
       (pyvenv-activate "~/.pyvenv/versions/"))
+(use-package python-django)
 #+end_src
 
 *** R ess
@@ -373,6 +427,7 @@ I don't like emacs littering my working folders
     (reindent-then-newline-and-indent))
 
   (use-package ess
+    :defer t
     :commands R
     :bind (
            :map ess-mode-map
@@ -596,6 +651,8 @@ First we setup the agenda it's kidna messy so I put it in a different place
             ("@home" . ?H)
             ("@work" . ?W)
             ("@Globant" . ?G)
+            ("@SRE" . ?s)
+            ("@Sociedat" . ?S)
             ("@ITAM" . ?I)
             ("@Deepsee" . ?D)
             ("@LiveNation" . ?L)
@@ -610,11 +667,13 @@ First we setup the agenda it's kidna messy so I put it in a different place
                      (org-agenda-max-todos nil)))
               (tags-todo "+@ITAM/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes ITAM")))
+              (tags-todo "+@Sociedat/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes Sociedat")))
               (tags-todo "+@Globant/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Globant")))
               (tags-todo "+@home/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Casa")))
-              (tags-todo "-@ITAM-@Globant-@home/!-NEXT"
+              (tags-todo "-@ITAM-@Globant-@home-@Sociedat/!-NEXT"
                     ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
                      (org-agenda-files '(,(skls/org-path "Tasks.org")))
                      (org-agenda-text-search-extra-files nil)))))
@@ -701,7 +760,6 @@ First we setup the agenda it's kidna messy so I put it in a different place
       (visual-fill-column-mode 1))
 
     (use-package org
-      :pin org
       :commands (org-capture org-agenda)
       :hook ((org-mode . skls/org-mode-babel)
              (org-mode . skls/org-mode-setup)
@@ -737,6 +795,101 @@ First we setup the agenda it's kidna messy so I put it in a different place
     (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
     (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
     (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)))
+#+end_src
+
+** Org-roam
+#+begin_src emacs-lisp
+(use-package org-roam
+  :hook
+  (after-init . org-roam-mode)
+  :custom
+  (org-roam-directory "~/Dropbox/org/org-roam")
+  (org-roam-completion-everywhere t)
+  (org-roam-completion-system 'default)
+  (org-roam-capture-templates
+    '(("d" "default" plain
+       #'org-roam-capture--get-point
+       "%?"
+       :file-name "%<%Y%m%d%H%M%S>-${slug}"
+       :head "#+title: ${title}\n"
+       :unnarrowed t)
+      ("ll" "link note" plain
+       #'org-roam-capture--get-point
+       "* %^{Link}"
+       :file-name "Inbox"
+       :olp ("Links")
+       :unnarrowed t
+       :immediate-finish)
+      ("lt" "link task" entry
+       #'org-roam-capture--get-point
+       "* TODO %^{Link}"
+       :file-name "Inbox"
+       :olp ("Tasks")
+       :unnarrowed t
+       :immediate-finish)))
+  (org-roam-dailies-directory "Journal/")
+  (org-roam-dailies-capture-templates
+    '(("d" "default" entry
+       #'org-roam-capture--get-point
+       "* %?"
+       :file-name "Journal/%<%Y-%m-%d>"
+       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
+      ("t" "Task" entry
+       #'org-roam-capture--get-point
+       "* TODO %?\n  %U\n  %a\n  %i"
+       :file-name "Journal/%<%Y-%m-%d>"
+       :olp ("Tasks")
+       :empty-lines 1
+       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
+      ("j" "journal" entry
+       #'org-roam-capture--get-point
+       "* %<%I:%M %p> - Journal  :journal:\n\n%?\n\n"
+       :file-name "Journal/%<%Y-%m-%d>"
+       :olp ("Log")
+       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
+      ("l" "log entry" entry
+       #'org-roam-capture--get-point
+       "* %<%I:%M %p> - %?"
+       :file-name "Journal/%<%Y-%m-%d>"
+       :olp ("Log")
+       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
+      ("m" "meeting" entry
+       #'org-roam-capture--get-point
+       "* %<%I:%M %p> - %^{Meeting Title}  :meetings:\n\n%?\n\n"
+       :file-name "Journal/%<%Y-%m-%d>"
+       :olp ("Log")
+       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")))
+  :bind (:map org-roam-mode-map
+          (("C-c n l"   . org-roam)
+           ("C-c n f"   . org-roam-find-file)
+           ("C-c n d"   . org-roam-dailies-find-date)
+           ("C-c n c"   . org-roam-dailies-capture-today)
+           ("C-c n C r" . org-roam-dailies-capture-tomorrow)
+           ("C-c n t"   . org-roam-dailies-find-today)
+           ("C-c n y"   . org-roam-dailies-find-yesterday)
+           ("C-c n r"   . org-roam-dailies-find-tomorrow)
+           ("C-c n g"   . org-roam-graph))
+         :map org-mode-map
+         (("C-c n i" . org-roam-insert))
+         (("C-c n I" . org-roam-insert-immediate))))
+#+end_src
+** Deft
+#+begin_src emacs-lisp
+(use-package deft
+  :commands (deft)
+  :config (setq deft-directory "~/Dropbox/org/org-roam"
+                deft-recursive t
+                deft-extensions '("md" "org")))
+#+end_src
+** Org-Download
+#+begin_src emacs-lisp
+(use-package org-download
+  :after org
+  :bind
+  (:map org-mode-map
+        (("s-Y" . org-download-screenshot)
+         ("s-y" . org-download-yank))))
+
 #+end_src
 
 * Writing
