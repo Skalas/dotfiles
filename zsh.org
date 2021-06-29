@@ -56,14 +56,14 @@ antigen theme juanghurtado
 # Tell Antigen that you're done.
 antigen apply
 
-source ~/src/skls/wsl.zsh
+#source ~/src/skls/wsl.zsh
 source ~/src/skls/vterm.zsh
 source ~/src/skls/python/poetry.zsh
 source ~/src/skls/aliases
 source ~/src/livenation.sh
-source ~/.env_vars
+#source ~/.env_vars
 #source ~/src/skls/python/conda_initialize.zsh
-source ~/src/skls/python/pyenv.zsh
+#source ~/src/skls/python/pyenv.zsh
 # Alias
 source ~/src/skls/aliases
 source ~/src/deepsee.zsh
