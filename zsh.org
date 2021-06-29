@@ -8,8 +8,6 @@ fortune -s
 #+end_src
 
 * Configure Antigen
-
-
 #+begin_src conf :tangle ./.zshrc
 source ~/src/antigen.zsh
 # Load the oh-my-zsh's library.
@@ -60,7 +58,7 @@ source ~/src/skls/wsl.zsh
 source ~/src/skls/vterm.zsh
 source ~/src/skls/python/poetry.zsh
 source ~/src/skls/aliases
-source ~/src/livenation.sh
+source ~/src/livenation.zsh
 source ~/.env_vars
 #source ~/src/skls/python/conda_initialize.zsh
 source ~/src/skls/python/pyenv.zsh
@@ -152,4 +150,25 @@ export LIBGL_ALWAYS_INDIRECT=1
 export GDK_SCALE=1
 setxkbmap us -variant intl
 
+#+end_src
+
+* Deepsee
+#+begin_src conf :tangle src/deepsee.zsh
+alias dsaws="aws --profile deepsee"
+#+end_src
+* Livenation
+#+begin_src conf :tangle src/livenation.zsh
+export TF_VERSION=0.12
+
+awsSANDBOX() { docker run -v $(pwd):/output --volume ~/.aws:/root/.aws -e AWS_DEFAULT_REGION=us-east-1 -e AWS_REGION=us-east-1 -e AWS_PROFILE=tm-sandbox-Ops-Techops --rm cgswong/aws:aws "${@}"; }
+awsNONPROD() { docker run -v $(pwd):/output --volume ~/.aws:/root/.aws -e AWS_DEFAULT_REGION=us-east-1 -e AWS_REGION=us-east-1 -e AWS_PROFILE=tm-nonprod-ReadOnly-Techops --rm cgswong/aws:aws "${@}"; }
+awsPROD() { docker run -v $(pwd):/output --volume ~/.aws:/root/.aws -e AWS_DEFAULT_REGION=us-east-1 -e AWS_REGION=us-east-1 -e AWS_PROFILE=tm-prod-ReadOnly-Techops --rm cgswong/aws:aws "${@}"; }
+#terraformer() { docker run --rm --net=host -u `id -u $USER`:`id -u $GROUP` -it -v $(pwd):/cfg -v ~/.aws:/.aws tmhub.io/ticketmaster/terraformer:latest "$@"; }
+terraformer() { docker run --rm -it -v $(pwd):/cfg -v ~/.aws:/.aws tmhub.io/ticketmaster/terraformer:$TF_VERSION "$@"; }
+terraformer-debug() { docker run --rm -it -e TF_LOG=DEBUG -v $(pwd):/cfg -v ~/.aws:/.aws tmhub.io/ticketmaster/terraformer:$TF_VERSION "$@"; }
+aws-grep() { docker run --rm -it -v $(pwd):/cfg -v ~/.aws:/.aws -e AWS_REGION=us-east-1 -e AWS_PROFILE=$1 tmhub.io/ticketmaster/aws-grep "${@:2}"; }
+ecr_images() { aws ecr list-images --repository-name "$@" --profile tm-prod-ReadOnly-Techops | jq -r '.imageIds[].imageTag' | grep -v null | sort; }
+credtool() { docker run -it --rm -v ~/.aws:/root/.aws -v $(PWD):/credtool tmhub.io/cet/credtool:latest "$@"; }
+
+alias tmaws="aws --profile tm-data-sciences-Ops-Techops"
 #+end_src
