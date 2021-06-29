@@ -1,3 +1,4 @@
+
 #+Author: Miguel Escalante
 #+Title:  My emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
@@ -96,33 +97,33 @@ better package management for emacs.
 *** Visual Themes
 #+begin_src emacs-lisp
 
-  ;; You must run (all-the-icons-install-fonts) one time after
-  ;; installing this package!
+    ;; You must run (all-the-icons-install-fonts) one time after
+    ;; installing this package!
 
-  (use-package minions
-    :hook (doom-modeline-mode . minions-mode))
+    (use-package minions
+      :hook (doom-modeline-mode . minions-mode))
 
-  (use-package doom-modeline
-    :after eshell     ;; Make sure it gets hooked after eshell
-    :hook (after-init . doom-modeline-init)
-    :custom-face
-    (mode-line ((t (:height 0.85))))
-    (mode-line-inactive ((t (:height 0.85))))
-    :custom
-    (doom-modeline-height 15)
-    (doom-modeline-bar-width 6)
-    (doom-modeline-lsp t)
-    (doom-modeline-github nil)
-    (doom-modeline-mu4e nil)
-    (doom-modeline-irc nil)
-    (doom-modeline-minor-modes t)
-    (doom-modeline-persp-name nil)
-    (doom-modeline-buffer-file-name-style 'truncate-except-project)
-    (doom-modeline-major-mode-icon nil))
-    (use-package doom-themes
-  :ensure t
-  :init (load-theme 'doom-oceanic-next t))
-  (use-package all-the-icons )
+    (use-package doom-modeline
+      :after eshell     ;; Make sure it gets hooked after eshell
+      :hook (after-init . doom-modeline-init)
+      :custom-face
+      (mode-line ((t (:height 0.85))))
+      (mode-line-inactive ((t (:height 0.85))))
+      :custom
+      (doom-modeline-height 15)
+      (doom-modeline-bar-width 6)
+      (doom-modeline-lsp t)
+      (doom-modeline-github nil)
+      (doom-modeline-mu4e nil)
+      (doom-modeline-irc nil)
+      (doom-modeline-minor-modes t)
+      (doom-modeline-persp-name nil)
+      (doom-modeline-buffer-file-name-style 'truncate-except-project)
+      (doom-modeline-major-mode-icon nil))
+      (use-package doom-themes
+    :ensure t
+    :init (load-theme 'doom-oceanic-next t))
+    (use-package all-the-icons )
 #+end_src
 *** Pretty fonts per different environments
 Make sure you have the font installed beforehand:
@@ -131,13 +132,16 @@ sudo apt install fonts-firacode fonts-cantarell
 #+end_src
 
 #+begin_src emacs-lisp
-(set-face-attribute 'default nil :font "Fira Code Retina")
+    (use-package fira-code-mode
+      :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
+      :hook prog-mode)
+  ;  (set-face-attribute 'default nil :font "Fira Code Retina" )
 
-;; Set the fixed pitch face
-(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina")
+    ;; ;; Set the fixed pitch face
+    ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code" :weight 'retina)
 
-;; Set the variable pitch face
-(set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular)
+      ;; ;; Set the variable pitch face
+    ;; (set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular)
 #+end_src
 
 ** Interaction with Emacs
@@ -375,38 +379,42 @@ I don't like emacs littering my working folders
 *** Python-mode
 #+begin_src emacs-lisp
   (setq tab-width 4)
-  (use-package lsp-pyright
-  :ensure t
-  :hook (python-mode . (lambda ()
-  (require 'lsp-pyright)
-  (setq-default py-split-windows-on-execute-function 'split-window-horizontally)
-  (lsp))))  ; or lsp-deferred
-  ;; (use-package python-mode
+  (use-package lsp-python-ms
+    :ensure t
+    :demand
+    :hook (python-mode . lsp))
+  ;; (use-package lsp-pyright
+  ;;   :ensure t
+  ;;   :hook (python-mode . (lambda ()
+  ;;                          (require 'lsp-pyright)
+  ;;                          (setq-default py-split-windows-on-execute-function 'split-window-horizontally)
+  ;;                          (lsp))))  ; or lsp-deferred
+  ;; ;; (use-package python-mode
   ;; :hook (python-mode . lsp-deferred))
   (use-package python-mode
-  :ensure t
-  :hook (python-mode . lsp-deferred)
-  :custom
-  ;; NOTE: Set these if Python 3 is called "python3" on your system!
-  ;; (python-shell-interpreter "python3")
-  ;; (dap-python-executable "python3")
-  (dap-python-debugger 'debugpy)
-  :config
-  (require 'dap-python))
-
-  (use-package dap-mode
-  ;; Uncomment the config below if you want all UI panes to be hidden by default!
-    ;; :custom
-    ;; (lsp-enable-dap-auto-configure nil)
-    ;; :config
-    ;; (dap-ui-mode 1)
-    :commands dap-debug
+    :ensure t
+    :hook (python-mode . lsp-deferred)
+    :custom
+    ;; NOTE: Set these if Python 3 is called "python3" on your system!
+      ;; (python-shell-interpreter "python3")
+    ;; (dap-python-executable "python3")
+    (dap-python-debugger 'debugpy)
     :config
-    ;; Bind `C-c l d` to `dap-hydra` for easy access
-    (general-define-key
-      :keymaps 'lsp-mode-map
-      :prefix lsp-keymap-prefix
-      "d" '(dap-hydra t :wk "debugger")))
+    (require 'dap-python))
+
+    (use-package dap-mode
+      ;; Uncomment the config below if you want all UI panes to be hidden by default!
+      ;; :custom
+      ;; (lsp-enable-dap-auto-configure nil)
+      ;; :config
+      ;; (dap-ui-mode 1)
+      :commands dap-debug
+      :config
+      ;; Bind `C-c l d` to `dap-hydra` for easy access
+      (general-define-key
+       :keymaps 'lsp-mode-map
+       :prefix lsp-keymap-prefix
+       "d" '(dap-hydra t :wk "debugger")))
 
     (use-package pyvenv
       :after python-mode
@@ -414,7 +422,7 @@ I don't like emacs littering my working folders
       (pyvenv-mode 1)
       (setenv "WORKON_HOME" "~/.pyenv/versions/")
       (pyvenv-activate "~/.pyvenv/versions/"))
-(use-package python-django)
+    (use-package python-django)
 #+end_src
 
 *** R ess
@@ -1132,36 +1140,40 @@ for the actual config file !
 * Mac OS
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-  (cond
-   ((string-equal system-type "darwin") ; Mac OS X
-    (progn
-      (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims"))
-    (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
-    (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
-    (global-set-key (kbd "M-º") '(lambda () (interactive) (insert "\\")))
-    (global-set-key (kbd "M-2") '(lambda () (interactive) (insert "@")))
-    (global-set-key (kbd "M-1") '(lambda () (interactive) (insert "|")))
-    (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
-    (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
-    (set-terminal-coding-system 'utf-8)
-    (set-keyboard-coding-system 'utf-8)
-    (prefer-coding-system 'utf-8)
-    (message "Mac OS X")
-    ))
-   )
-  ;; window jump
-  (cond
-   ((string-equal system-type "darwin") ; Mac OS X
-    (progn
-      (defvar my-keys-minor-mode-map
-        (let ((map (make-sparse-keymap)))
-          (define-key map (kbd "<C-s-up>") 'window-jump-up)
-          (define-key map (kbd "<C-s-right>") 'window-jump-right)
-          (define-key map (kbd "<C-s-down>") 'window-jump-down)
-          (define-key map (kbd "<C-s-left>") 'window-jump-left)
-          map)
-        "my-keys-minor-mode keymap.")
-      )))
+  (when (equal system-type 'darwin)
+    (setq insert-directory-program "/usr/local/opt/coreutils/libexec/gnubin/ls"))
+      (cond
+       ((string-equal system-type "darwin") ; Mac OS X
+        (progn
+          (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims"))
+        (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
+        (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
+        (global-set-key (kbd "M-º") '(lambda () (interactive) (insert "\\")))
+        (global-set-key (kbd "M-2") '(lambda () (interactive) (insert "@")))
+        (global-set-key (kbd "M-1") '(lambda () (interactive) (insert "|")))
+        (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
+        (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
+        (global-set-key (kbd "M-/") '(lambda () (interactive) (insert "¿")))
+        (set-terminal-coding-system 'utf-8)
+        (set-keyboard-coding-system 'utf-8)
+        (prefer-coding-system 'utf-8)
+        (set-face-attribute 'default nil :height 150)
+        (message "Mac OS X")
+        ))
+       )
+      ;; window jump
+      ;; (cond
+      ;;  ((string-equal system-type "darwin") ; Mac OS X
+      ;;   (progn
+      ;;     (defvar my-keys-minor-mode-map
+      ;;       (let ((map (make-sparse-keymap)))
+      ;;         (define-key map (kbd "<C-s-up>") 'window-jump-up)
+      ;;         (define-key map (kbd "<C-s-right>") 'window-jump-right)
+      ;;         (define-key map (kbd "<C-s-down>") 'window-jump-down)
+      ;;         (define-key map (kbd "<C-s-left>") 'window-jump-left)
+      ;;         map)
+      ;;       "my-keys-minor-mode keymap.")
+      ;;     )))
 
 #+END_SRC
 * Cleanup
