@@ -1,4 +1,8 @@
 
+
+
+
+
 #+Author: Miguel Escalante
 #+Title:  My emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
@@ -6,7 +10,7 @@
 * Set everything up
 ** First Basics
 #+begin_src emacs-lisp
-      ;; The default is 800 kilobytes.  Measured in bytes.
+  ;; The default is 800 kilobytes.  Measured in bytes.
   (setq gc-cons-threshold (* 50 1024 1024))
   ;;        gc-cons-percentage 0.6)
   (add-hook 'emacs-startup-hook
@@ -22,9 +26,10 @@
   (tool-bar-mode -1) ; I don't like the menus
   (tooltip-mode -1) ; I don't like the menus
   (set-fringe-mode -1) ; I don't like the menus
-  (setq visible-bell t) ; I don't like my errors being screamed at to me
   (global-auto-revert-mode 1)
-  (defalias 'yes-or-no-p 'y-or-n-p)
+         (defalias 'yes-or-no-p 'y-or-n-p)
+  ;; Make frame transparency overridable
+       (defvar skls/frame-transparency '(90 . 90))
 #+end_src
 
 ** directories
@@ -68,6 +73,16 @@ better package management for emacs.
   (setq use-package-verbose t)
 
 #+end_src
+** Visible mode line
+#+begin_src emacs-lisp
+  (use-package mode-line-bell)
+  (setq visible-bell nil)
+  (setq ring-bell-function (lambda ()
+                             (invert-face 'mode-line)
+                             (run-with-timer 0.1 nil 'invert-face 'mode-line)))
+  ;; (setq visible-bell t) ; I don't like my errors being screamed at to me
+
+#+end_src
 ** Sraight.el
 #+begin_src emacs-lisp :tangle no
 ;; Bootstrap straight.el
@@ -96,82 +111,92 @@ better package management for emacs.
 ** Themes
 *** Visual Themes
 #+begin_src emacs-lisp
+        ;; You must run (all-the-icons-install-fonts) one time after
+        ;; installing this package!
 
-    ;; You must run (all-the-icons-install-fonts) one time after
-    ;; installing this package!
+          (use-package doom-modeline
+            :init (doom-modeline-mode 1)
+            :custom ((doom-modeline-height 15)))
 
-    (use-package minions
-      :hook (doom-modeline-mode . minions-mode))
+          (use-package doom-themes
+            :ensure t
+            :init (load-theme 'doom-oceanic-next t))
 
-    (use-package doom-modeline
-      :after eshell     ;; Make sure it gets hooked after eshell
-      :hook (after-init . doom-modeline-init)
-      :custom-face
-      (mode-line ((t (:height 0.85))))
-      (mode-line-inactive ((t (:height 0.85))))
-      :custom
-      (doom-modeline-height 15)
-      (doom-modeline-bar-width 6)
-      (doom-modeline-lsp t)
-      (doom-modeline-github nil)
-      (doom-modeline-mu4e nil)
-      (doom-modeline-irc nil)
-      (doom-modeline-minor-modes t)
-      (doom-modeline-persp-name nil)
-      (doom-modeline-buffer-file-name-style 'truncate-except-project)
-      (doom-modeline-major-mode-icon nil))
-      (use-package doom-themes
-    :ensure t
-    :init (load-theme 'doom-oceanic-next t))
-    (use-package all-the-icons )
+        (use-package all-the-icons )
+
+      ;;   (use-package all-the-icons-dired)
+      ;; (add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
+  (use-package all-the-icons-dired
+    :hook (dired-mode . all-the-icons-dired-mode)
+    :config
+    (setq all-the-icons-dired-monochrome nil))
+
+        ;; Set frame transparency
+  (set-frame-parameter (selected-frame) 'alpha skls/frame-transparency)
+  (add-to-list 'default-frame-alist `(alpha . ,skls/frame-transparency))
+  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+
 #+end_src
 *** Pretty fonts per different environments
 Make sure you have the font installed beforehand:
+
 #+begin_src shell :noeval
 sudo apt install fonts-firacode fonts-cantarell
 #+end_src
 
 #+begin_src emacs-lisp
-    (use-package fira-code-mode
-      :custom (fira-code-mode-disabled-ligatures '("[]" "x"))  ; ligatures you don't want
-      :hook prog-mode)
-  ;  (set-face-attribute 'default nil :font "Fira Code Retina" )
+   (use-package fira-code-mode
+     :hook prog-mode)
+  (set-face-attribute 'default nil :font "Fira Code"  :height 160)
+  ;; Set the fixed pitch face:
+  (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 160)
 
-    ;; ;; Set the fixed pitch face
-    ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code" :weight 'retina)
-
-      ;; ;; Set the variable pitch face
-    ;; (set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular)
+  ;; Set the variable pitch face
+  (set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular)
 #+end_src
 
 ** Interaction with Emacs
 *** Ivy
  Package for enhance the experience, along with swiper its a marvel.
- #+begin_src emacs-lisp
-   (use-package ivy
-     :diminish
-     :bind (("C-s" . swiper)
-            ("M-x" . counsel-M-x)
-            :map ivy-minibuffer-map
-            ("TAB" . ivy-alt-done)
-            ("C-f" . ivy-alt-done)
-            ("C-j" . ivy-next-line)
-            ("C-k" . ivy-previous-line)
-            :map ivy-switch-buffer-map
-            ("C-k" . ivy-previous-line)
-            ("C-l" . ivy-done)
-            ("C-d" . ivy-switch-buffer-kill)
-            :map ivy-reverse-i-search-map
-            ("C-k" . ivy-previous-line)
-            ("C-d" . ivy-reverse-i-search-kill))
-     :init
-     (ivy-mode 1))
-   (use-package ivy-rich
-     :after ivy
-     :init
-     (ivy-rich-mode 1))
+#+begin_src emacs-lisp
+     (use-package ivy
+       :diminish
+       :bind (("C-s" . swiper)
+              ("M-x" . counsel-M-x)
+              :map ivy-minibuffer-map
+              ("TAB" . ivy-alt-done)
+              ("C-f" . ivy-alt-done)
+              ("C-j" . ivy-next-line)
+              ("C-k" . ivy-previous-line)
+              :map ivy-switch-buffer-map
+              ("C-k" . ivy-previous-line)
+              ("C-l" . ivy-done)
+              ("C-d" . ivy-switch-buffer-kill)
+              :map ivy-reverse-i-search-map
+              ("C-k" . ivy-previous-line)
+              ("C-d" . ivy-reverse-i-search-kill))
+       :init
+       (ivy-mode 1))
 
-   (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+    (use-package counsel
+      :bind (("C-M-j" . 'counsel-switch-buffer)
+             :map minibuffer-local-map
+             ("C-r" . 'counsel-minibuffer-history))
+      :config
+      (counsel-mode 1))
+
+    (use-package all-the-icons-ivy-rich
+      :after ivy
+      :init
+      (all-the-icons-ivy-rich-mode 1))
+
+    (use-package ivy-rich
+      :after all-the-icons-ivy-rich
+      :init
+      (ivy-rich-mode 1))
+
+  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
  #+end_src
 *** General
 #+begin_src emacs-lisp
@@ -381,7 +406,7 @@ I don't like emacs littering my working folders
   (setq tab-width 4)
   (use-package lsp-python-ms
     :ensure t
-    :demand
+;    :demand
     :hook (python-mode . lsp))
   ;; (use-package lsp-pyright
   ;;   :ensure t
@@ -919,9 +944,6 @@ First we setup the agenda it's kidna messy so I put it in a different place
 #+begin_src emacs-lisp
   (setq dired-listing-switches "-agho --group-directories-first")
 
-  (use-package all-the-icons-dired
-    :hook (dired-mode . all-the-icons-dired-mode))
-
   (use-package dired-single
     :commands (dired dired-jump))
 
@@ -1141,6 +1163,9 @@ for the actual config file !
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
   (when (equal system-type 'darwin)
+    (setq exec-path (cons "/usr/local/bin" exec-path))
+    (unless (getenv "LANG") (setenv "LANG" "en_US.UTF-8"))
+    (unless (getenv "LC_ALL") (setenv "LC_ALL" "en_US.UTF-8"))
     (setq insert-directory-program "/usr/local/opt/coreutils/libexec/gnubin/ls"))
       (cond
        ((string-equal system-type "darwin") ; Mac OS X
@@ -1154,6 +1179,16 @@ for the actual config file !
         (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
         (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
         (global-set-key (kbd "M-/") '(lambda () (interactive) (insert "¿")))
+        (global-set-key (kbd "M-i") '(lambda () (interactive) (insert "í")))
+        (global-set-key (kbd "M-I") '(lambda () (interactive) (insert "Í")))
+        (global-set-key (kbd "M-o") '(lambda () (interactive) (insert "ó")))
+        (global-set-key (kbd "M-O") '(lambda () (interactive) (insert "Ó")))
+        (global-set-key (kbd "M-a") '(lambda () (interactive) (insert "á")))
+        (global-set-key (kbd "M-A") '(lambda () (interactive) (insert "Á")))
+        (global-set-key (kbd "M-E") '(lambda () (interactive) (insert "É")))
+        (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
+        (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
+        (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
         (set-terminal-coding-system 'utf-8)
         (set-keyboard-coding-system 'utf-8)
         (prefer-coding-system 'utf-8)
@@ -1161,19 +1196,19 @@ for the actual config file !
         (message "Mac OS X")
         ))
        )
-      ;; window jump
-      ;; (cond
-      ;;  ((string-equal system-type "darwin") ; Mac OS X
-      ;;   (progn
-      ;;     (defvar my-keys-minor-mode-map
-      ;;       (let ((map (make-sparse-keymap)))
-      ;;         (define-key map (kbd "<C-s-up>") 'window-jump-up)
-      ;;         (define-key map (kbd "<C-s-right>") 'window-jump-right)
-      ;;         (define-key map (kbd "<C-s-down>") 'window-jump-down)
-      ;;         (define-key map (kbd "<C-s-left>") 'window-jump-left)
-      ;;         map)
-      ;;       "my-keys-minor-mode keymap.")
-      ;;     )))
+  ;; window jump
+    (cond
+     ((string-equal system-type "darwin") ; Mac OS X
+      (progn
+        (defvar my-keys-minor-mode-map
+          (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "<M-s-up>") 'window-jump-up)
+            (define-key map (kbd "<M-s-right>") 'window-jump-right)
+            (define-key map (kbd "<M-s-down>") 'window-jump-down)
+            (define-key map (kbd "<M-s-left>") 'window-jump-left)
+            map)
+          "my-keys-minor-mode keymap.")
+        )))
 
 #+END_SRC
 * Cleanup
