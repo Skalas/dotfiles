@@ -316,12 +316,12 @@ I don't like emacs littering my working folders
     (add-hook mode (lambda() (display-line-numbers-mode 0))))
 #+end_src
 *** Magit
+
 #+begin_src emacs-lisp
   (use-package magit
     :commands magit-status
-    :config
-    (setq magit-git-executable "/usr/bin/git")
-    )
+    :custom
+    (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 #+end_src
 *** Parens
 #+begin_src emacs-lisp
@@ -1202,63 +1202,64 @@ for the actual config file !
 * Mac OS
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-   (when (equal system-type 'darwin)
-     (use-package org-download
-       :after org
-       :defer nil
-       :custom
-       (org-download-method 'directory)
-       (org-download-image-dir "images")
-         (org-download-heading-lvl nil)
-         (org-download-timestamp "%Y%m%d-%H%M%S_")
-        (org-image-actual-width 450)
-        (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
-        :bind
-        ("C-c n s" . org-download-screenshot)
-        :config
-        (require 'org-download))
+  (when (equal system-type 'darwin)
+    (use-package org-download
+      :after org
+      :defer nil
+      :custom
+      (org-download-method 'directory)
+      (org-download-image-dir "images")
+      (org-download-heading-lvl nil)
+      (org-download-timestamp "%Y%m%d-%H%M%S_")
+      (org-image-actual-width 450)
+      (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+      :bind
+      ("C-c n s" . org-download-screenshot)
+      :config
+      (require 'org-download))
 
-      (setq exec-path (cons "/usr/local/bin" exec-path))
-      (unless (getenv "LANG") (setenv "LANG" "en_US.UTF-8"))
-      (unless (getenv "LC_ALL") (setenv "LC_ALL" "en_US.UTF-8"))
-      (setq insert-directory-program "/usr/local/opt/coreutils/libexec/gnubin/ls"))
-        (cond
-         ((string-equal system-type "darwin") ; Mac OS X
-          (progn
-            (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims"))
-          (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
-          (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
-          (global-set-key (kbd "M-n") '(lambda () (interactive) (insert "ñ")))
-          (global-set-key (kbd "M-º") '(lambda () (interactive) (insert "\\")))
-          (global-set-key (kbd "M-2") '(lambda () (interactive) (insert "@")))
-          (global-set-key (kbd "M-1") '(lambda () (interactive) (insert "|")))
-          (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
-          (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
-          (global-set-key (kbd "M-/") '(lambda () (interactive) (insert "¿")))
-          (global-set-key (kbd "M-i") '(lambda () (interactive) (insert "í")))
-          (global-set-key (kbd "M-I") '(lambda () (interactive) (insert "Í")))
-          (global-set-key (kbd "M-o") '(lambda () (interactive) (insert "ó")))
-          (global-set-key (kbd "M-O") '(lambda () (interactive) (insert "Ó")))
-          (global-set-key (kbd "M-a") '(lambda () (interactive) (insert "á")))
-          (global-set-key (kbd "M-A") '(lambda () (interactive) (insert "Á")))
-          (global-set-key (kbd "M-E") '(lambda () (interactive) (insert "É")))
-          (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
-          (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
-          (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
-          (set-terminal-coding-system 'utf-8)
-          (set-keyboard-coding-system 'utf-8)
-          (prefer-coding-system 'utf-8)
-          (set-face-attribute 'default nil :height 150)
-          (message "Mac OS X")
-          ))
-         )
-    ;; window jump
+    (setq exec-path (cons "/usr/local/bin" exec-path))
+    (setq magit-git-executable "/usr/bin/git")
+    (unless (getenv "LANG") (setenv "LANG" "en_US.UTF-8"))
+    (unless (getenv "LC_ALL") (setenv "LC_ALL" "en_US.UTF-8"))
+    (setq insert-directory-program "/usr/local/opt/coreutils/libexec/gnubin/ls"))
+  (cond
+   ((string-equal system-type "darwin") ; Mac OS X
+    (progn
+      (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims"))
+      (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
+      (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
+      (global-set-key (kbd "M-n") '(lambda () (interactive) (insert "ñ")))
+      (global-set-key (kbd "M-º") '(lambda () (interactive) (insert "\\")))
+      (global-set-key (kbd "M-2") '(lambda () (interactive) (insert "@")))
+      (global-set-key (kbd "M-1") '(lambda () (interactive) (insert "|")))
+      (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
+      (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
+      (global-set-key (kbd "M-/") '(lambda () (interactive) (insert "¿")))
+      (global-set-key (kbd "M-i") '(lambda () (interactive) (insert "í")))
+      (global-set-key (kbd "M-I") '(lambda () (interactive) (insert "Í")))
+      (global-set-key (kbd "M-o") '(lambda () (interactive) (insert "ó")))
+      (global-set-key (kbd "M-O") '(lambda () (interactive) (insert "Ó")))
+      (global-set-key (kbd "M-a") '(lambda () (interactive) (insert "á")))
+      (global-set-key (kbd "M-A") '(lambda () (interactive) (insert "Á")))
+      (global-set-key (kbd "M-E") '(lambda () (interactive) (insert "É")))
+      (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
+      (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
+      (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
+      (set-terminal-coding-system 'utf-8)
+      (set-keyboard-coding-system 'utf-8)
+      (prefer-coding-system 'utf-8)
+      (set-face-attribute 'default nil :height 150)
+      (message "Mac OS X")
+      ))
+   )
+  ;; window jump
   (defvar my-keys-minor-mode-map
     (let ((map (make-sparse-keymap)))
-              (define-key map (kbd "<M-s-up>") 'windmove-up)
-              (define-key map (kbd "<M-s-right>") 'windmove-right)
-              (define-key map (kbd "<M-s-down>") 'windmove-down)
-              (define-key map (kbd "<M-s-left>") 'windmove-left)
+      (define-key map (kbd "<M-s-up>") 'windmove-up)
+      (define-key map (kbd "<M-s-right>") 'windmove-right)
+      (define-key map (kbd "<M-s-down>") 'windmove-down)
+      (define-key map (kbd "<M-s-left>") 'windmove-left)
       map)
     "my-keys-minor-mode keymap.")
   (define-minor-mode my-keys-minor-mode
