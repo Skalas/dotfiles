@@ -1,8 +1,3 @@
-
-
-
-
-
 #+Author: Miguel Escalante
 #+Title:  My emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
@@ -107,6 +102,13 @@ better package management for emacs.
 
 ;; Load the helper package for commands like `straight-x-clean-unused-repos'
 (require 'straight-x)
+#+end_src
+** Perspective.el
+#+begin_src emacs-lisp
+  (use-package perspective
+    :bind (("C-x k" . persp-kill-buffer*))
+    :config
+    (persp-mode))
 #+end_src
 ** Themes
 *** Visual Themes
@@ -262,8 +264,6 @@ sudo apt install fonts-firacode fonts-cantarell
 #+end_src
 *** Ace-window
 #+begin_src emacs-lisp
-  (use-package ace-window
-    :bind ("M-o" . ace-window))
 #+end_src
 
 ** Text Scale
@@ -317,11 +317,11 @@ I don't like emacs littering my working folders
 #+end_src
 *** Magit
 #+begin_src emacs-lisp
-(use-package magit
-  :commands magit-status
-  :custom
-  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
-  )
+  (use-package magit
+    :commands magit-status
+    :config
+    (setq magit-git-executable "/usr/bin/git")
+    )
 #+end_src
 *** Parens
 #+begin_src emacs-lisp
@@ -404,50 +404,61 @@ I don't like emacs littering my working folders
 *** Python-mode
 #+begin_src emacs-lisp
   (setq tab-width 4)
-  (use-package lsp-python-ms
-    :ensure t
-;    :demand
-    :hook (python-mode . lsp))
-  ;; (use-package lsp-pyright
-  ;;   :ensure t
-  ;;   :hook (python-mode . (lambda ()
-  ;;                          (require 'lsp-pyright)
-  ;;                          (setq-default py-split-windows-on-execute-function 'split-window-horizontally)
-  ;;                          (lsp))))  ; or lsp-deferred
-  ;; ;; (use-package python-mode
-  ;; :hook (python-mode . lsp-deferred))
-  (use-package python-mode
-    :ensure t
-    :hook (python-mode . lsp-deferred)
-    :custom
-    ;; NOTE: Set these if Python 3 is called "python3" on your system!
-      ;; (python-shell-interpreter "python3")
-    ;; (dap-python-executable "python3")
-    (dap-python-debugger 'debugpy)
-    :config
-    (require 'dap-python))
 
-    (use-package dap-mode
-      ;; Uncomment the config below if you want all UI panes to be hidden by default!
-      ;; :custom
-      ;; (lsp-enable-dap-auto-configure nil)
-      ;; :config
-      ;; (dap-ui-mode 1)
-      :commands dap-debug
-      :config
-      ;; Bind `C-c l d` to `dap-hydra` for easy access
-      (general-define-key
-       :keymaps 'lsp-mode-map
-       :prefix lsp-keymap-prefix
-       "d" '(dap-hydra t :wk "debugger")))
+    ;; (use-package lsp-jedi
+    ;;   :ensure t
+    ;;   :config
+    ;;   (with-eval-after-load "lsp-mode"
+    ;;     (add-to-list 'lsp-disabled-clients 'pyls)
+    ;;     (add-to-list 'lsp-enabled-clients 'jedi)))
 
-    (use-package pyvenv
-      :after python-mode
-      :config
-      (pyvenv-mode 1)
-      (setenv "WORKON_HOME" "~/.pyenv/versions/")
-      (pyvenv-activate "~/.pyvenv/versions/"))
-    (use-package python-django)
+    ;;   (use-package lsp-python-ms
+    ;;     :ensure t
+    ;; ;    :demand
+    ;;     :hook (python-mode . lsp))
+
+    (use-package lsp-pyright
+      :ensure t
+      :hook (python-mode . (lambda ()
+                             (require 'lsp-pyright)
+                             ;(setq-default py-split-windows-on-execute-function 'split-window-horizontally)
+                               (lsp))))  ; or lsp-deferred
+
+    ;; (use-package python-mode
+    ;;   :hook (python-mode . lsp-deferred))
+
+    ;; (use-package python-mode
+    ;;   :ensure t
+    ;;   :hook (python-mode . lsp-deferred)
+    ;;   :custom
+    ;;   ;; NOTE: Set these if Python 3 is called "python3" on your system!
+    ;;   ;; (python-shell-interpreter "python3")
+    ;;   ;; (dap-python-executable "python3")
+    ;;   (dap-python-debugger 'debugpy)
+    ;;   :config
+    ;;   (require 'dap-python))
+
+    ;; (use-package dap-mode
+    ;;   ;; Uncomment the config below if you want all UI panes to be hidden by default!
+    ;;   ;; :custom
+    ;;   ;; (lsp-enable-dap-auto-configure nil)
+    ;;   ;; :config
+    ;;   ;; (dap-ui-mode 1)
+    ;;   :commands dap-debug
+    ;;   :config
+    ;;   ;; Bind `C-c l d` to `dap-hydra` for easy access
+    ;;   (general-define-key
+    ;;    :keymaps 'lsp-mode-map
+    ;;    :prefix lsp-keymap-prefix
+    ;;    "d" '(dap-hydra t :wk "debugger")))
+
+    ;; (use-package pyvenv
+    ;;   :after python-mode
+    ;;   :config
+    ;;   (pyvenv-mode 1)
+    ;;   (setenv "WORKON_HOME" "~/.pyenv/versions/")
+    ;;   (pyvenv-activate "~/.pyvenv/versions/"))
+    ;; (use-package python-django)
 #+end_src
 
 *** R ess
@@ -516,11 +527,28 @@ I used polymode in order to use jinja between the two braces, while still using 
       :innermodes '(poly-jinja2-expr-sql-innermode)
       ))
 
+  (defun skls/create-poly-python ()
+    ;; (setq polymode-prefix-key (kbd "C-c n"))
+    (define-hostmode poly-python-hostmode :mode 'python-mode)
+    (define-innermode poly-expr-sql-innermode
+      :mode 'sql-mode
+      :head-matcher (rx "r" (= 3 (char "\"'")) (* (any space)))
+      :tail-matcher (rx (= 3 (char "\"'")))
+      :head-mode 'host
+      :tail-mode 'host)
+    (define-polymode poly-sql-python-mode
+      :hostmode 'poly-python-hostmode
+      :innermodes '(poly-expr-sql-innermode)
+      ))
+
   (use-package polymode
     :commands poly-sql-jinja2-mode
     :mode ("\\.sql\\.j2\\'" . poly-sql-jinja2-mode)
+    ;;("\\.py\\'" . poly-sql-python-mode)
     :config
-    (skls/create-poly-jinja))
+    (skls/create-poly-jinja)
+    ;(skls/create-poly-python)
+    )
 
 #+END_SRC
 
@@ -832,79 +860,90 @@ First we setup the agenda it's kidna messy so I put it in a different place
 
 ** Org-roam
 #+begin_src emacs-lisp
-(use-package org-roam
-  :hook
-  (after-init . org-roam-mode)
-  :custom
-  (org-roam-directory "~/Dropbox/org/org-roam")
-  (org-roam-completion-everywhere t)
-  (org-roam-completion-system 'default)
-  (org-roam-capture-templates
-    '(("d" "default" plain
-       #'org-roam-capture--get-point
-       "%?"
-       :file-name "%<%Y%m%d%H%M%S>-${slug}"
-       :head "#+title: ${title}\n"
-       :unnarrowed t)
-      ("ll" "link note" plain
-       #'org-roam-capture--get-point
-       "* %^{Link}"
-       :file-name "Inbox"
-       :olp ("Links")
-       :unnarrowed t
-       :immediate-finish)
-      ("lt" "link task" entry
-       #'org-roam-capture--get-point
-       "* TODO %^{Link}"
-       :file-name "Inbox"
-       :olp ("Tasks")
-       :unnarrowed t
-       :immediate-finish)))
-  (org-roam-dailies-directory "Journal/")
-  (org-roam-dailies-capture-templates
-    '(("d" "default" entry
-       #'org-roam-capture--get-point
-       "* %?"
-       :file-name "Journal/%<%Y-%m-%d>"
-       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
-      ("t" "Task" entry
-       #'org-roam-capture--get-point
-       "* TODO %?\n  %U\n  %a\n  %i"
-       :file-name "Journal/%<%Y-%m-%d>"
-       :olp ("Tasks")
-       :empty-lines 1
-       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
-      ("j" "journal" entry
-       #'org-roam-capture--get-point
-       "* %<%I:%M %p> - Journal  :journal:\n\n%?\n\n"
-       :file-name "Journal/%<%Y-%m-%d>"
-       :olp ("Log")
-       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
-      ("l" "log entry" entry
-       #'org-roam-capture--get-point
-       "* %<%I:%M %p> - %?"
-       :file-name "Journal/%<%Y-%m-%d>"
-       :olp ("Log")
-       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
-      ("m" "meeting" entry
-       #'org-roam-capture--get-point
-       "* %<%I:%M %p> - %^{Meeting Title}  :meetings:\n\n%?\n\n"
-       :file-name "Journal/%<%Y-%m-%d>"
-       :olp ("Log")
-       :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")))
-  :bind (:map org-roam-mode-map
-          (("C-c n l"   . org-roam)
-           ("C-c n f"   . org-roam-find-file)
-           ("C-c n d"   . org-roam-dailies-find-date)
-           ("C-c n c"   . org-roam-dailies-capture-today)
-           ("C-c n C r" . org-roam-dailies-capture-tomorrow)
-           ("C-c n t"   . org-roam-dailies-find-today)
-           ("C-c n y"   . org-roam-dailies-find-yesterday)
-           ("C-c n r"   . org-roam-dailies-find-tomorrow)
-           ("C-c n g"   . org-roam-graph))
-         :map org-mode-map
-         (("C-c n i" . org-roam-insert))
-         (("C-c n I" . org-roam-insert-immediate))))
+  (use-package org-roam
+    :custom
+    (org-roam-directory "~/Dropbox/org/org-roam")
+    :init
+    (setq org-roam-v2-ack t)
+    :bind (
+           ("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert))
+    :config
+    (org-roam-setup))
+               ;;   :hook
+      ;;   (after-init . org-roam-mode)
+      ;;   :custom
+      ;;   (org-roam-directory "~/Dropbox/org/org-roam")
+      ;;   (org-roam-completion-everywhere t)
+      ;;   (org-roam-completion-system 'default)
+      ;;   (org-roam-capture-templates
+      ;;     '(("d" "default" plain
+      ;;        #'org-roam-capture--get-point
+      ;;        "%?"
+      ;;        :file-name "%<%Y%m%d%H%M%S>-${slug}"
+      ;;        :head "#+title: ${title}\n"
+      ;;        :unnarrowed t)
+      ;;       ("ll" "link note" plain
+      ;;        #'org-roam-capture--get-point
+      ;;        "* %^{Link}"
+      ;;        :file-name "Inbox"
+      ;;        :olp ("Links")
+      ;;        :unnarrowed t
+      ;;        :immediate-finish)
+      ;;       ("lt" "link task" entry
+      ;;        #'org-roam-capture--get-point
+      ;;        "* TODO %^{Link}"
+      ;;        :file-name "Inbox"
+      ;;        :olp ("Tasks")
+      ;;        :unnarrowed t
+      ;;        :immediate-finish)))
+      ;;   (org-roam-dailies-directory "Journal/")
+      ;;   (org-roam-dailies-capture-templates
+      ;;     '(("d" "default" entry
+      ;;        #'org-roam-capture--get-point
+      ;;        "* %?"
+      ;;        :file-name "Journal/%<%Y-%m-%d>"
+      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
+      ;;       ("t" "Task" entry
+      ;;        #'org-roam-capture--get-point
+      ;;        "* TODO %?\n  %U\n  %a\n  %i"
+      ;;        :file-name "Journal/%<%Y-%m-%d>"
+      ;;        :olp ("Tasks")
+      ;;        :empty-lines 1
+      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
+      ;;       ("j" "journal" entry
+      ;;        #'org-roam-capture--get-point
+      ;;        "* %<%I:%M %p> - Journal  :journal:\n\n%?\n\n"
+      ;;        :file-name "Journal/%<%Y-%m-%d>"
+      ;;        :olp ("Log")
+      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
+      ;;       ("l" "log entry" entry
+      ;;        #'org-roam-capture--get-point
+      ;;        "* %<%I:%M %p> - %?"
+      ;;        :file-name "Journal/%<%Y-%m-%d>"
+      ;;        :olp ("Log")
+      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
+      ;;       ("m" "meeting" entry
+      ;;        #'org-roam-capture--get-point
+      ;;        "* %<%I:%M %p> - %^{Meeting Title}  :meetings:\n\n%?\n\n"
+      ;;        :file-name "Journal/%<%Y-%m-%d>"
+      ;;        :olp ("Log")
+      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")))
+      ;;   :bind (:map org-roam-mode-map
+      ;;           (("C-c n l"   . org-roam)
+      ;;            ("C-c n f"   . org-roam-find-file)
+      ;;            ("C-c n d"   . org-roam-dailies-find-date)
+      ;;            ("C-c n c"   . org-roam-dailies-capture-today)
+      ;;            ("C-c n C r" . org-roam-dailies-capture-tomorrow)
+      ;;            ("C-c n t"   . org-roam-dailies-find-today)
+      ;;            ("C-c n y"   . org-roam-dailies-find-yesterday)
+      ;;            ("C-c n r"   . org-roam-dailies-find-tomorrow)
+      ;;            ("C-c n g"   . org-roam-graph))
+      ;;          :map org-mode-map
+      ;;          (("C-c n i" . org-roam-insert))
+      ;;          (("C-c n I" . org-roam-insert-immediate))))
+      ;; (setq org-roam-v2-ack t)
 #+end_src
 ** Deft
 #+begin_src emacs-lisp
@@ -1159,56 +1198,77 @@ for the actual config file !
   (provide 'essh)
 
 #+end_src
+
 * Mac OS
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-  (when (equal system-type 'darwin)
-    (setq exec-path (cons "/usr/local/bin" exec-path))
-    (unless (getenv "LANG") (setenv "LANG" "en_US.UTF-8"))
-    (unless (getenv "LC_ALL") (setenv "LC_ALL" "en_US.UTF-8"))
-    (setq insert-directory-program "/usr/local/opt/coreutils/libexec/gnubin/ls"))
-      (cond
-       ((string-equal system-type "darwin") ; Mac OS X
-        (progn
-          (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims"))
-        (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
-        (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
-        (global-set-key (kbd "M-º") '(lambda () (interactive) (insert "\\")))
-        (global-set-key (kbd "M-2") '(lambda () (interactive) (insert "@")))
-        (global-set-key (kbd "M-1") '(lambda () (interactive) (insert "|")))
-        (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
-        (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
-        (global-set-key (kbd "M-/") '(lambda () (interactive) (insert "¿")))
-        (global-set-key (kbd "M-i") '(lambda () (interactive) (insert "í")))
-        (global-set-key (kbd "M-I") '(lambda () (interactive) (insert "Í")))
-        (global-set-key (kbd "M-o") '(lambda () (interactive) (insert "ó")))
-        (global-set-key (kbd "M-O") '(lambda () (interactive) (insert "Ó")))
-        (global-set-key (kbd "M-a") '(lambda () (interactive) (insert "á")))
-        (global-set-key (kbd "M-A") '(lambda () (interactive) (insert "Á")))
-        (global-set-key (kbd "M-E") '(lambda () (interactive) (insert "É")))
-        (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
-        (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
-        (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
-        (set-terminal-coding-system 'utf-8)
-        (set-keyboard-coding-system 'utf-8)
-        (prefer-coding-system 'utf-8)
-        (set-face-attribute 'default nil :height 150)
-        (message "Mac OS X")
-        ))
-       )
-  ;; window jump
-    (cond
-     ((string-equal system-type "darwin") ; Mac OS X
-      (progn
-        (defvar my-keys-minor-mode-map
-          (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "<M-s-up>") 'window-jump-up)
-            (define-key map (kbd "<M-s-right>") 'window-jump-right)
-            (define-key map (kbd "<M-s-down>") 'window-jump-down)
-            (define-key map (kbd "<M-s-left>") 'window-jump-left)
-            map)
-          "my-keys-minor-mode keymap.")
-        )))
+   (when (equal system-type 'darwin)
+     (use-package org-download
+       :after org
+       :defer nil
+       :custom
+       (org-download-method 'directory)
+       (org-download-image-dir "images")
+         (org-download-heading-lvl nil)
+         (org-download-timestamp "%Y%m%d-%H%M%S_")
+        (org-image-actual-width 450)
+        (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
+        :bind
+        ("C-c n s" . org-download-screenshot)
+        :config
+        (require 'org-download))
+
+      (setq exec-path (cons "/usr/local/bin" exec-path))
+      (unless (getenv "LANG") (setenv "LANG" "en_US.UTF-8"))
+      (unless (getenv "LC_ALL") (setenv "LC_ALL" "en_US.UTF-8"))
+      (setq insert-directory-program "/usr/local/opt/coreutils/libexec/gnubin/ls"))
+        (cond
+         ((string-equal system-type "darwin") ; Mac OS X
+          (progn
+            (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims"))
+          (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
+          (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
+          (global-set-key (kbd "M-n") '(lambda () (interactive) (insert "ñ")))
+          (global-set-key (kbd "M-º") '(lambda () (interactive) (insert "\\")))
+          (global-set-key (kbd "M-2") '(lambda () (interactive) (insert "@")))
+          (global-set-key (kbd "M-1") '(lambda () (interactive) (insert "|")))
+          (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
+          (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
+          (global-set-key (kbd "M-/") '(lambda () (interactive) (insert "¿")))
+          (global-set-key (kbd "M-i") '(lambda () (interactive) (insert "í")))
+          (global-set-key (kbd "M-I") '(lambda () (interactive) (insert "Í")))
+          (global-set-key (kbd "M-o") '(lambda () (interactive) (insert "ó")))
+          (global-set-key (kbd "M-O") '(lambda () (interactive) (insert "Ó")))
+          (global-set-key (kbd "M-a") '(lambda () (interactive) (insert "á")))
+          (global-set-key (kbd "M-A") '(lambda () (interactive) (insert "Á")))
+          (global-set-key (kbd "M-E") '(lambda () (interactive) (insert "É")))
+          (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
+          (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
+          (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
+          (set-terminal-coding-system 'utf-8)
+          (set-keyboard-coding-system 'utf-8)
+          (prefer-coding-system 'utf-8)
+          (set-face-attribute 'default nil :height 150)
+          (message "Mac OS X")
+          ))
+         )
+    ;; window jump
+  (defvar my-keys-minor-mode-map
+    (let ((map (make-sparse-keymap)))
+              (define-key map (kbd "<M-s-up>") 'windmove-up)
+              (define-key map (kbd "<M-s-right>") 'windmove-right)
+              (define-key map (kbd "<M-s-down>") 'windmove-down)
+              (define-key map (kbd "<M-s-left>") 'windmove-left)
+      map)
+    "my-keys-minor-mode keymap.")
+  (define-minor-mode my-keys-minor-mode
+    "A minor mode so that my key settings override annoying major modes."
+    :init-value t
+    :lighter " my-keys")
+  (my-keys-minor-mode 1)
+  (defun my-minibuffer-setup-hook ()
+    (my-keys-minor-mode 0))
+  (add-hook 'minibuffer-setup-hook 'my-minibuffer-setup-hook)
 
 #+END_SRC
 * Cleanup
