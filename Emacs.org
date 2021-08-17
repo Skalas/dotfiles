@@ -6,6 +6,7 @@
 ** First Basics
 #+begin_src emacs-lisp
   ;; The default is 800 kilobytes.  Measured in bytes.
+  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
   (setq gc-cons-threshold (* 50 1024 1024))
   ;;        gc-cons-percentage 0.6)
   (add-hook 'emacs-startup-hook
@@ -22,9 +23,10 @@
   (tooltip-mode -1) ; I don't like the menus
   (set-fringe-mode -1) ; I don't like the menus
   (global-auto-revert-mode 1)
-         (defalias 'yes-or-no-p 'y-or-n-p)
+  (delete-selection-mode 1)
+  (defalias 'yes-or-no-p 'y-or-n-p)
   ;; Make frame transparency overridable
-       (defvar skls/frame-transparency '(90 . 90))
+  ;;(defvar skls/frame-transparency '(90 . 90))
 #+end_src
 
 ** directories
@@ -80,32 +82,33 @@ better package management for emacs.
 #+end_src
 ** Sraight.el
 #+begin_src emacs-lisp :tangle no
-;; Bootstrap straight.el
-(defvar bootstrap-version)
-(let ((bootstrap-file
-      (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-        "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-        'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+  ;; Bootstrap straight.el
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+        (bootstrap-version 5))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
 
-;; Always use straight to install on systems other than Linux
-(setq straight-use-package-by-default (not (eq system-type 'gnu/linux)))
+  ;; Always use straight to install on systems other than Linux
+  (setq straight-use-package-by-default (not (eq system-type 'gnu/linux)))
 
-;; Use straight.el for use-package expressions
-(straight-use-package 'use-package)
+  ;; Use straight.el for use-package expressions
+  (straight-use-package 'use-package)
 
-;; Load the helper package for commands like `straight-x-clean-unused-repos'
-(require 'straight-x)
+  ;; Load the helper package for commands like `straight-x-clean-unused-repos'
+  (require 'straight-x)
 #+end_src
 ** Perspective.el
 #+begin_src emacs-lisp
   (use-package perspective
+    :defer nil
     :bind (("C-x k" . persp-kill-buffer*))
     :config
     (persp-mode))
@@ -113,29 +116,29 @@ better package management for emacs.
 ** Themes
 *** Visual Themes
 #+begin_src emacs-lisp
-        ;; You must run (all-the-icons-install-fonts) one time after
-        ;; installing this package!
+  ;; You must run (all-the-icons-install-fonts) one time after
+  ;; installing this package!
 
-          (use-package doom-modeline
-            :init (doom-modeline-mode 1)
-            :custom ((doom-modeline-height 15)))
+  (use-package doom-modeline
+    :init (doom-modeline-mode 1)
+    :custom ((doom-modeline-height 15)))
 
-          (use-package doom-themes
-            :ensure t
-            :init (load-theme 'doom-oceanic-next t))
+  (use-package doom-themes
+    :ensure t
+    :init (load-theme 'doom-oceanic-next t))
 
-        (use-package all-the-icons )
+  (use-package all-the-icons )
 
-      ;;   (use-package all-the-icons-dired)
-      ;; (add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
+  ;;   (use-package all-the-icons-dired)
+  ;; (add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
   (use-package all-the-icons-dired
     :hook (dired-mode . all-the-icons-dired-mode)
     :config
     (setq all-the-icons-dired-monochrome nil))
 
-        ;; Set frame transparency
-  (set-frame-parameter (selected-frame) 'alpha skls/frame-transparency)
-  (add-to-list 'default-frame-alist `(alpha . ,skls/frame-transparency))
+  ;; Set frame transparency
+  ;;(set-frame-parameter (selected-frame) 'alpha skls/frame-transparency)
+  ;;(add-to-list 'default-frame-alist `(alpha . ,skls/frame-transparency))
   (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -144,12 +147,12 @@ better package management for emacs.
 Make sure you have the font installed beforehand:
 
 #+begin_src shell :noeval
-sudo apt install fonts-firacode fonts-cantarell
+  sudo apt install fonts-firacode fonts-cantarell
 #+end_src
 
 #+begin_src emacs-lisp
-   (use-package fira-code-mode
-     :hook prog-mode)
+  (use-package fira-code-mode
+    :hook prog-mode)
   (set-face-attribute 'default nil :font "Fira Code"  :height 160)
   ;; Set the fixed pitch face:
   (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 160)
@@ -159,47 +162,131 @@ sudo apt install fonts-firacode fonts-cantarell
 #+end_src
 
 ** Interaction with Emacs
-*** Ivy
- Package for enhance the experience, along with swiper its a marvel.
+*** Vertico!
+
 #+begin_src emacs-lisp
-     (use-package ivy
-       :diminish
-       :bind (("C-s" . swiper)
-              ("M-x" . counsel-M-x)
-              :map ivy-minibuffer-map
-              ("TAB" . ivy-alt-done)
-              ("C-f" . ivy-alt-done)
-              ("C-j" . ivy-next-line)
-              ("C-k" . ivy-previous-line)
-              :map ivy-switch-buffer-map
-              ("C-k" . ivy-previous-line)
-              ("C-l" . ivy-done)
-              ("C-d" . ivy-switch-buffer-kill)
-              :map ivy-reverse-i-search-map
-              ("C-k" . ivy-previous-line)
-              ("C-d" . ivy-reverse-i-search-kill))
-       :init
-       (ivy-mode 1))
 
-    (use-package counsel
-      :bind (("C-M-j" . 'counsel-switch-buffer)
-             :map minibuffer-local-map
-             ("C-r" . 'counsel-minibuffer-history))
-      :config
-      (counsel-mode 1))
+  (defun skls/minibuffer-backward-kill (arg)
+    "When minibuffer is completing a file name delete up to parent
+  folder, otherwise delete a word"
+    (interactive "p")
+    (if minibuffer-completing-file-name
+        ;; Borrowed from https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
+      ;;and davidwilson
+        (if (string-match-p "/." (minibuffer-contents))
+            (zap-up-to-char (- arg) ?/)
+          (delete-minibuffer-contents))
+        (backward-kill-word arg)))
+    ;; Enable vertico
 
-    (use-package all-the-icons-ivy-rich
-      :after ivy
+  (use-package vertico
+    :init
+    (vertico-mode)
+    :bind
+    ([C-backspace] . skls/minibuffer-backward-kill)
+    ([M-backspace] . skls/minibuffer-backward-kill)
+    :custom (vertico-cycle t)
+    ;; Grow and shrink the Vertico minibuffer
+    ;; (setq vertico-resize t)
+      )
+  (use-package marginalia
+    :after vertico
+      :custom
+      (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
+      :init (marginalia-mode))
+
+    ;; Use the `orderless' completion style. Additionally enable
+    ;; `partial-completion' for file path expansion. `partial-completion' is
+    ;; important for wildcard support. Multiple files can be opened at once
+    ;; with `find-file' if you enter a wildcard. You may also give the
+    ;; `initials' completion style a try.
+    (use-package orderless
       :init
-      (all-the-icons-ivy-rich-mode 1))
+      (setq completion-styles '(orderless)
+            completion-category-defaults nil
+            completion-category-overrides '((file (styles partial-completion)))))
 
-    (use-package ivy-rich
-      :after all-the-icons-ivy-rich
+    ;; Persist history over Emacs restarts. Vertico sorts by history position.
+    (use-package savehist
       :init
-      (ivy-rich-mode 1))
+      (savehist-mode))
+#+end_src
+*** Consult commands
+Consult provides a lot of useful completion commands similar to Ivy’s Counsel.
+#+begin_src emacs-lisp
+  (defun skls/get-project-root ()
+    (when (fboundp 'projectile-project-root)
+      (projectile-project-root)))
 
-  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
- #+end_src
+  (use-package consult
+    :demand t
+    :bind (("C-s" . consult-line)
+           ("C-M-l" . consult-imenu)
+           ("C-M-j" . persp-switch-to-buffer*)
+           :map minibuffer-local-map
+           ("C-r" . consult-history))
+    :custom
+    (consult-project-root-function #'skls/get-project-root)
+    (completion-in-region-function #'consult-completion-in-region))
+#+end_src
+*** Embark
+#+begin_src emacs-lisp
+(use-package embark
+  :bind (("C-S-a" . embark-act)
+         :map minibuffer-local-map
+         ("C-d" . embark-act))
+  :config
+  ;; Show Embark actions via which-key
+  (setq embark-action-indicator
+        (lambda (map)
+          (which-key--show-keymap "Embark" map nil nil 'no-paging)
+          #'which-key--hide-popup-ignore-command)
+        embark-become-indicator embark-action-indicator))
+
+#+end_src
+*** Ivy
+Package for enhance the experience, along with swiper its a marvel.
+  #+begin_src emacs-lisp :tangle no
+      ;; Enable recursive minibuffers
+      ;;    (setq enable-recursive-minibuffers t))
+      ;; (use-package ivy
+      ;;   :diminish
+      ;;   :bind (("C-s" . swiper)
+      ;;          ("M-x" . counsel-M-x)
+      ;;          :map ivy-minibuffer-map
+      ;;          ("TAB" . ivy-alt-done)
+      ;;          ("C-f" . ivy-alt-done)
+      ;;          ("C-j" . ivy-next-line)
+      ;;          ("C-k" . ivy-previous-line)
+      ;;          :map ivy-switch-buffer-map
+      ;;          ("C-k" . ivy-previous-line)
+      ;;          ("C-l" . ivy-done)
+      ;;          ("C-d" . ivy-switch-buffer-kill)
+      ;;          :map ivy-reverse-i-search-map
+      ;;          ("C-k" . ivy-previous-line)
+      ;;          ("C-d" . ivy-reverse-i-search-kill))
+      ;;   :init
+      ;;   (ivy-mode 1))
+
+      ;; (use-package counsel
+      ;;   :bind (("C-M-j" . 'counsel-switch-buffer)
+      ;;          :map minibuffer-local-map
+      ;;          ("C-r" . 'counsel-minibuffer-history))
+      ;;   :config
+      ;;   (counsel-mode 1))
+
+      ;; (use-package all-the-icons-ivy-rich
+      ;;   :after ivy
+      ;;   :init
+      ;;   (all-the-icons-ivy-rich-mode 1))
+
+      ;; (use-package ivy-rich
+      ;;   :after all-the-icons-ivy-rich
+      ;;   :init
+      ;;   (ivy-rich-mode 1))
+
+
+#+end_src
 *** General
 #+begin_src emacs-lisp
   (use-package general
@@ -212,10 +299,10 @@ sudo apt install fonts-firacode fonts-cantarell
     (general-create-definer my-leader-def
       :prefix "C-c")
     (my-leader-def
-       ;; bind "C-c a" to 'org-agenda
-       "a" 'org-agenda
-       "b" 'counsel-bookmark
-       "c" 'org-capture))
+      ;; bind "C-c a" to 'org-agenda
+      "a" 'org-agenda
+      "b" 'counsel-bookmark
+      "c" 'org-capture))
 #+end_src
 
 #+RESULTS:
@@ -299,7 +386,7 @@ I don't like emacs littering my working folders
 #+end_src
 ** Ripgrep
 #+begin_src emacs-lisp
-(use-package ripgrep)
+  (use-package ripgrep)
 #+end_src
 * Programing
 ** General
@@ -334,50 +421,61 @@ I don't like emacs littering my working folders
     :hook (prog-mode . rainbow-delimiters-mode))
 
 #+end_src
-*** Electric Pair mode
+*** Smartparens
 #+begin_src emacs-lisp
-  ;; (electric-pair-mode 1)
-  ;; (add-hook 'electric-pair-mode-hook
-  ;;           (lambda ()
-  ;;             (setq-local electric-pair-inhibit-predicate
-  ;;                         `(lambda (c)
-  ;;                            (if (char-equal c ?<) t (electric-pair-inhibit-predicate c))
-  ;;                            (if (char-equal c ?\") t (electric-pair-inhibit-predicate c))))))
+  (use-package smartparens
+    :hook (prog-mode . smartparens-mode))
 #+end_src
 *** whitespace
 #+begin_src emacs-lisp
-(use-package ws-butler
-  :hook ((text-mode . ws-butler-mode)
-         (prog-mode . ws-butler-mode)))
+  (use-package ws-butler
+    :hook ((text-mode . ws-butler-mode)
+           (prog-mode . ws-butler-mode)))
 #+end_src
 ** Languages
-*** Lsp-mode
+*** Lsp-mode (graveyard)
 #+begin_src emacs-lisp
-  (defun skls/lsp-mode-setup ()
-    (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-    (lsp-headerline-breadcrumb-mode))
+  ;; (defun skls/lsp-mode-setup ()
+  ;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+  ;;   (lsp-headerline-breadcrumb-mode))
 
-  (use-package lsp-mode
-    :commands (lsp lsp-deferred)
-    :hook (lsp-mode . skls/lsp-mode-setup)
-    :init
-    (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
-    :config
-    (lsp-enable-which-key-integration t))
+  ;; (use-package lsp-mode
+  ;;   :commands (lsp lsp-deferred)
+  ;;   :hook (lsp-mode . skls/lsp-mode-setup)
+  ;;   :init
+  ;;   (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+  ;;   :config
+  ;;   (lsp-enable-which-key-integration t))
 
   ;; (use-package lsp-ui
   ;;   :hook (lsp-mode . lsp-ui-mode)
   ;;   :custom
   ;;   (lsp-ui-doc-position 'bottom))
 
-  (use-package lsp-treemacs
-    :after lsp)
+  ;; (use-package lsp-treemacs
+  ;;   :after lsp)
 
-  (use-package lsp-ivy
-    :after lsp)
+  ;; (use-package project
+  ;;   :pin elpa
+  ;;   :ensure t
+  ;;   :after lsp)
+
+  ;; (use-package lsp-ivy
+  ;;   :after lsp)
+#+end_src
+*** coding enhancements
+#+begin_src emacs-lisp
+
 
   (use-package flycheck
-    :hook (lsp-mode . flycheck-mode))
+    :ensure t
+    :init (global-flycheck-mode))
+
+  (use-package yasnippet-snippets
+    :after yasnippet)
+
+  ;; (use-package yasnippet-ess
+  ;;   :after yasnippet)
 
   (use-package yasnippet
     :hook (prog-mode . yas-minor-mode)
@@ -387,80 +485,124 @@ I don't like emacs littering my working folders
 #+end_src
 *** Company-mode
 #+begin_src emacs-lisp
-(use-package company
-  :after lsp-mode
-  :hook (lsp-mode . company-mode)
-  :bind (:map company-active-map
-         ("<tab>" . company-complete-selection))
-        (:map lsp-mode-map
-         ("<tab>" . company-indent-or-complete-common))
-  :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 1))
+  (use-package company
+    :after lsp-mode
+    :hook (lsp-mode . company-mode)
+    :bind (:map company-active-map
+                ("<tab>" . company-complete-selection))
+    (:map lsp-mode-map
+          ("<tab>" . company-indent-or-complete-common))
+    :custom
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 1))
 
-(use-package company-box
-  :hook (company-mode . company-box-mode))
+  (use-package company-box
+    :hook (company-mode . company-box-mode))
 #+end_src
 *** Python-mode
+Remember to install the python language server, the correct one is :
+#+begin_src shell
+  pip install python-lsp-server
+#+end_src
+Ahora si:
 #+begin_src emacs-lisp
+  (use-package python-black
+    :demand t
+    :after python-mode
+    :hook (python-mode . python-black-on-save-mode-enable-dwim))
+  (setenv "WORKON_HOME" "~/.pyenv/versions/")
+  (use-package pyvenv
+    :after python-mode
+    :config
+    (pyvenv-mode 1)
+    (pyvenv-activate "~/.pyvenv/versions/"))
   (setq tab-width 4)
 
-    ;; (use-package lsp-jedi
-    ;;   :ensure t
-    ;;   :config
-    ;;   (with-eval-after-load "lsp-mode"
-    ;;     (add-to-list 'lsp-disabled-clients 'pyls)
-    ;;     (add-to-list 'lsp-enabled-clients 'jedi)))
+  (use-package python-mode
+    :ensure t)
+  (use-package elpy
+    :after python-mode
+    :ensure t
+    :config
+    (setq elpy-shell-starting-directory 'current-directory
+          python-shell-interpreter "~/.pyenv/shims/python"
+          python-shell-interpreter-args "-i"
+          elpy-rpc-virtualenv-path 'current
+          python-shell-interpreter "/Users/miguel.escalante/.pyenv/shims/jupyter-console"
+          python-shell-interpreter-args "--simple-prompt"
+          python-shell-prompt-detect-failure-warning nil)
+    (add-to-list 'python-shell-completion-native-disabled-interpreters
+                 "jupyter-console")
 
-    ;;   (use-package lsp-python-ms
-    ;;     :ensure t
-    ;; ;    :demand
-    ;;     :hook (python-mode . lsp))
-
-    (use-package lsp-pyright
-      :ensure t
-      :hook (python-mode . (lambda ()
-                             (require 'lsp-pyright)
-                             ;(setq-default py-split-windows-on-execute-function 'split-window-horizontally)
-                               (lsp))))  ; or lsp-deferred
-
-    ;; (use-package python-mode
-    ;;   :hook (python-mode . lsp-deferred))
-
-    ;; (use-package python-mode
-    ;;   :ensure t
-    ;;   :hook (python-mode . lsp-deferred)
-    ;;   :custom
-    ;;   ;; NOTE: Set these if Python 3 is called "python3" on your system!
-    ;;   ;; (python-shell-interpreter "python3")
-    ;;   ;; (dap-python-executable "python3")
-    ;;   (dap-python-debugger 'debugpy)
-    ;;   :config
-    ;;   (require 'dap-python))
-
-    ;; (use-package dap-mode
-    ;;   ;; Uncomment the config below if you want all UI panes to be hidden by default!
-    ;;   ;; :custom
-    ;;   ;; (lsp-enable-dap-auto-configure nil)
-    ;;   ;; :config
-    ;;   ;; (dap-ui-mode 1)
-    ;;   :commands dap-debug
-    ;;   :config
-    ;;   ;; Bind `C-c l d` to `dap-hydra` for easy access
-    ;;   (general-define-key
-    ;;    :keymaps 'lsp-mode-map
-    ;;    :prefix lsp-keymap-prefix
-    ;;    "d" '(dap-hydra t :wk "debugger")))
-
-    ;; (use-package pyvenv
-    ;;   :after python-mode
-    ;;   :config
-    ;;   (pyvenv-mode 1)
-    ;;   (setenv "WORKON_HOME" "~/.pyenv/versions/")
-    ;;   (pyvenv-activate "~/.pyvenv/versions/"))
-    ;; (use-package python-django)
+    :init
+    (elpy-enable))
+  (use-package python-django
+    :after python-mode)
+  (use-package poetry
+    :after python-mode)
+  (use-package sphinx-doc
+    :after python-mode
+    :config (sphinx-doc-mode t))
 #+end_src
+*** Lsp-python
+This is the lsp graveyard
+#+begin_src emacs-lisp :tangle no
 
+  ;; (defun lsp-python-ms-format-buffer ()
+  ;;   (interactive)
+  ;;   (when (and (executable-find "yapf") buffer-file-name)
+  ;;     (call-process "yapf" nil nil nil "-i" buffer-file-name)))
+  ;; (add-hook 'python-mode-hook
+  ;;           (lambda ()
+  ;;             (add-hook 'after-save-hook #'lsp-python-ms-format-buffer t t)))
+
+  ;; (add-hook 'hack-local-variables-hook
+  ;;           (lambda ()
+  ;;             (when (derived-mode-p 'python-mode)
+  ;;               (require 'lsp-python-ms)
+  ;;               (lsp)))) ; or lsp-deferred
+  ;; (use-package lsp-python-ms
+  ;;   :ensure t
+  ;;   :hook (python-mode . (lambda ()
+  ;;                          (require 'lsp-python-ms)
+  ;;                          (setq-default py-split-windows-on-execute-function 'split-window-horizontally)
+  ;;                          (lsp)))
+  ;;   :init
+  ;;   (setq lsp-python-ms-executable "~/src/python-language-server/output/bin/Release/osx-x64/publish/Microsoft.Python.LanguageServer"))
+
+  ;; (use-package lsp-pyright
+  ;;   :ensure t
+  ;;   :hook (python-mode . (lambda ()
+  ;;                          (require 'lsp-pyright)
+  ;;                          (setq-default py-split-windows-on-execute-function 'split-window-horizontally)
+  ;;                          (lsp))))  ; or lsp-deferred
+
+  ;; (use-package python-mode
+  ;;   :ensure t
+  ;;   :hook (python-mode . lsp-deferred)
+  ;;   :custom
+  ;;   ;; NOTE: Set these if Python 3 is called "python3" on your system!
+  ;;   ;; (python-shell-interpreter "python3")
+  ;;   ;; (dap-python-executable "python3")
+  ;;   (dap-python-debugger 'debugpy)
+  ;;   :config
+  ;;   (require 'dap-python))
+
+  ;; (use-package dap-mode
+  ;;   ;; Uncomment the config below if you want all UI panes to be hidden by default!
+  ;;   ;; :custom
+  ;;   ;; (lsp-enable-dap-auto-configure nil)
+  ;;   ;; :config
+  ;;   ;; (dap-ui-mode 1)
+  ;;   :commands dap-debug
+  ;;   :config
+  ;;   ;; Bind `C-c l d` to `dap-hydra` for easy access
+  ;;   (general-define-key
+  ;;    :keymaps 'lsp-mode-map
+  ;;    :prefix lsp-keymap-prefix
+  ;;    "d" '(dap-hydra t :wk "debugger")))
+
+#+end_src
 *** R ess
 #+begin_src emacs-lisp
   (defun skls/insert-r-pipe ()
@@ -543,11 +685,10 @@ I used polymode in order to use jinja between the two braces, while still using 
 
   (use-package polymode
     :commands poly-sql-jinja2-mode
-    :mode ("\\.sql\\.j2\\'" . poly-sql-jinja2-mode)
-    ;;("\\.py\\'" . poly-sql-python-mode)
+    :after python-mode
     :config
-    (skls/create-poly-jinja)
-    ;(skls/create-poly-python)
+    ;(skls/create-poly-jinja)
+    (skls/create-poly-python)
     )
 
 #+END_SRC
@@ -1272,6 +1413,10 @@ for the actual config file !
   (add-hook 'minibuffer-setup-hook 'my-minibuffer-setup-hook)
 
 #+END_SRC
+** Pdf-tools
+#+begin_src emacs-lisp
+(pdf-loader-install)
+#+end_src
 * Cleanup
 Dial down GC thershold so it runs frequently but in less time.
 #+begin_src emacs-lisp
