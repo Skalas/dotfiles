@@ -613,7 +613,6 @@ This is the lsp graveyard
     (reindent-then-newline-and-indent))
 
   (use-package ess
-    :defer t
     :commands R
     :bind (
            :map ess-mode-map
@@ -624,7 +623,7 @@ This is the lsp graveyard
                 ("C->" . skls/insert-r-pipe)
                 )
     :init
-    (load "ess-site")
+    (load "ess-r-mode")
     )
 #+end_src
 
