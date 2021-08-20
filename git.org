@@ -4,6 +4,10 @@
 Basic User info
 #+begin_src conf :tangle ./.gitconfig
 [user]
-	mail = miguel.escalante@itam.mx
+	email = escalas5@gmail.com
 	name = Miguel Escalante
+[credential]
+	helper = store
+[push]
+	default = matching
 #+end_src
