@@ -433,6 +433,10 @@ I don't like emacs littering my working folders
            (prog-mode . ws-butler-mode)))
 #+end_src
 ** Languages
+*** RealGUD
+#+begin_src emacs-lisp
+(use-package realgud)
+#+end_src
 *** Lsp-mode (graveyard)
 #+begin_src emacs-lisp
   ;; (defun skls/lsp-mode-setup ()
@@ -792,6 +796,13 @@ Essh.el The best package so far for editing shell files as pipelines
 
 * Org Mode
 The best package ever!!! :) see [[https://orgmode.org][OrgMode]]
+** Treeslide o de cómo hacer presentaciones.
+#+begin_src emacs-lisp
+(defun skls/org-treeslide ()
+  (use-package org-tree-slide
+    :custom
+    (org-image-actual-width nil)))
+#+end_src
 ** Babel
 The best for writing Literate programing
 #+begin_src emacs-lisp
@@ -918,9 +929,9 @@ First we setup the agenda it's kidna messy so I put it in a different place
 
 ** Org-superstar
 #+begin_src emacs-lisp
-  (defun skls/org-superstar ()
-    (use-package org-superstar)
-    (org-superstar-mode 1))
+(defun skls/org-superstar ()
+  (use-package org-superstar)
+  (org-superstar-mode 1))
 #+end_src
 ** Org reveal
 #+begin_src emacs-lisp
@@ -943,35 +954,36 @@ First we setup the agenda it's kidna messy so I put it in a different place
 #+end_src
 ** Basic Setup
 #+begin_src emacs-lisp
-    (defun skls/org-font-setup ()
-      ;; Replace list hyphen with dot
-      (font-lock-add-keywords 'org-mode
-                              '(("^ *\\([-]\\) "
-                                 (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
-    (defun skls/org-mode-setup ()
-      (toggle-truncate-lines)
-      (org-indent-mode)
-      (variable-pitch-mode 1)
-      (visual-line-mode 1))
+        (defun skls/org-font-setup ()
+          ;; Replace list hyphen with dot
+          (font-lock-add-keywords 'org-mode
+                                  '(("^ *\\([-]\\) "
+                                     (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
+        (defun skls/org-mode-setup ()
+          (toggle-truncate-lines)
+          (org-indent-mode)
+          (variable-pitch-mode 1)
+          (visual-line-mode 1))
 
-    (defun skls/org-mode-visual-fill ()
-      (use-package visual-fill-column)
-      (setq visual-fill-column-width 100
-            visual-fill-column-center-text t)
-      (visual-fill-column-mode 1))
+        (defun skls/org-mode-visual-fill ()
+          (use-package visual-fill-column)
+          (setq visual-fill-column-width 100
+                visual-fill-column-center-text t)
+          (visual-fill-column-mode 1))
 
-    (use-package org
-      :commands (org-capture org-agenda)
-      :hook ((org-mode . skls/org-mode-babel)
-             (org-mode . skls/org-mode-setup)
-             (org-mode . skls/org-mode-visual-fill)
-             (org-mode . skls/org-superstar)
-             (org-mode . skls/org-reveal))
-      :config
-      (setq org-ellipsis " ▾")
-      (skls/org-agenda-setup)
-      (skls/org-font-setup)
-      )
+        (use-package org
+          :commands (org-capture org-agenda)
+          :hook ((org-mode . skls/org-mode-babel)
+                 (org-mode . skls/org-mode-setup)
+                 (org-mode . skls/org-mode-visual-fill)
+                 (org-mode . skls/org-superstar)
+                 (org-mode . skls/org-reveal)
+                 (org-mode . skls/org-treeslide))
+          :config
+          (setq org-ellipsis " ▾")
+          (skls/org-agenda-setup)
+          (skls/org-font-setup)
+          )
 #+end_src
 ** Faces
 #+begin_src emacs-lisp
