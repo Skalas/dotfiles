@@ -153,9 +153,9 @@ Make sure you have the font installed beforehand:
 #+begin_src emacs-lisp
   (use-package fira-code-mode
     :hook prog-mode)
-  (set-face-attribute 'default nil :font "Fira Code"  :height 160)
+  (set-face-attribute 'default nil :font "Fira Code")  ;):height 160)
   ;; Set the fixed pitch face:
-  (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 160)
+  (set-face-attribute 'fixed-pitch nil :font "Fira Code"); :height 160)
 
   ;; Set the variable pitch face
   (set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular)
@@ -1355,6 +1355,10 @@ for the actual config file !
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
   (when (equal system-type 'darwin)
+    (set-face-attribute 'default nil :font "Fira Code":height 160)
+  ;; Set the fixed pitch face:
+
+    (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 160)
     (use-package org-download
       :after org
       :defer nil
@@ -1426,7 +1430,9 @@ for the actual config file !
 #+END_SRC
 ** Pdf-tools
 #+begin_src emacs-lisp
-(pdf-loader-install)
+  (use-package pdf-tools
+    :config
+    (pdf-loader-install))
 #+end_src
 * Cleanup
 Dial down GC thershold so it runs frequently but in less time.
