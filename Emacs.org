@@ -471,20 +471,20 @@ I don't like emacs littering my working folders
 #+begin_src emacs-lisp
 
 
-  (use-package flycheck
-    :ensure t
-    :init (global-flycheck-mode))
+  ;; (use-package flycheck
+  ;;   :ensure t
+  ;;   :init (global-flycheck-mode))
 
-  (use-package yasnippet-snippets
-    :after yasnippet)
-
-  ;; (use-package yasnippet-ess
+  ;; (use-package yasnippet-snippets
   ;;   :after yasnippet)
 
-  (use-package yasnippet
-    :hook (prog-mode . yas-minor-mode)
-    :config
-    (yas-reload-all))
+  ;; ;; (use-package yasnippet-ess
+  ;; ;;   :after yasnippet)
+
+  ;; (use-package yasnippet
+  ;;   :hook (prog-mode . yas-minor-mode)
+  ;;   :config
+  ;;   (yas-reload-all))
 
 #+end_src
 *** Company-mode
@@ -514,12 +514,12 @@ Ahora si:
     :demand t
     :after python-mode
     :hook (python-mode . python-black-on-save-mode-enable-dwim))
-  (setenv "WORKON_HOME" "~/.pyenv/versions/")
+  (setenv "WORKON_HOME" "~/miniconda3/envs")
   (use-package pyvenv
     :after python-mode
     :config
     (pyvenv-mode 1)
-    (pyvenv-activate "~/.pyvenv/versions/"))
+    (pyvenv-activate "~/miniconda3/envs"))
   (setq tab-width 4)
 
   (use-package python-mode
@@ -528,15 +528,19 @@ Ahora si:
     :after python-mode
     :ensure t
     :config
+    ;; (setq elpy-shell-starting-directory 'current-directory
+    ;;       python-shell-interpreter "~/.pyenv/shims/python"
+    ;;       python-shell-interpreter-args "-i"
+    ;;       elpy-rpc-virtualenv-path 'current)
     (setq elpy-shell-starting-directory 'current-directory
-          python-shell-interpreter "~/.pyenv/shims/python"
+          python-shell-interpreter "python"
           python-shell-interpreter-args "-i"
-          elpy-rpc-virtualenv-path 'current
-          python-shell-interpreter "/Users/miguel.escalante/.pyenv/shims/jupyter-console"
-          python-shell-interpreter-args "--simple-prompt"
-          python-shell-prompt-detect-failure-warning nil)
-    (add-to-list 'python-shell-completion-native-disabled-interpreters
-                 "jupyter-console")
+          elpy-rpc-virtualenv-path 'current)
+    ;;       python-shell-interpreter "/Users/miguel.escalante/.pyenv/shims/jupyter-console"
+    ;;       python-shell-interpreter-args "--simple-prompt"
+    ;;       python-shell-prompt-detect-failure-warning nil)
+     (add-to-list 'python-shell-completion-native-disabled-interpreters
+                  "python")
 
     :init
     (elpy-enable))
@@ -629,6 +633,8 @@ This is the lsp graveyard
     :init
     (load "ess-r-mode")
     )
+  (setq ess-use-flymake nil) ;; disable Flymake
+
 #+end_src
 
 *** Poly-r
@@ -663,8 +669,8 @@ I used polymode in order to use jinja between the two braces, while still using 
     (define-hostmode poly-sql-hostmode :mode 'sql-mode)
     (define-innermode poly-jinja2-expr-sql-innermode
       :mode 'jinja2-mode
-      :head-matcher "{{"
-      :tail-matcher "}}"
+      :head-matcher "{"
+      :tail-matcher "}"
       :head-mode 'host
       :tail-mode 'host)
     (define-polymode poly-sql-jinja2-mode
@@ -687,11 +693,12 @@ I used polymode in order to use jinja between the two braces, while still using 
       ))
 
   (use-package polymode
-    :commands poly-sql-jinja2-mode
-    :after python-mode
+    :defer t
     :config
-    ;(skls/create-poly-jinja)
+    (skls/create-poly-jinja)
     (skls/create-poly-python)
+    (add-to-list 'auto-mode-alist '("\\.py" . poly-sql-python-mode))
+    (add-to-list 'auto-mode-alist '("\\.j2" . poly-sql-jinja2-mode))
     )
 
 #+END_SRC
