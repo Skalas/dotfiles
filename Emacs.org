@@ -5,6 +5,11 @@
 * Set everything up
 ** First Basics
 #+begin_src emacs-lisp
+  ;; Encoding
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (prefer-coding-system 'utf-8)
+
   ;; The default is 800 kilobytes.  Measured in bytes.
   (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
   (setq gc-cons-threshold (* 50 1024 1024))
@@ -359,6 +364,15 @@ Package for enhance the experience, along with swiper its a marvel.
       (define-key map (kbd "<M-C-left>") 'windmove-left)
       map)
     "my-keys-minor-mode keymap.")
+  (define-minor-mode my-keys-minor-mode
+    "A minor mode so that my key settings override annoying major modes."
+    :init-value t
+    :lighter " my-keys")
+  (my-keys-minor-mode 1)
+  (defun my-minibuffer-setup-hook ()
+    (my-keys-minor-mode 0))
+  (add-hook 'minibuffer-setup-hook 'my-minibuffer-setup-hook)
+
 #+end_src
 
 ** Text Scale
@@ -1412,34 +1426,11 @@ for the actual config file !
      (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
      (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
      (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
-     (set-terminal-coding-system 'utf-8)
-     (set-keyboard-coding-system 'utf-8)
-     (prefer-coding-system 'utf-8)
      (set-face-attribute 'default nil :height 150)
      (message "Mac OS X")
      ;; window jump
-     (defvar my-keys-minor-mode-map
-       (let ((map (make-sparse-keymap)))
-         (define-key map (kbd "<M-s-up>") 'windmove-up)
-         (define-key map (kbd "<M-s-right>") 'windmove-right)
-         (define-key map (kbd "<M-s-down>") 'windmove-down)
-         (define-key map (kbd "<M-s-left>") 'windmove-left)
-         map)
-       "my-keys-minor-mode keymap.")
-
      )
-  (define-minor-mode my-keys-minor-mode
-    "A minor mode so that my key settings override annoying major modes."
-    :init-value t
-    :lighter " my-keys")
-  (my-keys-minor-mode 1)
-  (defun my-minibuffer-setup-hook ()
-    (my-keys-minor-mode 0))
-  (add-hook 'minibuffer-setup-hook 'my-minibuffer-setup-hook)
 
-  (set-terminal-coding-system 'utf-8)
-  (set-keyboard-coding-system 'utf-8)
-  (prefer-coding-system 'utf-8)
 #+END_SRC
 ** Pdf-tools
 #+begin_src emacs-lisp
