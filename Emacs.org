@@ -1,8 +1,17 @@
+
 #+Author: Miguel Escalante
 #+Title:  My emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
 
 * Set everything up
+** Pre-basics:
+#+begin_src emacs-lisp
+  (when (equal system-type 'darwin)
+    (setenv "LIBRARY_PATH" "/usr/local/opt/gcc/lib/gcc/11:/usr/local/opt/libgccjit/lib/gcc/11:/usr/local/opt/gcc/lib/gcc/11/gcc/x86_64-apple-darwin20/11")
+
+    )
+
+#+end_src
 ** First Basics
 #+begin_src emacs-lisp
   ;; Encoding
@@ -1384,9 +1393,9 @@ for the actual config file !
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
    (when (equal system-type 'darwin)
-     (set-face-attribute 'default nil :font "Fira Code":height 160)
+     (set-face-attribute 'default nil :font "Fira Code":height 120)
    ;; Set the fixed pitch face:
-     (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 160)
+     (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 120)
      (use-package org-download
        :after org
        :defer nil
@@ -1426,7 +1435,7 @@ for the actual config file !
      (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
      (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
      (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
-     (set-face-attribute 'default nil :height 150)
+     (set-face-attribute 'default nil :height 120)
      (message "Mac OS X")
      ;; window jump
      )
