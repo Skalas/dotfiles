@@ -714,7 +714,7 @@ I used polymode in order to use jinja between the two braces, while still using 
     (define-hostmode poly-python-hostmode :mode 'python-mode)
     (define-innermode poly-expr-sql-innermode
       :mode 'sql-mode
-      :head-matcher (rx "r" (= 3 (char "\"'")) (* (any space)))
+      :head-matcher (rx (or "r" "f") (= 3 (char "\"'")) (* (any space)))
       :tail-matcher (rx (= 3 (char "\"'")))
       :head-mode 'host
       :tail-mode 'host)
