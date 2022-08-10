@@ -1,4 +1,3 @@
-
 #+Author: Miguel Escalante
 #+Title:  My emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
@@ -123,7 +122,8 @@ better package management for emacs.
 #+begin_src emacs-lisp
   (use-package perspective
     :defer nil
-    :bind (("C-x k" . persp-kill-buffer*))
+    :custom
+    (persp-mode-prefix-key (kbd "C-c x"))
     :config
     (persp-mode))
 #+end_src
