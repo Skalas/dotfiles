@@ -985,6 +985,18 @@ First we setup the agenda it's kidna messy so I put it in a different place
     )
 
  #+end_src
+
+** Org download
+#+begin_src emacs-lisp
+(use-package org-download
+  :ensure t
+  :defer t
+  :init
+  ;; Add handlers for drag-and-drop when Org is loaded.
+  (with-eval-after-load 'org
+    (org-download-enable)))
+ #+end_src
+
 ** Org -> Md
 #+begin_src emacs-lisp
   (use-package ox-gfm
