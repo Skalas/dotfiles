@@ -545,12 +545,12 @@ Ahora si:
     :demand t
     :after python-mode
     :hook (python-mode . python-black-on-save-mode-enable-dwim))
-  (setenv "WORKON_HOME" "~/miniconda3/envs")
+  (setenv "WORKON_HOME" "~/src/miniconda3/envs")
   (use-package pyvenv
     :after python-mode
     :config
     (pyvenv-mode 1)
-    (pyvenv-activate "~/miniconda3/envs"))
+    (pyvenv-activate "~/src/miniconda3/envs"))
   (setq tab-width 4)
 
   (use-package python-mode
