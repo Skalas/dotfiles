@@ -9,70 +9,62 @@ fortune -s
 
 * Configure Antigen
 #+begin_src conf :tangle ./.zshrc
-source ~/src/antigen.zsh
-# Load the oh-my-zsh's library.
-antigen use oh-my-zsh
+  source ~/src/antigen.zsh
+  # Load the oh-my-zsh's library.
+  antigen use oh-my-zsh
 
-# Bundles from the default repo (robbyrussell's oh-my-zsh).
-antigen bundle git
-antigen bundle pip
-antigen bundle lein
-antigen bundle command-not-found
-antigen bundle docker
-antigen bundle dirhistory
-antigen bundle git-extras
-antigen bundle tmux
-antigen bundle httpie
-antigen bundle jsontools
-antigen bundle pep8
-antigen bundle python
-antigen bundle aws
-antigen bundle esc/conda-zsh-completion
+  # Bundles from the default repo (robbyrussell's oh-my-zsh).
+  antigen bundle git
+  antigen bundle pip
+  antigen bundle lein
+  antigen bundle command-not-found
+  antigen bundle docker
+  antigen bundle dirhistory
+  antigen bundle git-extras
+  antigen bundle tmux
+  antigen bundle httpie
+  antigen bundle jsontools
+  antigen bundle pep8
+  antigen bundle python
+  antigen bundle aws
+  antigen bundle esc/conda-zsh-completion
 
-# Syntax highlighting bundle.
-antigen bundle zsh-users/zsh-autosuggestions
-antigen bundle zsh-users/zsh-completions
-antigen bundle zsh-users/zsh-syntax-highlighting
-antigen bundle ssh-agent
+  # Syntax highlighting bundle.
+  antigen bundle zsh-users/zsh-autosuggestions
+  antigen bundle zsh-users/zsh-completions
+  antigen bundle zsh-users/zsh-syntax-highlighting
+  antigen bundle ssh-agent
 
-if [[ $CURRENT_OS == 'OS X' ]]; then
-    antigen bundle brew
-    antigen bundle brew-cask
-    antigen bundle gem
-    antigen bundle osx
-elif [[ $CURRENT_OS == 'Linux' ]]; then
+  if [[ $CURRENT_OS == 'OS X' ]]; then
+      antigen bundle brew
+      antigen bundle brew-cask
+      antigen bundle gem
+      antigen bundle osx
+  elif [[ $CURRENT_OS == 'Linux' ]]; then
 
-    if [[ $DISTRO == 'CentOS' ]]; then
-        antigen bundle centos
-    fi
-elif [[ $CURRENT_OS == 'Cygwin' ]]; then
-    antigen bundle cygwin
-fi
-# Load the theme.
-antigen theme juanghurtado
+      if [[ $DISTRO == 'CentOS' ]]; then
+          antigen bundle centos
+      fi
+  elif [[ $CURRENT_OS == 'Cygwin' ]]; then
+      antigen bundle cygwin
+  fi
+  # Load the theme.
+  #antigen theme juanghurtado
+  antigen theme romkatv/powerlevel10
 
-# Tell Antigen that you're done.
-antigen apply
+  # Tell Antigen that you're done.
+  antigen apply
 
-#source ~/src/skls/wsl.zsh
-source ~/src/skls/vterm.zsh
-source ~/src/skls/python/poetry.zsh
-source ~/src/skls/aliases
-#source ~/.env_vars
-source ~/src/livenation.zsh
-#source ~/.env_vars
-#source ~/src/skls/python/conda_initialize.zsh
-#source ~/src/skls/python/pyenv.zsh
-# Alias
-source ~/src/skls/aliases
-source ~/src/deepsee.zsh
+  #source ~/src/skls/wsl.zsh
+  source ~/src/skls/python/poetry.zsh
+  source ~/src/skls/aliases
+  #source ~/.env_vars
+  #source ~/src/skls/python/conda_initialize.zsh
+  #source ~/src/skls/python/pyenv.zsh
+  # Alias
+  source ~/src/skls/aliases
 
-#+end_src
-* Vterm
-#+begin_src conf :tangle src/skls/vterm.zsh
-if [[ "$INSIDE_EMACS" = 'vterm' ]]; then
-    alias clear='vterm_printf "51;Evterm-clear-scrollback";tput clear'
-fi	
+
 #+end_src
 * Python Config
 ** Anaconda initialize
@@ -150,26 +142,4 @@ export DISPLAY=$(ip route | awk '{print $3; exit}'):0
 export LIBGL_ALWAYS_INDIRECT=1
 export GDK_SCALE=1
 setxkbmap us -variant intl
-
-#+end_src
-
-* Deepsee
-#+begin_src conf :tangle src/deepsee.zsh
-alias dsaws="aws --profile deepsee"
-#+end_src
-* Livenation
-#+begin_src conf :tangle src/livenation.zsh
-export TF_VERSION=0.12
-
-awsSANDBOX() { docker run -v $(pwd):/output --volume ~/.aws:/root/.aws -e AWS_DEFAULT_REGION=us-east-1 -e AWS_REGION=us-east-1 -e AWS_PROFILE=tm-sandbox-Ops-Techops --rm cgswong/aws:aws "${@}"; }
-awsNONPROD() { docker run -v $(pwd):/output --volume ~/.aws:/root/.aws -e AWS_DEFAULT_REGION=us-east-1 -e AWS_REGION=us-east-1 -e AWS_PROFILE=tm-nonprod-ReadOnly-Techops --rm cgswong/aws:aws "${@}"; }
-awsPROD() { docker run -v $(pwd):/output --volume ~/.aws:/root/.aws -e AWS_DEFAULT_REGION=us-east-1 -e AWS_REGION=us-east-1 -e AWS_PROFILE=tm-prod-ReadOnly-Techops --rm cgswong/aws:aws "${@}"; }
-#terraformer() { docker run --rm --net=host -u `id -u $USER`:`id -u $GROUP` -it -v $(pwd):/cfg -v ~/.aws:/.aws tmhub.io/ticketmaster/terraformer:latest "$@"; }
-terraformer() { docker run --rm -it -v $(pwd):/cfg -v ~/.aws:/.aws tmhub.io/ticketmaster/terraformer:$TF_VERSION "$@"; }
-terraformer-debug() { docker run --rm -it -e TF_LOG=DEBUG -v $(pwd):/cfg -v ~/.aws:/.aws tmhub.io/ticketmaster/terraformer:$TF_VERSION "$@"; }
-aws-grep() { docker run --rm -it -v $(pwd):/cfg -v ~/.aws:/.aws -e AWS_REGION=us-east-1 -e AWS_PROFILE=$1 tmhub.io/ticketmaster/aws-grep "${@:2}"; }
-ecr_images() { aws ecr list-images --repository-name "$@" --profile tm-prod-ReadOnly-Techops | jq -r '.imageIds[].imageTag' | grep -v null | sort; }
-credtool() { docker run -it --rm -v ~/.aws:/root/.aws -v $(PWD):/credtool tmhub.io/cet/credtool:latest "$@"; }
-
-alias tmaws="aws --profile tm-data-sciences-Ops-Techops"
 #+end_src
