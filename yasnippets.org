@@ -1,0 +1,103 @@
+#+TITLE: Snippets for different languages
+#+AUTHOR: Prof. Miguel Angel Escalante Serrato
+#+EMAIL:  miguel.escalante@itam.mx
+#+STARTUP: showall
+
+
+* OrgMode snippets
+** Metadata for orgmode
+#+begin_src conf :tangle .emacs.d/templates/snippets/org-mode/org_meta :mkdirp yes
+
+# -*- mode: snippet -*-
+# name: org-meta
+# key: <meta
+# --
+#+TITLE: ${1:Titulo}
+#+AUTHOR: ${2:Prof. Miguel Angel Escalante Serrato}
+#+EMAIL:  ${3:miguel.escalante@itam.mx}
+#+DATE: ${4:fecha}
+#+STARTUP: showall
+
+#+end_src
+** Headers for revealjs
+
+#+begin_src conf :tangle .emacs.d/templates/snippets/org-mode/reveal-head :mkdirp yes
+# -*- mode: snippet -*-
+# name: reveal-head
+# key: <reveal
+# group: reveal
+# --
+:REVEAL_PROPERTIES:
+# Template uses org export with export option <R B>
+# Alternatives: use with citeproc
+#+LANGUAGE: es
+#+OPTIONS: num:nil toc:nil timestamp:nil
+#+REVEAL_REVEAL_JS_VERSION: 4
+#+REVEAL_THEME: night
+#+REVEAL_SLIDE_NUMBER: t
+#+REVEAL_HEAD_PREAMBLE: <meta name="description" content="${1:Titulo}">
+#+REVEAL_INIT_OPTIONS: width:1600, height:900, margin:.2
+#+REVEAL_EXTRA_CSS: ${2:./mods.css}
+#+REVEAL_PLUGINS: (notes)
+:END:
+$0
+#+end_src
+
+** Org snippet generator
+#+begin_src conf :tangle .emacs.d/templates/snippets/org-mode/snippets :mkdirp yes
+  # -*- mode: snippet -*-
+  # name: new-snippet
+  # key: snip
+  # group: snippets
+  # --
+    #+begin_src $1 :tangle .emacs.d/templates/snippets/$2/$3 :mkdirp yes
+    # -*- mode: snippet -*-
+    # name: $3
+    # key: $4
+    # group: $5
+    # --
+    $0,#+end_src
+  #+end_src
+
+
+* R (Ess mode)
+
+#+begin_src R :tangle .emacs.d/templates/snippets/ess-mode/usual-suspects :mkdirp yes
+  # -*- mode: snippet -*-
+  # name: Usual suspects R
+  # key: pack
+  # group: ess
+  # --
+  library(tidyverse)
+  library(readxl)
+  library(stringr)
+  library(lubridate)
+  library(readr)
+  $0
+#+End_src
+
+** If in R
+#+begin_src R :tangle .emacs.d/templates/snippets/ess-mode/if :mkdirp yes
+  # -*- mode: snippet -*-
+  # name: if
+  # key: if
+  # group: ess
+  # --
+  if ( ${1} ) {
+    $0
+  }
+#+end_src
+
+** ifelse
+#+begin_src R :tangle .emacs.d/templates/snippets/ess-mode/ifelse :mkdirp yes
+  # -*- mode: snippet -*-
+  # name: ifelse
+  # key: ife
+  # group: ess
+  # --
+   if( ${1} ){
+     ${2}
+   }else{
+     $0
+   }
+#+end_src
