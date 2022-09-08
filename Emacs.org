@@ -771,12 +771,42 @@ Essh.el The best package so far for editing shell files as pipelines
 #+end_src
 ** Vterm
 #+begin_src emacs-lisp
-  (use-package vterm
-    :commands vterm
-    :config
-    (setq vterm-always-compile-module t)
-    (setq vterm-shell "zsh")                       ;; Set this to customize the shell to launch
-    (setq vterm-max-scrollback 10000))
+  (defun skls/vterm-execute-current-line ()
+      "Insert text of current line in vterm and execute."
+      (interactive)
+      (require 'vterm)
+      (if (use-region-p)
+          (setq min (region-beginning)
+                max (region-end))
+        (setq min (point-at-bol)
+              max (point-at-eol)))
+      (let ((command (concat (buffer-substring min max) "\n")))
+        (let ((buf (current-buffer)))
+          (unless (get-buffer vterm-buffer-name)
+            (vterm))
+          (display-buffer vterm-buffer-name t)
+          (switch-to-buffer-other-window vterm-buffer-name)
+          (vterm--goto-line -1)
+          (message command)
+          (vterm-send-string command)
+          (vterm-send-return)
+          (switch-to-buffer-other-window buf)
+          (goto-char max)
+          (next-line)
+          (keyboard-quit)
+          )))
+
+    (use-package vterm
+      :commands vterm
+      :config
+      (setq vterm-always-compile-module t)
+      (setq vterm-shell "zsh")                       ;; Set this to customize the shell to launch
+      (setq vterm-max-scrollback 10000))
+  (global-set-key "\M-c" 'skls/vterm-execute-current-line)
+
+
+
+
 #+end_src
 ** Eshell
 #+begin_src emacs-lisp
@@ -852,6 +882,7 @@ The best for writing Literate programing
     (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
     (add-to-list 'org-structure-template-alist '("R" . "src R"))
     (add-to-list 'org-structure-template-alist '("sql" . "src sql"))
+    (add-to-list 'org-structure-template-alist '("js" . "src js"))
     (setq org-confirm-babel-evaluate nil)
     (setq org-src-tab-acts-natively t)
     (org-babel-do-load-languages
@@ -861,6 +892,7 @@ The best for writing Literate programing
        (python . t)
        (sql . t)
        (shell . t)
+       (js . t)
        )))
 #+end_src
 ** Agenda

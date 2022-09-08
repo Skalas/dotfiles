@@ -19,4 +19,15 @@
      Hostname git.tmaws.io
      IdentityFile ~/.ssh/id_ed25519
      IdentitiesOnly yes
+
+  Host BastionProd
+       Hostname 52.43.154.167
+       User ubuntu
+       IdentityFile ~/.ssh/opi.pem
+
+  Host BastionStaging
+       Hostname 54.214.99.138
+       User ubuntu
+       IdentityFile ~/.ssh/opi.pem
+
 #+end_src
