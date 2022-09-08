@@ -1154,7 +1154,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
     (org-download-image-dir "images")
     (org-download-heading-lvl nil)
     (org-download-timestamp "%Y%m%d-%H%M%S_")
-    (org-image-actual-width 300)
+    (org-image-actual-width 500)
     :bind
     ("C-M-y" . org-download-clipboard)
     :init
