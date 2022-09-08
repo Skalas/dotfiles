@@ -775,13 +775,12 @@ Essh.el The best package so far for editing shell files as pipelines
       "Insert text of current line in vterm and execute."
       (interactive)
       (require 'vterm)
-      (let ((command (buffer-substring
-                      (save-excursion
-                        (beginning-of-line)
-                        (point))
-                      (save-excursion
-                       (end-of-line)
-                       (point)))))
+      (if (use-region-p)
+          (setq min (region-beginning)
+                max (region-end))
+        (setq min (point-at-bol)
+              max (point-at-eol)))
+      (let ((command (concat (buffer-substring min max) "\n")))
         (let ((buf (current-buffer)))
           (unless (get-buffer vterm-buffer-name)
             (vterm))
@@ -792,6 +791,9 @@ Essh.el The best package so far for editing shell files as pipelines
           (vterm-send-string command)
           (vterm-send-return)
           (switch-to-buffer-other-window buf)
+          (goto-char max)
+          (next-line)
+          (keyboard-quit)
           )))
 
     (use-package vterm
@@ -890,6 +892,7 @@ The best for writing Literate programing
        (python . t)
        (sql . t)
        (shell . t)
+       (js . t)
        )))
 #+end_src
 ** Agenda
