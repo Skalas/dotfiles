@@ -165,14 +165,13 @@ Make sure you have the font installed beforehand:
 #+end_src
 
 #+begin_src emacs-lisp
-  ;; (use-package fira-code-mode
-  ;;   :hook prog-mode)
-  (set-face-attribute 'default nil :font "Fira Code" :height 100)  ;):height 160)
-  ;; Set the fixed pitch face:
-  (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 100); :height 160)
 
-  ;; Set the variable pitch face
-  (set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular :height 100)
+  (set-face-attribute 'default nil :font "Fira Code" :height 100)
+  ;; Set the fixed pitch face:
+  ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 200); :height 160)
+
+  ;; ;; Set the variable pitch face
+  ;; (set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular :height 100)
 #+end_src
 
 ** Interaction with Emacs
