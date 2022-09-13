@@ -10,4 +10,6 @@ Basic User info
 	helper = store
 [push]
 	default = matching
+[pull]
+	rebase = false
 #+end_src
