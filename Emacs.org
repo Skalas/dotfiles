@@ -943,19 +943,18 @@ First we setup the agenda it's kidna messy so I put it in a different place
               (todo "NEXT"
                     ((org-agenda-overriding-header "Next Actions")
                      (org-agenda-max-todos nil)))
+              (tags-todo "+@Kavak/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes Kavak")))
               (tags-todo "+@ITAM/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes ITAM")))
               (tags-todo "+@Sociedat/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Sociedat")))
-              (tags-todo "+@Kavak/!-NEXT"
-                         ((org-agenda-overriding-header "Pendientes Globant")))
               (tags-todo "+@home/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Casa")))
-              (tags-todo "-@ITAM-@Globant-@home-@Sociedat/!-NEXT"
+              (tags-todo "-@ITAM-@Kavak-@home-@Sociedat/!-NEXT"
                     ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
                      (org-agenda-files '(,(skls/org-path "Tasks.org")))
                      (org-agenda-text-search-extra-files nil)))))
-
             ("n" "Next Tasks"
              ((agenda "" ((org-deadline-warning-days 7)))
               (todo "NEXT"
@@ -984,13 +983,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
              "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
                :clock-in :clock-resume
                :empty-lines 1)
-              ("w" "Workflows")
-              ("we" "Checking Email" entry (file+olp+datetree "~/Dropbox/org/Journal.org")
-               "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
-
-              ("m" "Metrics Capture")
-              ("mw" "Weight" table-line (file+headline "~/Dropbox/org/Metrics.org" "Weight")
-               "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)))
+            ))
     )
 #+end_src
 
