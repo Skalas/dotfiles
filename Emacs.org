@@ -62,7 +62,6 @@ better package management for emacs.
 
   (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                            ("melpa-stable" . "https://stable.melpa.org/packages/")
-                           ("org" . "https://orgmode.org/elpa/")
                            ("elpa" . "https://elpa.gnu.org/packages/")))
   (package-initialize)
   (unless package-archive-contents
@@ -169,10 +168,10 @@ Make sure you have the font installed beforehand:
   ;;   :hook prog-mode)
   (set-face-attribute 'default nil :font "Fira Code" :height 100)  ;):height 160)
   ;; Set the fixed pitch face:
-  (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 100); :height 160)
+  ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 100); :height 160)
 
-  ;; Set the variable pitch face
-  (set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular :height 100)
+  ;; ;; Set the variable pitch face
+  ;; (set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular :height 100)
 #+end_src
 
 ** Interaction with Emacs
@@ -932,13 +931,10 @@ First we setup the agenda it's kidna messy so I put it in a different place
             ("@errand" . ?E)
             ("@home" . ?H)
             ("@work" . ?W)
-            ("@Globant" . ?G)
-            ("@SRE" . ?s)
             ("@Sociedat" . ?S)
             ("@ITAM" . ?I)
-            ("@Deepsee" . ?D)
-            ("@LiveNation" . ?L)
             ("note" . ?n)
+            ("@Kavak" . ?k)
             ("idea" . ?i)))
 
     (setq org-agenda-custom-commands
@@ -951,7 +947,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
                          ((org-agenda-overriding-header "Pendientes ITAM")))
               (tags-todo "+@Sociedat/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Sociedat")))
-              (tags-todo "+@Globant/!-NEXT"
+              (tags-todo "+@Kavak/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Globant")))
               (tags-todo "+@home/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Casa")))
@@ -964,6 +960,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
              ((agenda "" ((org-deadline-warning-days 7)))
               (todo "NEXT"
                     ((org-agenda-overriding-header "Next Tasks")))))
+
 
             ;; Low-effort next actions
             ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
