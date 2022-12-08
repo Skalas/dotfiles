@@ -4,7 +4,7 @@
 Basic User info
 #+begin_src conf :tangle ./.gitconfig
 [user]
-	email = escalas5@gmail.com
+	email = miguel.escalante@kavak.com
 	name = Miguel Escalante
 [credential]
 	helper = store
