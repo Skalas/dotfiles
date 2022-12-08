@@ -1,6 +1,18 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
 fortune -s
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 
 source ~/src/antigen.zsh
+source ~/.env_vars
+source ~/src/load_anaconda.zsh
+# Alias
+source ~/src/aliases
+
 # Load the oh-my-zsh's library.
 antigen use oh-my-zsh
 
@@ -32,6 +44,7 @@ if [[ $CURRENT_OS == 'OS X' ]]; then
     antigen bundle gem
     antigen bundle osx
 elif [[ $CURRENT_OS == 'Linux' ]]; then
+    # None so far...
 
     if [[ $DISTRO == 'CentOS' ]]; then
         antigen bundle centos
@@ -40,18 +53,10 @@ elif [[ $CURRENT_OS == 'Cygwin' ]]; then
     antigen bundle cygwin
 fi
 # Load the theme.
-antigen theme juanghurtado
+antigen theme romkatv/powerlevel10k
 
 # Tell Antigen that you're done.
 antigen apply
 
-source ~/src/skls/wsl.zsh
-source ~/src/skls/vterm.zsh
-source ~/src/skls/python/poetry.zsh
-source ~/src/skls/aliases
-source ~/src/livenation.sh
-source ~/.env_vars
-#source ~/src/skls/python/conda_initialize.zsh
-source ~/src/skls/python/pyenv.zsh
-# Alias
-source ~/src/skls/aliases
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
