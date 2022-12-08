@@ -3,14 +3,6 @@
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
 
 * Set everything up
-** Pre-basics:
-#+begin_src emacs-lisp
-  (when (equal system-type 'darwin)
-    (setenv "LIBRARY_PATH" "/usr/local/opt/gcc/lib/gcc/11:/usr/local/opt/libgccjit/lib/gcc/11:/usr/local/opt/gcc/lib/gcc/11/gcc/x86_64-apple-darwin20/11")
-
-    )
-
-#+end_src
 ** First Basics
 #+begin_src emacs-lisp
   ;; Encoding
@@ -167,7 +159,7 @@ Make sure you have the font installed beforehand:
 
   ;; (use-package fira-code-mode
   ;;   :hook prog-mode)
-  (set-face-attribute 'default nil :font "Fira Code" :height 100)  ;):height 160)
+  ;;  (set-face-attribute 'default nil :font "Fira Code" :height 100)  ;):height 160)
   ;; Set the fixed pitch face:
   ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 100); :height 160)
   ;; Set the variable pitch face
@@ -540,47 +532,38 @@ Remember to install the python language server, the correct one is :
 #+end_src
 Ahora si:
 #+begin_src emacs-lisp
-  (use-package python-black
-    :demand t
-    :after python-mode
-    :hook (python-mode . python-black-on-save-mode-enable-dwim))
   (setenv "WORKON_HOME" "~/src/miniconda3/envs")
+  (setq tab-width 4)
   (use-package pyvenv
     :after python-mode
     :config
     (pyvenv-mode 1)
-    (pyvenv-activate "~/src/miniconda3/envs"))
-  (setq tab-width 4)
+    (pyvenv-activate "~/src/miniconda3/envs")
+    )
 
-  (use-package python-mode
-    :ensure t)
-  (use-package elpy
+  (use-package python-black
+    :demand t
     :after python-mode
+    :hook (python-mode . python-black-on-save-mode-enable-dwim))
+
+  (use-package elpy
+    ;;:after python-mode
     :ensure t
     :config
-    ;; (setq elpy-shell-starting-directory 'current-directory
-    ;;       python-shell-interpreter "~/.pyenv/shims/python"
-    ;;       python-shell-interpreter-args "-i"
-    ;;       elpy-rpc-virtualenv-path 'current)
-    (setq elpy-shell-starting-directory 'current-directory
-          python-shell-interpreter "python"
-          python-shell-interpreter-args "-i"
-          elpy-rpc-virtualenv-path 'current)
-    ;;       python-shell-interpreter "/Users/miguel.escalante/.pyenv/shims/jupyter-console"
-    ;;       python-shell-interpreter-args "--simple-prompt"
-    ;;       python-shell-prompt-detect-failure-warning nil)
-     (add-to-list 'python-shell-completion-native-disabled-interpreters
-                  "python")
-
     :init
     (elpy-enable))
-  (use-package python-django
-    :after python-mode)
-  (use-package poetry
-    :after python-mode)
+
+  ;; (use-package python-django
+  ;;   :after python-mode)
+
+  ;; (use-package poetry
+  ;;   :after python-mode)
+
   (use-package sphinx-doc
     :after python-mode
     :config (sphinx-doc-mode t))
+  (use-package python-mode
+    :ensure t)
 #+end_src
 *** Lsp-python
 This is the lsp graveyard
@@ -651,6 +634,7 @@ This is the lsp graveyard
     (reindent-then-newline-and-indent))
 
   (use-package ess
+    :defer t
     :commands R
     :bind (
            :map ess-mode-map
@@ -683,8 +667,10 @@ This package helps me to build
 
 *** Docker
 #+BEGIN_SRC emacs-lisp
-  (use-package docker)
-  (use-package docker-tramp)
+  ;; (use-package docker
+  ;;   :ensure t
+  ;;   :bind ("C-c d" . docker)
+  ;;   )
   (use-package dockerfile-mode)
 #+END_SRC
 *** SQL
@@ -737,30 +723,213 @@ I used polymode in order to use jinja between the two braces, while still using 
 Essh.el The best package so far for editing shell files as pipelines
 #+BEGIN_SRC emacs-lisp
   (global-set-key [f12] 'vterm)
+  (add-to-list 'load-path "~/.emacs.d/packages/")
+  (require 'essh)
   (defun skls/essh-sh-hook ()
-    (my-leader-def
-      :keymaps 'sh-mode-map
-      "C-r" 'pipe-region-to-shell
-      "C-b" 'pipe-buffer-to-shell
-      "C-c" 'pipe-line-to-shell
-      "C-n" 'pipe-line-to-shell-and-step
-      "C-f" 'pipe-function-to-shell
-      "C-d" 'shell-cd-current-directory
-      )
-    (setq explicit-shell-file-name "/bin/zsh")
-    (setq explicit-bash-args '("--noediting" "--login" "-i"))
-    (setenv "SHELL" shell-file-name)
-    (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m))
+    (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        ;;
+    (define-key sh-mode-map "\C-c\C-c" 'pipe-buffer-to-shell)        ;;
+    (define-key sh-mode-map (kbd "C-<return>") 'pipe-line-to-shell-and-step)          ;;
+    (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell) ;;
+    (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      ;;
+    (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory))
+  (add-hook 'sh-mode-hook 'skls/essh-sh-hook)
 
-  (use-package essh
-    :hook sh-mode
-    :load-path "packages/"
-    :config (skls/essh-sh-hook)
-    )
+  ;; (use-package essh
+  ;;   :hook sh-mode
+  ;;   :load-path "packages/"
+  ;;   :config
+  ;;   (skls/essh-sh-hook)
+  ;;   ;
+  ;;   )
 #+END_SRC
 
 #+RESULTS:
 | essh |
+
+**** Essh.el
+#+begin_src emacs-lisp :tangle .emacs.d/packages/essh.el
+    ;;; essh.el --- a set of commands that emulate for bash what ESS is to R.
+
+    ;; Filename: essh.el
+
+
+    ;; ------------------------------------------------------------------ ;;
+    ;; TO INSTALL:                                                        ;;
+    ;; 1. add essh.el in your load-path.                                  ;;
+    ;;                                                                    ;;
+    ;; 2. add to your .emacs file:                                        ;;
+    ;;                                                                    ;;
+    ;; (require 'essh)                                                    ;;
+    ;; (defun essh-sh-hook ()                                             ;;
+    ;;   (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        ;;
+    ;;   (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)        ;;
+    ;;   (define-key sh-mode-map "\C-c\C-j" 'pipe-line-to-shell)          ;;
+    ;;   (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step) ;;
+    ;;   (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      ;;
+    ;;   (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory)) ;;
+    ;; (add-hook 'sh-mode-hook 'essh-sh-hook)                             ;;
+    ;; ------------------------------------------------------------------ ;;
+
+    ;; function taken from ess package
+    (defun essh-next-code-line (&optional arg)
+      "Move ARG lines of code forward (backward if ARG is negative).
+    Skips past all empty and comment lines.	 Default for ARG is 1.
+
+    On success, return 0.  Otherwise, go as far as possible and return -1."
+      (interactive "p")
+      (or arg (setq arg 1))
+      (beginning-of-line)
+      (let ((n 0)
+            (inc (if (> arg 0) 1 -1)))
+        (while (and (/= arg 0) (= n 0))
+          (setq n (forward-line inc)); n=0 is success
+          (while (and (= n 0)
+                      (looking-at "\\s-*\\($\\|\\s<\\)"))
+            (setq n (forward-line inc)))
+          (setq arg (- arg inc)))
+        n))
+
+    (defun process-shell ()
+      "returns a list with existing shell process."
+      (interactive)
+      (setq listpr (process-list))
+      (setq lengthpr (length listpr))
+      (setq i 0)
+      (setq listshellp '())
+      (while (< i lengthpr)
+        (setq pos (string-match "shell" (prin1-to-string (elt listpr i))))
+        (if pos (add-to-list 'listshellp (process-name (get-process (elt listpr i)))))
+        (setq i (+ 1 i)))
+      listshellp)
+
+
+    (defun process-shell-choose ()
+      "returns which process to use."
+    (interactive)
+    (setq outpr 0)
+    (setq cbuf (current-buffer))
+    (setq shelllist (process-shell))
+    (setq shelln (length shelllist))
+    (if (eq shelln 0)
+        (progn (shell)
+               (switch-to-buffer cbuf)
+               (setq outpr (get-process "shell"))
+               (sleep-for 0.5)))
+    (if (eq shelln 1)
+        (setq outpr (get-process (elt shelllist 0))))
+    (if (> shelln 1)
+    (progn
+    (setq proc (completing-read "Send code to:" shelllist nil t (elt shelllist 0)))
+    (setq outpr (get-process proc))))
+    outpr)
+
+
+    (defun shell-eval-line (sprocess command)
+      "Evaluates a single command into the shell process."
+      (setq sbuffer (process-buffer sprocess))
+      (setq command (concat command "\n"))
+      (accept-process-output sprocess 0 10)
+      (with-current-buffer sbuffer
+        (end-of-buffer) ;point is not seen being moved (unless sbuffer is focused)
+        (insert command)			;pastes the command to shell
+        (set-marker (process-mark sprocess) (point-max))
+        (process-send-string sprocess command)
+        ;; (accept-process-output sprocess 0 10)
+        ))
+
+    (defun shell-cd-current-directory ()
+      "Changes the shell working directory to the current buffer's one."
+      (interactive)
+      (setq sprocess (process-shell-choose))
+      (setq com (format "cd %s" (file-name-directory default-directory)))
+      (shell-eval-line sprocess com))
+
+
+    (defun pipe-line-to-shell (&optional step)
+      "Evaluates the current line to the shell."
+      (interactive ())
+      (setq com (buffer-substring (point-at-bol) (point-at-eol)))
+      (if (> (length com) 0)
+          (progn
+            (setq sprocess (process-shell-choose))
+            (shell-eval-line sprocess com)
+            (when step (essh-next-code-line)))
+        (message "No command in this line")))
+
+    (defun pipe-line-to-shell-and-step ()
+      "Evaluates the current line to the shell and goes to next line."
+      (interactive)
+      (pipe-line-to-shell t))
+
+    (defun pipe-region-to-shell (start end)
+      "Sends a region to the shell."
+      (interactive "r")
+      (setq com (buffer-substring start end))	       ;reads command
+      (setq lcom (length com))		       ;count chars
+      (setq lastchar (substring com (1- lcom) lcom)) ;get last char
+      (unless (string-match "\n" lastchar) ;if last char is not "\n", then...
+        (setq com (concat com "\n")))	     ;...add it!
+      (setq sprocess (process-shell-choose))
+      (setq sbuffer (process-buffer sprocess))
+      (while (> (length com) 0)
+        (setq pos (string-match "\n" com))
+        (setq scom (substring com 0 pos))
+        (setq com (substring com (min (length com) (1+ pos))))
+        (shell-eval-line sprocess scom)
+        (accept-process-output sprocess 0 10)
+        ))
+
+
+    (defun pipe-buffer-to-shell ()
+      "Evaluate whole buffer to the shell."
+      (interactive)
+      (pipe-region-to-shell (point-min) (point-max)))
+
+    (defun pipe-function-to-shell ()
+    "Evaluate function to the shell."
+    (interactive)
+    (setq beg-end (essh-beg-end-of-function))
+    (if beg-end
+        (save-excursion
+          (setq beg (nth 0 beg-end))
+          (setq end (nth 1 beg-end))
+          (goto-line beg)
+          (setq origin (point-at-bol))
+          (goto-line end)
+          (setq terminal (point-at-eol))
+          (pipe-region-to-shell origin terminal))
+      (message "No function at current point.")))
+
+    (defun essh-beg-end-of-function ()
+      "Returns the lines where the function starts and ends. If there is no function at current line, it returns nil."
+      (interactive)
+      (setq curline (line-number-at-pos))	;current line
+      (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
+      (setq pos (string-match "function" curcom))
+      (save-excursion
+        (if pos
+            (progn
+              (setq beg curline))
+          (progn
+            (while (not pos)
+              (setq curline (1- curline))	;current line
+              (previous-line)			;go to previous line
+              (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
+              (setq pos (string-match "function" curcom)))
+          (setq beg curline)))
+        (beginning-of-line)
+        (forward-list)			; move pointer to first matching brace
+        (setq end (line-number-at-pos)))
+      ;; (message (format  "%d %d" beg end))
+      (if (and (<= (line-number-at-pos) end) (>= (line-number-at-pos) beg))
+          (list beg end)
+        nil))
+
+  ;;;###autoload
+  (defun essh ())
+  (provide 'essh)
+
+#+end_src
 
 *** Terraform
 #+begin_src emacs-lisp
@@ -882,6 +1051,7 @@ The best for writing Literate programing
     (add-to-list 'org-structure-template-alist '("R" . "src R"))
     (add-to-list 'org-structure-template-alist '("sql" . "src sql"))
     (add-to-list 'org-structure-template-alist '("js" . "src js"))
+    (add-to-list 'org-structure-template-alist '("cy" . "src cypher"))
     (setq org-confirm-babel-evaluate nil)
     (setq org-src-tab-acts-natively t)
     (org-babel-do-load-languages
@@ -892,6 +1062,7 @@ The best for writing Literate programing
        (sql . t)
        (shell . t)
        (js . t)
+       (cypher . t)
        )))
 #+end_src
 ** Agenda
@@ -1012,6 +1183,16 @@ First we setup the agenda it's kidna messy so I put it in a different place
 #+begin_src emacs-lisp
   (use-package ox-gfm
     :after org)
+#+end_src
+
+** Org cypher
+#+begin_src emacs-lisp
+(use-package ob-cypher
+  :ensure t
+  :config
+  (add-to-list 'org-babel-load-languages '(cypher . t))
+  (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
+  (add-to-list 'org-babel-tangle-lang-exts '("cypher" . "cypher")))
 #+end_src
 ** Basic Setup
 #+begin_src emacs-lisp
@@ -1355,241 +1536,65 @@ To have a bar on the side
     :config (treemacs-set-scope-type 'Tabs))
 #+end_src
 
-* Essh.el
-#+begin_src emacs-lisp :tangle .emacs.d/packages/essh.el
-    ;;; essh.el --- a set of commands that emulate for bash what ESS is to R.
-
-    ;; Filename: essh.el
-
-
-    ;; ------------------------------------------------------------------ ;;
-    ;; TO INSTALL:                                                        ;;
-    ;; 1. add essh.el in your load-path.                                  ;;
-    ;;                                                                    ;;
-    ;; 2. add to your .emacs file:                                        ;;
-    ;;                                                                    ;;
-    ;; (require 'essh)                                                    ;;
-    ;; (defun essh-sh-hook ()                                             ;;
-    ;;   (define-key sh-mode-map "\C-c\C-r" 'pipe-region-to-shell)        ;;
-    ;;   (define-key sh-mode-map "\C-c\C-b" 'pipe-buffer-to-shell)        ;;
-    ;;   (define-key sh-mode-map "\C-c\C-j" 'pipe-line-to-shell)          ;;
-    ;;   (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell-and-step) ;;
-    ;;   (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)      ;;
-    ;;   (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory)) ;;
-    ;; (add-hook 'sh-mode-hook 'essh-sh-hook)                             ;;
-    ;; ------------------------------------------------------------------ ;;
-
-    ;; function taken from ess package
-    (defun essh-next-code-line (&optional arg)
-      "Move ARG lines of code forward (backward if ARG is negative).
-    Skips past all empty and comment lines.	 Default for ARG is 1.
-
-    On success, return 0.  Otherwise, go as far as possible and return -1."
-      (interactive "p")
-      (or arg (setq arg 1))
-      (beginning-of-line)
-      (let ((n 0)
-            (inc (if (> arg 0) 1 -1)))
-        (while (and (/= arg 0) (= n 0))
-          (setq n (forward-line inc)); n=0 is success
-          (while (and (= n 0)
-                      (looking-at "\\s-*\\($\\|\\s<\\)"))
-            (setq n (forward-line inc)))
-          (setq arg (- arg inc)))
-        n))
-
-    (defun process-shell ()
-      "returns a list with existing shell process."
-      (interactive)
-      (setq listpr (process-list))
-      (setq lengthpr (length listpr))
-      (setq i 0)
-      (setq listshellp '())
-      (while (< i lengthpr)
-        (setq pos (string-match "shell" (prin1-to-string (elt listpr i))))
-        (if pos (add-to-list 'listshellp (process-name (get-process (elt listpr i)))))
-        (setq i (+ 1 i)))
-      listshellp)
-
-
-    (defun process-shell-choose ()
-      "returns which process to use."
-    (interactive)
-    (setq outpr 0)
-    (setq cbuf (current-buffer))
-    (setq shelllist (process-shell))
-    (setq shelln (length shelllist))
-    (if (eq shelln 0)
-        (progn (shell)
-               (switch-to-buffer cbuf)
-               (setq outpr (get-process "shell"))
-               (sleep-for 0.5)))
-    (if (eq shelln 1)
-        (setq outpr (get-process (elt shelllist 0))))
-    (if (> shelln 1)
-    (progn
-    (setq proc (completing-read "Send code to:" shelllist nil t (elt shelllist 0)))
-    (setq outpr (get-process proc))))
-    outpr)
-
-
-    (defun shell-eval-line (sprocess command)
-      "Evaluates a single command into the shell process."
-      (setq sbuffer (process-buffer sprocess))
-      (setq command (concat command "\n"))
-      (accept-process-output sprocess 0 10)
-      (with-current-buffer sbuffer
-        (end-of-buffer) ;point is not seen being moved (unless sbuffer is focused)
-        (insert command)			;pastes the command to shell
-        (set-marker (process-mark sprocess) (point-max))
-        (process-send-string sprocess command)
-        ;; (accept-process-output sprocess 0 10)
-        ))
-
-    (defun shell-cd-current-directory ()
-      "Changes the shell working directory to the current buffer's one."
-      (interactive)
-      (setq sprocess (process-shell-choose))
-      (setq com (format "cd %s" (file-name-directory default-directory)))
-      (shell-eval-line sprocess com))
-
-
-    (defun pipe-line-to-shell (&optional step)
-      "Evaluates the current line to the shell."
-      (interactive ())
-      (setq com (buffer-substring (point-at-bol) (point-at-eol)))
-      (if (> (length com) 0)
-          (progn
-            (setq sprocess (process-shell-choose))
-            (shell-eval-line sprocess com)
-            (when step (essh-next-code-line)))
-        (message "No command in this line")))
-
-    (defun pipe-line-to-shell-and-step ()
-      "Evaluates the current line to the shell and goes to next line."
-      (interactive)
-      (pipe-line-to-shell t))
-
-    (defun pipe-region-to-shell (start end)
-      "Sends a region to the shell."
-      (interactive "r")
-      (setq com (buffer-substring start end))	       ;reads command
-      (setq lcom (length com))		       ;count chars
-      (setq lastchar (substring com (1- lcom) lcom)) ;get last char
-      (unless (string-match "\n" lastchar) ;if last char is not "\n", then...
-        (setq com (concat com "\n")))	     ;...add it!
-      (setq sprocess (process-shell-choose))
-      (setq sbuffer (process-buffer sprocess))
-      (while (> (length com) 0)
-        (setq pos (string-match "\n" com))
-        (setq scom (substring com 0 pos))
-        (setq com (substring com (min (length com) (1+ pos))))
-        (shell-eval-line sprocess scom)
-        (accept-process-output sprocess 0 10)
-        ))
-
-
-    (defun pipe-buffer-to-shell ()
-      "Evaluate whole buffer to the shell."
-      (interactive)
-      (pipe-region-to-shell (point-min) (point-max)))
-
-    (defun pipe-function-to-shell ()
-    "Evaluate function to the shell."
-    (interactive)
-    (setq beg-end (essh-beg-end-of-function))
-    (if beg-end
-        (save-excursion
-          (setq beg (nth 0 beg-end))
-          (setq end (nth 1 beg-end))
-          (goto-line beg)
-          (setq origin (point-at-bol))
-          (goto-line end)
-          (setq terminal (point-at-eol))
-          (pipe-region-to-shell origin terminal))
-      (message "No function at current point.")))
-
-    (defun essh-beg-end-of-function ()
-      "Returns the lines where the function starts and ends. If there is no function at current line, it returns nil."
-      (interactive)
-      (setq curline (line-number-at-pos))	;current line
-      (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
-      (setq pos (string-match "function" curcom))
-      (save-excursion
-        (if pos
-            (progn
-              (setq beg curline))
-          (progn
-            (while (not pos)
-              (setq curline (1- curline))	;current line
-              (previous-line)			;go to previous line
-              (setq curcom (buffer-substring (point-at-bol) (point-at-eol)))
-              (setq pos (string-match "function" curcom)))
-          (setq beg curline)))
-        (beginning-of-line)
-        (forward-list)			; move pointer to first matching brace
-        (setq end (line-number-at-pos)))
-      ;; (message (format  "%d %d" beg end))
-      (if (and (<= (line-number-at-pos) end) (>= (line-number-at-pos) beg))
-          (list beg end)
-        nil))
-
-  ;;;###autoload
-  (defun essh ())
-  (provide 'essh)
-
-#+end_src
-
 * Mac OS
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-   (when (equal system-type 'darwin)
-     (set-face-attribute 'default nil :font "Fira Code":height 120)
-   ;; Set the fixed pitch face:
-     (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 120)
-     (use-package org-download
-       :after org
-       :defer nil
-       :custom
-       (org-download-method 'directory)
-       (org-download-image-dir "images")
-       (org-download-heading-lvl nil)
-       (org-download-timestamp "%Y%m%d-%H%M%S_")
-       (org-image-actual-width 450)
-       (org-download-screenshot-method "/usr/local/bin/pngpaste %s")
-       :bind
-       ("C-c n s" . org-download-screenshot)
-       :config
-       (require 'org-download))
-     (setq exec-path (cons "/usr/local/bin" exec-path))
-     (setq magit-git-executable "/usr/bin/git")
-     (unless (getenv "LANG") (setenv "LANG" "en_US.UTF-8"))
-     (unless (getenv "LC_ALL") (setenv "LC_ALL" "en_US.UTF-8"))
-     (setq insert-directory-program "/usr/local/opt/coreutils/libexec/gnubin/ls")
-     (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims"))
-     (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
-     (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
-     (global-set-key (kbd "M-n") '(lambda () (interactive) (insert "ñ")))
-     (global-set-key (kbd "M-º") '(lambda () (interactive) (insert "\\")))
-     (global-set-key (kbd "M-2") '(lambda () (interactive) (insert "@")))
-     (global-set-key (kbd "M-1") '(lambda () (interactive) (insert "|")))
-     (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
-     (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
-     (global-set-key (kbd "M-/") '(lambda () (interactive) (insert "¿")))
-     (global-set-key (kbd "M-i") '(lambda () (interactive) (insert "í")))
-     (global-set-key (kbd "M-I") '(lambda () (interactive) (insert "Í")))
-     (global-set-key (kbd "M-o") '(lambda () (interactive) (insert "ó")))
-     (global-set-key (kbd "M-O") '(lambda () (interactive) (insert "Ó")))
-     (global-set-key (kbd "M-a") '(lambda () (interactive) (insert "á")))
-     (global-set-key (kbd "M-A") '(lambda () (interactive) (insert "Á")))
-     (global-set-key (kbd "M-E") '(lambda () (interactive) (insert "É")))
-     (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
-     (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
-     (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
-     (set-face-attribute 'default nil :height 120)
-     (message "Mac OS X")
-     ;; window jump
-     )
+  (when (equal system-type 'darwin)
+    ;;(set-face-attribute 'default nil :font "Fira Code":height 120)
+  ;; Set the fixed pitch face:
+    ;;(set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 120)
+    (setq insert-directory-program "/opt/homebrew/bin/gls")
+    (use-package org-download
+      :after org
+      :defer t
+      :custom
+      (org-download-method 'directory)
+      (org-download-image-dir "images")
+      (org-download-heading-lvl nil)
+      (org-download-timestamp "%Y%m%d-%H%M%S_")
+      (org-image-actual-width 500)
+      :bind
+      ("C-M-y" . org-download-clipboard)
+      :init
+      ;; Add handlers for drag-and-drop when Org is loaded.
+      (with-eval-after-load 'org
+        (org-download-enable)))
+    (setq exec-path (cons "/usr/local/bin" exec-path))
+    ;; Here is where you add the executables for emacs to look for.
+    (add-to-list 'exec-path "/opt/homebrew/bin/")
+    (add-to-list 'exec-path "/opt/homebrew/sbin/")
+    (add-to-list 'exec-path "/opt/homebrew/opt/libpq/bin/")
+    (setq magit-git-executable "/opt/homebrew/bin/git")
+    (unless (getenv "LANG") (setenv "LANG" "en_US.UTF-8"))
+    (unless (getenv "LC_ALL") (setenv "LC_ALL" "en_US.UTF-8"))
+    ;;(setq insert-directory-program "/usr/local/opt/coreutils/libexec/gnubin/ls")
+    (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims"))
+    (setenv "PATH" (concat (getenv "PATH")
+                           ":/Library/TeX/texbin:/usr/local/bin/:/Users/miguelescalante/src/miniconda3/bin/:/opt/homebrew/bin/:/opt/homebrew/sbin/:/opt/homebrew/opt/libpq/bin"))
+    (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
+    (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
+    (global-set-key (kbd "M-n") '(lambda () (interactive) (insert "ñ")))
+    (global-set-key (kbd "M-º") '(lambda () (interactive) (insert "\\")))
+    (global-set-key (kbd "M-2") '(lambda () (interactive) (insert "@")))
+    (global-set-key (kbd "M-1") '(lambda () (interactive) (insert "|")))
+    (global-set-key (kbd "M-ç") '(lambda () (interactive) (insert "}")))
+    (global-set-key (kbd "M-+") '(lambda () (interactive) (insert "]")))
+    (global-set-key (kbd "M-/") '(lambda () (interactive) (insert "¿")))
+    (global-set-key (kbd "M-i") '(lambda () (interactive) (insert "í")))
+    (global-set-key (kbd "M-I") '(lambda () (interactive) (insert "Í")))
+    (global-set-key (kbd "M-o") '(lambda () (interactive) (insert "ó")))
+    (global-set-key (kbd "M-O") '(lambda () (interactive) (insert "Ó")))
+    (global-set-key (kbd "M-a") '(lambda () (interactive) (insert "á")))
+    (global-set-key (kbd "M-A") '(lambda () (interactive) (insert "Á")))
+    (global-set-key (kbd "M-E") '(lambda () (interactive) (insert "É")))
+    (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
+    (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
+    (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
+    (set-face-attribute 'default nil :font "Fira Code" :height 130)
+    ;;(set-face-attribute 'default nil :height 120)
+    (message "Mac OS X")
+    ;; window jump
+    )
 
 #+END_SRC
 ** Pdf-tools

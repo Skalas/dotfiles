@@ -50,7 +50,7 @@ fortune -s
   fi
   # Load the theme.
   #antigen theme juanghurtado
-  antigen theme romkatv/powerlevel10
+  antigen theme romkatv/powerlevel10k
 
   # Tell Antigen that you're done.
   antigen apply
