@@ -1,5 +1,5 @@
-#+Author: Miguel Escalante
 #+Title:  My emacs Config
+#+Author: Miguel Escalante#
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
 
 * Set everything up
@@ -550,6 +550,7 @@ Ahora si:
     ;;:after python-mode
     :ensure t
     :config
+    (setq python-shell-completion-native-disabled-interpreters '("python3"))
     :init
     (elpy-enable))
 
@@ -747,7 +748,7 @@ Essh.el The best package so far for editing shell files as pipelines
 | essh |
 
 **** Essh.el
-#+begin_src emacs-lisp :tangle .emacs.d/packages/essh.el
+#+begin_src emacs-lisp :tangle ./.emacs.d/packages/essh.el :mkdirp yes
     ;;; essh.el --- a set of commands that emulate for bash what ESS is to R.
 
     ;; Filename: essh.el
@@ -1470,13 +1471,17 @@ for the actual config file !
     (global-set-key (kbd "M-e") '(lambda () (interactive) (insert "é")))
     (global-set-key (kbd "M-U") '(lambda () (interactive) (insert "Ú")))
     (global-set-key (kbd "M-u") '(lambda () (interactive) (insert "ú")))
-    (set-face-attribute 'default nil :font "Fira Code" :height 130)
+    ;;(set-face-attribute 'default nil :font "Fira Code" :height 130)
     ;;(set-face-attribute 'default nil :height 120)
     (message "Mac OS X")
     ;; window jump
     )
 
 #+END_SRC
+* Kavak config
+#+begin_src emacs-lisp
+  (setenv "AWS_PROFILE" "mfa")
+#+end_src
 ** Pdf-tools
 #+begin_src emacs-lisp
   (use-package pdf-tools
