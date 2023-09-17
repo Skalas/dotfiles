@@ -1,5 +1,5 @@
 #+Title:  My emacs Config
-#+Author: Miguel Escalante#
+#+Author: Miguel Escalante
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
 
 * Set everything up
@@ -143,7 +143,7 @@ better package management for emacs.
 
   ;; Set frame transparency
   ;;(set-frame-parameter (selected-frame) 'alpha skls/frame-transparency)
-  ;;(add-to-list 'default-frame-alist `(alpha . ,skls/frame-transparency))
+  ;;(add-to-list 'default-frame-alist `(alpha . skls/frame-transparency))
   (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -158,12 +158,12 @@ Make sure you have the font installed beforehand:
 #+begin_src emacs-lisp
 
   ;; (use-package fira-code-mode
-  ;;   :hook prog-mode)
-  ;;  (set-face-attribute 'default nil :font "Fira Code" :height 100)  ;):height 160)
-  ;; Set the fixed pitch face:
-  ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 100); :height 160)
-  ;; Set the variable pitch face
-  ;; (set-face-attribute 'variable-pitch nil :font "Cantarell" :weight 'regular :height 100)
+  ;;     :hook prog-mode)
+  (set-face-attribute 'default nil :font "Fira Code"); :height 160) ;
+  ;;  Set the fixed pitch face:
+  ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code"); :height 160)
+  ;; ;;  Set the variable pitch face
+  ;; (set-face-attribute 'variable-pitch nil :font "Cantarell"); :weight 'regular :height 100)
 #+end_src
 
 ** Interaction with Emacs
@@ -527,9 +527,6 @@ I don't like emacs littering my working folders
 #+end_src
 *** Python-mode
 Remember to install the python language server, the correct one is :
-#+begin_src shell
-  pip install python-lsp-server
-#+end_src
 Ahora si:
 #+begin_src emacs-lisp
   (setenv "WORKON_HOME" "~/src/miniconda3/envs")
@@ -543,8 +540,8 @@ Ahora si:
 
   (use-package python-black
     :demand t
-    :after python-mode
-    :hook (python-mode . python-black-on-save-mode-enable-dwim))
+    :after python
+    :hook (python-mode . python-black-on-save-mode))
 
   (use-package elpy
     ;;:after python-mode
@@ -677,6 +674,8 @@ This package helps me to build
 *** SQL
 I used polymode in order to use jinja between the two braces, while still using sql indentation and everything else .
 #+BEGIN_SRC emacs-lisp
+  (use-package flymake-sqlfluff
+  :ensure t)
   (eval-after-load "sql"
     '(use-package sql-indent))
 
@@ -1069,94 +1068,95 @@ The best for writing Literate programing
 ** Agenda
 First we setup the agenda it's kidna messy so I put it in a different place
 #+begin_src emacs-lisp
-  (defun skls/org-agenda-setup ()
-    (setq org-agenda-start-with-log-mode t)
-    (setq org-log-done 'time)
-    (setq org-log-into-drawer t)
+    (defun skls/org-agenda-setup ()
+      (setq org-agenda-start-with-log-mode t)
+      (setq org-log-done 'time)
+      (setq org-log-into-drawer t)
 
-    (require 'org-habit)
-    (add-to-list 'org-modules 'org-habit)
-    (setq org-habit-graph-column 60)
+      (require 'org-habit)
+      (add-to-list 'org-modules 'org-habit)
+      (setq org-habit-graph-column 60)
 
-    (setq org-todo-keywords
-          '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)" "CANCELED(c)")
-            (sequence  "WAIT(w)" "BACK(b)" "|")))
+      (setq org-todo-keywords
+            '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)" "CANCELED(c)")
+              (sequence  "WAIT(w)" "BACK(b)" "|")))
 
-    (setq org-refile-targets
-          '(("Archive.org" :maxlevel . 1)
-            ("Tasks.org" :maxlevel . 1)))
-    ;; TODO: org-todo-keyword-faces
-    (setq org-todo-keyword-faces
-          '(("NEXT" . (:foreground "orange red" :weight bold))
-            ("WAIT" . (:foreground "HotPink2" :weight bold))
-            ("BACK" . (:foreground "MediumPurple3" :weight bold))))
-    ;; Save Org buffers after refiling!
-    ;; (advice-add 'org-refile :after 'org-save-all-org-buffers)
-    (advice-add 'org-refile :after
-                (lambda (&rest _)
-                  (org-save-all-org-buffers)))
+      (setq org-refile-targets
+            '(("Archive.org" :maxlevel . 1)
+              ("Tasks.org" :maxlevel . 1)))
+      ;; TODO: org-todo-keyword-faces
+      (setq org-todo-keyword-faces
+            '(("NEXT" . (:foreground "orange red" :weight bold))
+              ("WAIT" . (:foreground "HotPink2" :weight bold))
+              ("BACK" . (:foreground "MediumPurple3" :weight bold))))
+      ;; Save Org buffers after refiling!
+      ;; (advice-add 'org-refile :after 'org-save-all-org-buffers)
+      (advice-add 'org-refile :after
+                  (lambda (&rest _)
+                    (org-save-all-org-buffers)))
 
-    (setq org-tag-alist
-          '((:startgroup)
-                                          ; Put mutually exclusive tags here
-            (:endgroup)
-            ("@errand" . ?E)
-            ("@home" . ?H)
-            ("@work" . ?W)
-            ("@Sociedat" . ?S)
-            ("@ITAM" . ?I)
-            ("note" . ?n)
-            ("@Kavak" . ?k)
-            ("idea" . ?i)))
+      (setq org-tag-alist
+            '((:startgroup)
+                                            ; Put mutually exclusive tags here
+              (:endgroup)
+              ("@errand" . ?E)
+              ("@home" . ?H)
+              ("@work" . ?W)
+              ("@Sociedat" . ?S)
+              ("@ITAM" . ?I)
+              ("note" . ?n)
+              ("@Kavak" . ?k)
+              ("idea" . ?i)
+              ("@Fascino" . ?f)))
 
-    (setq org-agenda-custom-commands
-          `(("d" "Dashboard"
-             ((agenda "" ((org-deadline-warning-days 7)))
-              (todo "NEXT"
-                    ((org-agenda-overriding-header "Next Actions")
-                     (org-agenda-max-todos nil)))
-              (tags-todo "+@Kavak/!-NEXT"
-                         ((org-agenda-overriding-header "Pendientes Kavak")))
-              (tags-todo "+@ITAM/!-NEXT"
-                         ((org-agenda-overriding-header "Pendientes ITAM")))
-              (tags-todo "+@Sociedat/!-NEXT"
-                         ((org-agenda-overriding-header "Pendientes Sociedat")))
-              (tags-todo "+@home/!-NEXT"
-                         ((org-agenda-overriding-header "Pendientes Casa")))
-              (tags-todo "-@ITAM-@Kavak-@home-@Sociedat/!-NEXT"
-                    ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
-                     (org-agenda-files '(,(skls/org-path "Tasks.org")))
-                     (org-agenda-text-search-extra-files nil)))))
-            ("n" "Next Tasks"
-             ((agenda "" ((org-deadline-warning-days 7)))
-              (todo "NEXT"
-                    ((org-agenda-overriding-header "Next Tasks")))))
+      (setq org-agenda-custom-commands
+            `(("d" "Dashboard"
+               ((agenda "" ((org-deadline-warning-days 7)))
+                (todo "NEXT"
+                      ((org-agenda-overriding-header "Next Actions")
+                       (org-agenda-max-todos nil)))
+                (tags-todo "+@Kavak/!-NEXT"
+                           ((org-agenda-overriding-header "Pendientes Kavak")))
+                (tags-todo "+@ITAM/!-NEXT"
+                           ((org-agenda-overriding-header "Pendientes ITAM")))
+                (tags-todo "+@Fascino/!-NEXT"
+                           ((org-agenda-overriding-header "Pendientes Pasta")))
+                (tags-todo "+@home/!-NEXT"
+                           ((org-agenda-overriding-header "Pendientes Casa")))
+                (tags-todo "-@ITAM-@Kavak-@home-@Sociedat-@Fascino/!-NEXT"
+                      ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
+                       (org-agenda-files '(,(skls/org-path "Tasks.org")))
+                       (org-agenda-text-search-extra-files nil)))))
+              ("n" "Next Tasks"
+               ((agenda "" ((org-deadline-warning-days 7)))
+                (todo "NEXT"
+                      ((org-agenda-overriding-header "Next Tasks")))))
 
 
-            ;; Low-effort next actions
-            ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
-             ((org-agenda-overriding-header "Low Effort Tasks")
-              (org-agenda-max-todos 20)
-              (org-agenda-files org-agenda-files)))))
+              ;; Low-effort next actions
+              ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
+               ((org-agenda-overriding-header "Low Effort Tasks")
+                (org-agenda-max-todos 20)
+                (org-agenda-files org-agenda-files)))))
 
-    (setq org-capture-templates
-          `(("t" "Tasks / Projects")
-            ("tt" "Task" entry (file+olp "~/Dropbox/org/Tasks.org" "Inbox")
-             "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
-            ("j" "Journal Entries")
-            ("jj" "Journal" entry
-             (file+olp+datetree "~/Dropbox/org/Journal.org")
-             "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
-             ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
-             :clock-in :clock-resume
-             :empty-lines 1)
-            ("jm" "Meeting" entry
-             (file+olp+datetree "~/Dropbox/org/Journal.org")
-             "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
+      (setq org-capture-templates
+            `(("t" "Tasks / Projects")
+              ("tt" "Task" entry (file+olp "~/Dropbox/org/Tasks.org" "Inbox")
+               "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
+              ("j" "Journal Entries")
+              ("jj" "Journal" entry
+               (file+olp+datetree "~/Dropbox/org/Journal.org")
+               "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
+               ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
                :clock-in :clock-resume
                :empty-lines 1)
-            ))
-    )
+              ("jm" "Meeting" entry
+               (file+olp+datetree "~/Dropbox/org/Journal.org")
+               "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
+                 :clock-in :clock-resume
+                 :empty-lines 1)
+              ))
+      )
 #+end_src
 
 ** Org-superstar
@@ -1404,7 +1404,7 @@ This automatically saves all the elisp code chunks to init.el
   ;; Automatically tangle our Emacs.org config file when we save it
   (defun skls/org-babel-tangle-config ()
     (when (string-equal  (file-name-directory (buffer-file-name))
-                         (expand-file-name"~/github/dotfiles/"))
+                         (expand-file-name"~/github/skalas/dotfiles/"))
                          ;; Dynamic scoping to the rescue
                          (let ((org-confirm-babel-evaluate nil))
                            (org-babel-tangle))))
@@ -1542,7 +1542,7 @@ To have a bar on the side
 #+BEGIN_SRC emacs-lisp
   (when (equal system-type 'darwin)
     ;;(set-face-attribute 'default nil :font "Fira Code":height 120)
-  ;; Set the fixed pitch face:
+    ;; Set the fixed pitch face:
     ;;(set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 120)
     (setq insert-directory-program "/opt/homebrew/bin/gls")
     (use-package org-download
