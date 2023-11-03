@@ -1,3 +1,4 @@
+
 #+Title:  My emacs Config
 #+Author: Miguel Escalante
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
@@ -21,7 +22,7 @@
                                (float-time
                                 (time-subtract after-init-time before-init-time)))
                        gcs-done)))
-  (setq inhibit-startup-message t) ; No emacs init paga
+  (setq inhibit-startup-message t) ; No emacs init page
   (menu-bar-mode -1) ; I don't like the menus
   (scroll-bar-mode -1) ; I don't like the menus
   (tool-bar-mode -1) ; I don't like the menus
@@ -134,8 +135,6 @@ better package management for emacs.
 
   (use-package all-the-icons )
 
-  ;;   (use-package all-the-icons-dired)
-  ;; (add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
   (use-package all-the-icons-dired
     :hook (dired-mode . all-the-icons-dired-mode)
     :config
@@ -159,7 +158,7 @@ Make sure you have the font installed beforehand:
 
   ;; (use-package fira-code-mode
   ;;     :hook prog-mode)
-  (set-face-attribute 'default nil :font "Fira Code"); :height 160) ;
+  (set-face-attribute 'default nil :font "Fira Code" :height 160) ;
   ;;  Set the fixed pitch face:
   ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code"); :height 160)
   ;; ;;  Set the variable pitch face
@@ -656,7 +655,7 @@ This package helps me to build
     :config
     (defun skls/insert-rmd-chunk (language)
       "Insert an r-chunk in markdown mode. Necessary due to interactions between polymode and yas snippet"
-      (interactive "sLanguage: ")
+      (interactive "Language: ")
       (insert (concat "```{" language "}\n\n```"))
       (forward-line -1))
     (define-key poly-markdown+r-mode-map (kbd "M-n M-i") #'skls/insert-rmd-chunk)
@@ -1068,95 +1067,95 @@ The best for writing Literate programing
 ** Agenda
 First we setup the agenda it's kidna messy so I put it in a different place
 #+begin_src emacs-lisp
-    (defun skls/org-agenda-setup ()
-      (setq org-agenda-start-with-log-mode t)
-      (setq org-log-done 'time)
-      (setq org-log-into-drawer t)
+  (defun skls/org-agenda-setup ()
+    (setq org-agenda-start-with-log-mode t)
+    (setq org-log-done 'time)
+    (setq org-log-into-drawer t)
 
-      (require 'org-habit)
-      (add-to-list 'org-modules 'org-habit)
-      (setq org-habit-graph-column 60)
+    (require 'org-habit)
+    (add-to-list 'org-modules 'org-habit)
+    (setq org-habit-graph-column 60)
 
-      (setq org-todo-keywords
-            '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)" "CANCELED(c)")
-              (sequence  "WAIT(w)" "BACK(b)" "|")))
+    (setq org-todo-keywords
+          '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)" "CANCELED(c)")
+            (sequence  "WAIT(w)" "BACK(b)" "|")))
 
-      (setq org-refile-targets
-            '(("Archive.org" :maxlevel . 1)
-              ("Tasks.org" :maxlevel . 1)))
-      ;; TODO: org-todo-keyword-faces
-      (setq org-todo-keyword-faces
-            '(("NEXT" . (:foreground "orange red" :weight bold))
-              ("WAIT" . (:foreground "HotPink2" :weight bold))
-              ("BACK" . (:foreground "MediumPurple3" :weight bold))))
-      ;; Save Org buffers after refiling!
-      ;; (advice-add 'org-refile :after 'org-save-all-org-buffers)
-      (advice-add 'org-refile :after
-                  (lambda (&rest _)
-                    (org-save-all-org-buffers)))
+    (setq org-refile-targets
+          '(("Archive.org" :maxlevel . 1)
+            ("Tasks.org" :maxlevel . 1)))
+    ;; TODO: org-todo-keyword-faces
+    (setq org-todo-keyword-faces
+          '(("NEXT" . (:foreground "orange red" :weight bold))
+            ("WAIT" . (:foreground "HotPink2" :weight bold))
+            ("BACK" . (:foreground "MediumPurple3" :weight bold))))
+    ;; Save Org buffers after refiling!
+    ;; (advice-add 'org-refile :after 'org-save-all-org-buffers)
+    (advice-add 'org-refile :after
+                (lambda (&rest _)
+                  (org-save-all-org-buffers)))
 
-      (setq org-tag-alist
-            '((:startgroup)
-                                            ; Put mutually exclusive tags here
-              (:endgroup)
-              ("@errand" . ?E)
-              ("@home" . ?H)
-              ("@work" . ?W)
-              ("@Sociedat" . ?S)
-              ("@ITAM" . ?I)
-              ("note" . ?n)
-              ("@Kavak" . ?k)
-              ("idea" . ?i)
-              ("@Fascino" . ?f)))
+    (setq org-tag-alist
+          '((:startgroup)
+            ;; Put mutually exclusive tags here
+            (:endgroup)
+            ("@errand" . ?E)
+            ("@home" . ?H)
+            ("@work" . ?W)
+            ("@Sociedat" . ?S)
+            ("@ITAM" . ?I)
+            ("note" . ?n)
+            ("@Kavak" . ?k)
+            ("idea" . ?i)
+            ("@Fascino" . ?f)))
 
-      (setq org-agenda-custom-commands
-            `(("d" "Dashboard"
-               ((agenda "" ((org-deadline-warning-days 7)))
-                (todo "NEXT"
-                      ((org-agenda-overriding-header "Next Actions")
-                       (org-agenda-max-todos nil)))
-                (tags-todo "+@Kavak/!-NEXT"
-                           ((org-agenda-overriding-header "Pendientes Kavak")))
-                (tags-todo "+@ITAM/!-NEXT"
-                           ((org-agenda-overriding-header "Pendientes ITAM")))
-                (tags-todo "+@Fascino/!-NEXT"
-                           ((org-agenda-overriding-header "Pendientes Pasta")))
-                (tags-todo "+@home/!-NEXT"
-                           ((org-agenda-overriding-header "Pendientes Casa")))
-                (tags-todo "-@ITAM-@Kavak-@home-@Sociedat-@Fascino/!-NEXT"
-                      ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
-                       (org-agenda-files '(,(skls/org-path "Tasks.org")))
-                       (org-agenda-text-search-extra-files nil)))))
-              ("n" "Next Tasks"
-               ((agenda "" ((org-deadline-warning-days 7)))
-                (todo "NEXT"
-                      ((org-agenda-overriding-header "Next Tasks")))))
+    (setq org-agenda-custom-commands
+          `(("d" "Dashboard"
+             ((agenda "" ((org-deadline-warning-days 7)))
+              (todo "NEXT"
+                    ((org-agenda-overriding-header "Next Actions")
+                     (org-agenda-max-todos nil)))
+              (tags-todo "+@Kavak/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes Kavak")))
+              (tags-todo "+@ITAM/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes ITAM")))
+              (tags-todo "+@Fascino/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes Pasta")))
+              (tags-todo "+@home/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes Casa")))
+              (tags-todo "-@ITAM-@Kavak-@home-@Sociedat-@Fascino/!-NEXT"
+                    ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
+                     (org-agenda-files '(,(skls/org-path "Tasks.org")))
+                     (org-agenda-text-search-extra-files nil)))))
+            ("n" "Next Tasks"
+             ((agenda "" ((org-deadline-warning-days 7)))
+              (todo "NEXT"
+                    ((org-agenda-overriding-header "Next Tasks")))))
 
 
-              ;; Low-effort next actions
-              ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
-               ((org-agenda-overriding-header "Low Effort Tasks")
-                (org-agenda-max-todos 20)
-                (org-agenda-files org-agenda-files)))))
+            ;; Low-effort next actions
+            ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
+             ((org-agenda-overriding-header "Low Effort Tasks")
+              (org-agenda-max-todos 20)
+              (org-agenda-files org-agenda-files)))))
 
-      (setq org-capture-templates
-            `(("t" "Tasks / Projects")
-              ("tt" "Task" entry (file+olp "~/Dropbox/org/Tasks.org" "Inbox")
-               "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
-              ("j" "Journal Entries")
-              ("jj" "Journal" entry
-               (file+olp+datetree "~/Dropbox/org/Journal.org")
-               "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
-               ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
+    (setq org-capture-templates
+          `(("t" "Tasks / Projects")
+            ("tt" "Task" entry (file+olp "~/Dropbox/org/Tasks.org" "Inbox")
+             "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
+            ("j" "Journal Entries")
+            ("jj" "Journal" entry
+             (file+olp+datetree "~/Dropbox/org/Journal.org")
+             "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
+             ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
+             :clock-in :clock-resume
+             :empty-lines 1)
+            ("jm" "Meeting" entry
+             (file+olp+datetree "~/Dropbox/org/Journal.org")
+             "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
                :clock-in :clock-resume
                :empty-lines 1)
-              ("jm" "Meeting" entry
-               (file+olp+datetree "~/Dropbox/org/Journal.org")
-               "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
-                 :clock-in :clock-resume
-                 :empty-lines 1)
-              ))
-      )
+            ))
+    )
 #+end_src
 
 ** Org-superstar
