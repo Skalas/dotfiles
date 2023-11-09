@@ -158,7 +158,7 @@ Make sure you have the font installed beforehand:
 
   ;; (use-package fira-code-mode
   ;;     :hook prog-mode)
-  (set-face-attribute 'default nil :font "Fira Code" :height 160) ;
+  (set-face-attribute 'default nil :font "Fira Code"); :height 160) ;
   ;;  Set the fixed pitch face:
   ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code"); :height 160)
   ;; ;;  Set the variable pitch face
@@ -1540,6 +1540,7 @@ To have a bar on the side
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
   (when (equal system-type 'darwin)
+    (set-face-attribute 'default nil :font "Fira Code" :height 160) ;
     ;;(set-face-attribute 'default nil :font "Fira Code":height 120)
     ;; Set the fixed pitch face:
     ;;(set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 120)
