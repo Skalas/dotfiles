@@ -86,29 +86,24 @@ better package management for emacs.
 
 #+end_src
 ** Sraight.el
-#+begin_src emacs-lisp :tangle no
-  ;; Bootstrap straight.el
+#+begin_src emacs-lisp
   (defvar bootstrap-version)
   (let ((bootstrap-file
-         (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-        (bootstrap-version 5))
+	 (expand-file-name
+	  "straight/repos/straight.el/bootstrap.el"
+	  (or (bound-and-true-p straight-base-dir)
+	      user-emacs-directory)))
+	(bootstrap-version 7))
     (unless (file-exists-p bootstrap-file)
       (with-current-buffer
-          (url-retrieve-synchronously
-           "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-           'silent 'inhibit-cookies)
-        (goto-char (point-max))
-        (eval-print-last-sexp)))
+	  (url-retrieve-synchronously
+	   "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+	   'silent 'inhibit-cookies)
+	(goto-char (point-max))
+	(eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
+  (setq package-enable-at-startup nil)
 
-  ;; Always use straight to install on systems other than Linux
-  (setq straight-use-package-by-default (not (eq system-type 'gnu/linux)))
-
-  ;; Use straight.el for use-package expressions
-  (straight-use-package 'use-package)
-
-  ;; Load the helper package for commands like `straight-x-clean-unused-repos'
-  (require 'straight-x)
 #+end_src
 ** Perspective.el
 #+begin_src emacs-lisp
@@ -131,7 +126,7 @@ better package management for emacs.
 
   (use-package doom-themes
     :ensure t
-    :init (load-theme 'doom-oceanic-next t))
+    :init (load-theme 'misterioso t))
 
   (use-package all-the-icons )
 
@@ -195,25 +190,26 @@ Make sure you have the font installed beforehand:
       )
   (use-package marginalia
     :after vertico
-      :custom
-      (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
-      :init (marginalia-mode))
+    :custom
+    (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
+    :init (marginalia-mode))
 
-    ;; Use the `orderless' completion style. Additionally enable
-    ;; `partial-completion' for file path expansion. `partial-completion' is
-    ;; important for wildcard support. Multiple files can be opened at once
-    ;; with `find-file' if you enter a wildcard. You may also give the
-    ;; `initials' completion style a try.
-    (use-package orderless
-      :init
-      (setq completion-styles '(orderless)
-            completion-category-defaults nil
+  ;; Use the `orderless' completion style. Additionally enable
+  ;; `partial-completion' for file path expansion. `partial-completion' is
+  ;; important for wildcard support. Multiple files can be opened at once
+  ;; with `find-file' if you enter a wildcard. You may also give the
+  ;; `initials' completion style a try.
+  (use-package orderless
+    :init
+    (setq completion-styles '(orderless)
+          completion-category-defaults nil
             completion-category-overrides '((file (styles partial-completion)))))
 
     ;; Persist history over Emacs restarts. Vertico sorts by history position.
-    (use-package savehist
-      :init
-      (savehist-mode))
+  (use-package savehist
+    :straight t
+    :init
+    (savehist-mode))
 #+end_src
 *** Consult commands
 Consult provides a lot of useful completion commands similar to Ivy’s Counsel.
@@ -308,9 +304,6 @@ Package for enhance the experience, along with swiper its a marvel.
       "b" 'counsel-bookmark
       "c" 'org-capture))
 #+end_src
-
-#+RESULTS:
-: t
 
 *** Which key
 #+begin_src emacs-lisp
@@ -411,7 +404,7 @@ I don't like emacs littering my working folders
 #+end_src
 * Programing
 ** General
-*** Line display and colnum
+*** Line display and column
 #+begin_src emacs-lisp
   (column-number-mode)
   (global-display-line-numbers-mode t)
@@ -424,7 +417,6 @@ I don't like emacs littering my working folders
     (add-hook mode (lambda() (display-line-numbers-mode 0))))
 #+end_src
 *** Magit
-
 #+begin_src emacs-lisp
   (use-package magit
     :commands magit-status
@@ -458,36 +450,7 @@ I don't like emacs littering my working folders
 #+begin_src emacs-lisp
 (use-package realgud)
 #+end_src
-*** Lsp-mode (graveyard)
-#+begin_src emacs-lisp
-  ;; (defun skls/lsp-mode-setup ()
-  ;;   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-  ;;   (lsp-headerline-breadcrumb-mode))
 
-  ;; (use-package lsp-mode
-  ;;   :commands (lsp lsp-deferred)
-  ;;   :hook (lsp-mode . skls/lsp-mode-setup)
-  ;;   :init
-  ;;   (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
-  ;;   :config
-  ;;   (lsp-enable-which-key-integration t))
-
-  ;; (use-package lsp-ui
-  ;;   :hook (lsp-mode . lsp-ui-mode)
-  ;;   :custom
-  ;;   (lsp-ui-doc-position 'bottom))
-
-  ;; (use-package lsp-treemacs
-  ;;   :after lsp)
-
-  ;; (use-package project
-  ;;   :pin elpa
-  ;;   :ensure t
-  ;;   :after lsp)
-
-  ;; (use-package lsp-ivy
-  ;;   :after lsp)
-#+end_src
 *** coding enhancements
 #+begin_src emacs-lisp
 
@@ -562,65 +525,6 @@ Ahora si:
   (use-package python-mode
     :ensure t)
 #+end_src
-*** Lsp-python
-This is the lsp graveyard
-#+begin_src emacs-lisp :tangle no
-
-  ;; (defun lsp-python-ms-format-buffer ()
-  ;;   (interactive)
-  ;;   (when (and (executable-find "yapf") buffer-file-name)
-  ;;     (call-process "yapf" nil nil nil "-i" buffer-file-name)))
-  ;; (add-hook 'python-mode-hook
-  ;;           (lambda ()
-  ;;             (add-hook 'after-save-hook #'lsp-python-ms-format-buffer t t)))
-
-  ;; (add-hook 'hack-local-variables-hook
-  ;;           (lambda ()
-  ;;             (when (derived-mode-p 'python-mode)
-  ;;               (require 'lsp-python-ms)
-  ;;               (lsp)))) ; or lsp-deferred
-  ;; (use-package lsp-python-ms
-  ;;   :ensure t
-  ;;   :hook (python-mode . (lambda ()
-  ;;                          (require 'lsp-python-ms)
-  ;;                          (setq-default py-split-windows-on-execute-function 'split-window-horizontally)
-  ;;                          (lsp)))
-  ;;   :init
-  ;;   (setq lsp-python-ms-executable "~/src/python-language-server/output/bin/Release/osx-x64/publish/Microsoft.Python.LanguageServer"))
-
-  ;; (use-package lsp-pyright
-  ;;   :ensure t
-  ;;   :hook (python-mode . (lambda ()
-  ;;                          (require 'lsp-pyright)
-  ;;                          (setq-default py-split-windows-on-execute-function 'split-window-horizontally)
-  ;;                          (lsp))))  ; or lsp-deferred
-
-  ;; (use-package python-mode
-  ;;   :ensure t
-  ;;   :hook (python-mode . lsp-deferred)
-  ;;   :custom
-  ;;   ;; NOTE: Set these if Python 3 is called "python3" on your system!
-  ;;   ;; (python-shell-interpreter "python3")
-  ;;   ;; (dap-python-executable "python3")
-  ;;   (dap-python-debugger 'debugpy)
-  ;;   :config
-  ;;   (require 'dap-python))
-
-  ;; (use-package dap-mode
-  ;;   ;; Uncomment the config below if you want all UI panes to be hidden by default!
-  ;;   ;; :custom
-  ;;   ;; (lsp-enable-dap-auto-configure nil)
-  ;;   ;; :config
-  ;;   ;; (dap-ui-mode 1)
-  ;;   :commands dap-debug
-  ;;   :config
-  ;;   ;; Bind `C-c l d` to `dap-hydra` for easy access
-  ;;   (general-define-key
-  ;;    :keymaps 'lsp-mode-map
-  ;;    :prefix lsp-keymap-prefix
-  ;;    "d" '(dap-hydra t :wk "debugger")))
-
-#+end_src
 *** R ess
 #+begin_src emacs-lisp
   (defun skls/insert-r-pipe ()
@@ -649,13 +553,14 @@ This is the lsp graveyard
 #+end_src
 
 *** Poly-r
-This package helps me to build
+In a nutshell, the code makes it easier to generate and insert code chunks in markdown for a specified language while working with the ~poly-R~ package in Emacs.
+
 #+begin_src emacs-lisp
   (use-package poly-R
     :config
     (defun skls/insert-rmd-chunk (language)
       "Insert an r-chunk in markdown mode. Necessary due to interactions between polymode and yas snippet"
-      (interactive "Language: ")
+      (interactive "bLanguage: ")
       (insert (concat "```{" language "}\n\n```"))
       (forward-line -1))
     (define-key poly-markdown+r-mode-map (kbd "M-n M-i") #'skls/insert-rmd-chunk)
@@ -741,9 +646,6 @@ Essh.el The best package so far for editing shell files as pipelines
   ;;   ;
   ;;   )
 #+END_SRC
-
-#+RESULTS:
-| essh |
 
 **** Essh.el
 #+begin_src emacs-lisp :tangle ./.emacs.d/packages/essh.el :mkdirp yes
@@ -975,37 +877,6 @@ Essh.el The best package so far for editing shell files as pipelines
 
 
 #+end_src
-** Eshell
-#+begin_src emacs-lisp
-  ;; (defun skls/configure-eshell ()
-  ;;   ;; Save command history when commands are entered
-  ;;   (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
-
-  ;;   ;; Truncate buffer for performance
-  ;;   (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-
-  ;;   ;; Bind some useful keys for evil-mode
-  ;;   (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
-  ;;   (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
-  ;;   (evil-normalize-keymaps)
-
-  ;;   (setq eshell-history-size         10000
-  ;;         eshell-buffer-maximum-lines 10000
-  ;;         eshell-hist-ignoredups t
-  ;;         eshell-scroll-to-bottom-on-input t))
-
-  ;; (use-package eshell-git-prompt
-  ;;   :after eshell)
-
-  ;; (use-package eshell
-  ;;   :hook (eshell-first-time-mode . skls/configure-eshell)
-  ;;   :config
-  ;;   (with-eval-after-load 'esh-opt
-  ;;     (setq eshell-destroy-buffer-when-process-dies t)
-  ;;     (setq eshell-visual-commands '("htop" "zsh" "vim")))
-
-  ;;   (eshell-git-prompt-use-theme 'powerline))
-#+end_src
 
 * File Types
 *** Csv's
@@ -1098,15 +969,15 @@ First we setup the agenda it's kidna messy so I put it in a different place
           '((:startgroup)
             ;; Put mutually exclusive tags here
             (:endgroup)
-            ("@errand" . ?E)
-            ("@home" . ?H)
-            ("@work" . ?W)
-            ("@Sociedat" . ?S)
-            ("@ITAM" . ?I)
+            ("@home" . ?h)
+            ("@work" . ?w)
+            ("@Sociedat" . ?s)
+            ("@ITAM" . ?i)
             ("note" . ?n)
+            ("@Personal" . ?p)
             ("@Kavak" . ?k)
             ("idea" . ?i)
-            ("@Fascino" . ?f)))
+            ("@Fratellino" . ?f)))
 
     (setq org-agenda-custom-commands
           `(("d" "Dashboard"
@@ -1114,15 +985,17 @@ First we setup the agenda it's kidna messy so I put it in a different place
               (todo "NEXT"
                     ((org-agenda-overriding-header "Next Actions")
                      (org-agenda-max-todos nil)))
+              (tags-todo "+@Personal/!-NEXT"
+                         ((org-agenda-overriding-header "Pendientes personales")))
               (tags-todo "+@Kavak/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Kavak")))
               (tags-todo "+@ITAM/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes ITAM")))
-              (tags-todo "+@Fascino/!-NEXT"
+              (tags-todo "+@Fratellino/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Pasta")))
               (tags-todo "+@home/!-NEXT"
                          ((org-agenda-overriding-header "Pendientes Casa")))
-              (tags-todo "-@ITAM-@Kavak-@home-@Sociedat-@Fascino/!-NEXT"
+              (tags-todo "-@ITAM-@Kavak-@home-@Sociedat-@Fratellino-@Personal/!-NEXT"
                     ((org-agenda-overriding-header "Unprocessed Inbox Tasks")
                      (org-agenda-files '(,(skls/org-path "Tasks.org")))
                      (org-agenda-text-search-extra-files nil)))))
@@ -1158,12 +1031,13 @@ First we setup the agenda it's kidna messy so I put it in a different place
     )
 #+end_src
 
-** Org-superstar
+** Org-Modern
 #+begin_src emacs-lisp
-(defun skls/org-superstar ()
-  (use-package org-superstar)
-  (org-superstar-mode 1))
+  (defun skls/org-modern ()
+    (use-package org-modern)
+    (with-eval-after-load 'org (global-org-modern-mode)))
 #+end_src
+
 ** Org reveal
 #+begin_src emacs-lisp
   (defun skls/org-reveal ()
@@ -1187,69 +1061,70 @@ First we setup the agenda it's kidna messy so I put it in a different place
 
 ** Org cypher
 #+begin_src emacs-lisp
-(use-package ob-cypher
-  :ensure t
-  :config
-  (add-to-list 'org-babel-load-languages '(cypher . t))
-  (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
-  (add-to-list 'org-babel-tangle-lang-exts '("cypher" . "cypher")))
+  (use-package ob-cypher
+    :ensure t
+    :config
+    (add-to-list 'org-babel-load-languages '(cypher . t))
+    (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
+    (add-to-list 'org-babel-tangle-lang-exts '("cypher" . "cypher")))
 #+end_src
 ** Basic Setup
 #+begin_src emacs-lisp
-        (defun skls/org-font-setup ()
-          ;; Replace list hyphen with dot
-          (font-lock-add-keywords 'org-mode
-                                  '(("^ *\\([-]\\) "
-                                     (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
-        (defun skls/org-mode-setup ()
-          (toggle-truncate-lines)
-          (org-indent-mode)
-          (variable-pitch-mode 1)
-          (visual-line-mode 1))
+  (defun skls/org-font-setup ()
+    ;; Replace list hyphen with dot
+    (font-lock-add-keywords 'org-mode
+			    '(("^ *\\([-]\\) "
+			       (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
+  (defun skls/org-mode-setup ()
+    (toggle-truncate-lines)
+    (org-indent-mode)
+    (variable-pitch-mode 1)
+    (visual-line-mode 1))
 
-        (defun skls/org-mode-visual-fill ()
-          (use-package visual-fill-column)
-          (setq visual-fill-column-width 100
-                visual-fill-column-center-text t)
-          (visual-fill-column-mode 1))
+  (defun skls/org-mode-visual-fill ()
+    (use-package visual-fill-column)
+    (setq visual-fill-column-width 100
+	  visual-fill-column-center-text t)
+    (visual-fill-column-mode 1))
 
-        (use-package org
-          :commands (org-capture org-agenda)
-          :hook ((org-mode . skls/org-mode-babel)
-                 (org-mode . skls/org-mode-setup)
-                 (org-mode . skls/org-mode-visual-fill)
-                 (org-mode . skls/org-superstar)
-                 (org-mode . skls/org-reveal)
-                 (org-mode . skls/org-treeslide))
-          :config
-          (setq org-ellipsis " ▾")
-          (skls/org-agenda-setup)
-          (skls/org-font-setup)
-          )
+  (use-package org
+    :straight t
+    :commands (org-capture org-agenda)
+    :hook ((org-mode . skls/org-mode-babel)
+	   (org-mode . skls/org-mode-setup)
+	   (org-mode . skls/org-mode-visual-fill)
+	   (org-mode . skls/org-modern)
+	   (org-mode . skls/org-reveal)
+	   (org-mode . skls/org-treeslide))
+    :config
+    (setq org-ellipsis " ▾")
+    (skls/org-agenda-setup)
+    (skls/org-font-setup)
+    )
 #+end_src
 ** Faces
 #+begin_src emacs-lisp
-(with-eval-after-load 'org-faces
-  (dolist (face '((org-level-1 . 1.2)
-                  (org-level-2 . 1.1)
-                  (org-level-3 . 1.05)
-                  (org-level-4 . 1.0)
-                  (org-level-5 . 1.1)
-                  (org-level-6 . 1.1)
-                  (org-level-7 . 1.1)
-                  (org-level-8 . 1.1)))
-    (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face))
-    (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
-    (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
-    (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
-    (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-    (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
-    (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
-    (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)))
+  (with-eval-after-load 'org-faces
+    (dolist (face '((org-level-1 . 2.0)
+                    (org-level-2 . 1.5)
+                    (org-level-3 . 1.0)
+                    (org-level-4 . 1.0)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face))
+      (set-face-attribute 'org-block nil    :foreground nil :inherit 'fixed-pitch)
+      (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+      (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+      (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+      (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
+      (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+      (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+      (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+      (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+      (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+      (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)))
 #+end_src
 
 ** Org-roam
@@ -1265,79 +1140,23 @@ First we setup the agenda it's kidna messy so I put it in a different place
            ("C-c n i" . org-roam-node-insert))
     :config
     (org-roam-setup))
-               ;;   :hook
-      ;;   (after-init . org-roam-mode)
-      ;;   :custom
-      ;;   (org-roam-directory "~/Dropbox/org/org-roam")
-      ;;   (org-roam-completion-everywhere t)
-      ;;   (org-roam-completion-system 'default)
-      ;;   (org-roam-capture-templates
-      ;;     '(("d" "default" plain
-      ;;        #'org-roam-capture--get-point
-      ;;        "%?"
-      ;;        :file-name "%<%Y%m%d%H%M%S>-${slug}"
-      ;;        :head "#+title: ${title}\n"
-      ;;        :unnarrowed t)
-      ;;       ("ll" "link note" plain
-      ;;        #'org-roam-capture--get-point
-      ;;        "* %^{Link}"
-      ;;        :file-name "Inbox"
-      ;;        :olp ("Links")
-      ;;        :unnarrowed t
-      ;;        :immediate-finish)
-      ;;       ("lt" "link task" entry
-      ;;        #'org-roam-capture--get-point
-      ;;        "* TODO %^{Link}"
-      ;;        :file-name "Inbox"
-      ;;        :olp ("Tasks")
-      ;;        :unnarrowed t
-      ;;        :immediate-finish)))
-      ;;   (org-roam-dailies-directory "Journal/")
-      ;;   (org-roam-dailies-capture-templates
-      ;;     '(("d" "default" entry
-      ;;        #'org-roam-capture--get-point
-      ;;        "* %?"
-      ;;        :file-name "Journal/%<%Y-%m-%d>"
-      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
-      ;;       ("t" "Task" entry
-      ;;        #'org-roam-capture--get-point
-      ;;        "* TODO %?\n  %U\n  %a\n  %i"
-      ;;        :file-name "Journal/%<%Y-%m-%d>"
-      ;;        :olp ("Tasks")
-      ;;        :empty-lines 1
-      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
-      ;;       ("j" "journal" entry
-      ;;        #'org-roam-capture--get-point
-      ;;        "* %<%I:%M %p> - Journal  :journal:\n\n%?\n\n"
-      ;;        :file-name "Journal/%<%Y-%m-%d>"
-      ;;        :olp ("Log")
-      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
-      ;;       ("l" "log entry" entry
-      ;;        #'org-roam-capture--get-point
-      ;;        "* %<%I:%M %p> - %?"
-      ;;        :file-name "Journal/%<%Y-%m-%d>"
-      ;;        :olp ("Log")
-      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")
-      ;;       ("m" "meeting" entry
-      ;;        #'org-roam-capture--get-point
-      ;;        "* %<%I:%M %p> - %^{Meeting Title}  :meetings:\n\n%?\n\n"
-      ;;        :file-name "Journal/%<%Y-%m-%d>"
-      ;;        :olp ("Log")
-      ;;        :head "#+title: %<%Y-%m-%d %a>\n\n[[roam:%<%Y-%B>]]\n\n")))
-      ;;   :bind (:map org-roam-mode-map
-      ;;           (("C-c n l"   . org-roam)
-      ;;            ("C-c n f"   . org-roam-find-file)
-      ;;            ("C-c n d"   . org-roam-dailies-find-date)
-      ;;            ("C-c n c"   . org-roam-dailies-capture-today)
-      ;;            ("C-c n C r" . org-roam-dailies-capture-tomorrow)
-      ;;            ("C-c n t"   . org-roam-dailies-find-today)
-      ;;            ("C-c n y"   . org-roam-dailies-find-yesterday)
-      ;;            ("C-c n r"   . org-roam-dailies-find-tomorrow)
-      ;;            ("C-c n g"   . org-roam-graph))
-      ;;          :map org-mode-map
-      ;;          (("C-c n i" . org-roam-insert))
-      ;;          (("C-c n I" . org-roam-insert-immediate))))
-      ;; (setq org-roam-v2-ack t)
+#+end_src
+
+** Roam UI
+#+begin_src emacs-lisp
+(use-package org-roam-ui
+  :straight
+    (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+    :after org-roam
+;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+;;         a hookable mode anymore, you're advised to pick something yourself
+;;         if you don't care about startup time, use
+;;  :hook (after-init . org-roam-ui-mode)
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
 #+end_src
 ** Deft
 #+begin_src emacs-lisp
@@ -1599,7 +1418,7 @@ To have a bar on the side
 #+END_SRC
 * Kavak config
 #+begin_src emacs-lisp
-  (setenv "AWS_PROFILE" "mfa")
+  (setenv "AWS_PROFILE" "ds-dt")
 #+end_src
 ** Pdf-tools
 #+begin_src emacs-lisp
@@ -1640,5 +1459,29 @@ Dial down GC thershold so it runs frequently but in less time.
   (auto-package-update-hide-results t)
   :config
   (auto-package-update-maybe)
-  (auto-package-update-at-time "09:00"))
+  (auto-package-update-at-time "13:00"))
+#+end_src
+* AI
+
+** Copilot
+
+#+begin_src emacs-lisp
+  (use-package copilot
+    :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+    :ensure t
+    :config
+    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+    )
+  (add-hook 'prog-mode-hook 'copilot-mode)
+#+end_src
+
+** C3P0
+#+begin_src emacs-lisp
+  (use-package c3po
+    :straight (:host github :repo "d1egoaz/c3po.el")
+    :config
+    (setq c3po-api-key "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"))
+  (require 'c3po)
+  (c3po-toggle-c3po-model)
 #+end_src
