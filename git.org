@@ -3,13 +3,15 @@
 
 Basic User info
 #+begin_src conf :tangle ./.gitconfig
-[user]
-	email = miguel.escalante@kavak.com
-	name = Miguel Escalante
-[credential]
-	helper = store
-[push]
-	default = matching
-[pull]
-	rebase = false
+  # This is Git's per-user configuration file.
+  [user]
+  # Please adapt and uncomment the following lines:
+  	name = Miguel Angel Escalante Serrato
+  	email = escala@gmail.com
+  [pull]
+  	rebase = false
+  [push]
+  	default = matching
+  [core]
+          editor = nvim
 #+end_src

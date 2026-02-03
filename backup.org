@@ -51,7 +51,7 @@
   (setq default-directory "~/github/")
   (custom-set-variables
    '(org-directory "~/Dropbox/org")
-   '(org-agenda-files '("~/Dropbox/org/Tasks.org" "~/Dropbox/org/Cumpleaños.org")))
+   '(org-agenda-files (list org-directory)))
 #+end_src
 
 ** Use-package
@@ -61,9 +61,7 @@ better package management for emacs.
 
   (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                            ("melpa-stable" . "https://stable.melpa.org/packages/")
-                           ("elpa" . "https://elpa.gnu.org/packages/")
-  			 ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
-
+                           ("elpa" . "https://elpa.gnu.org/packages/")))
   (package-initialize)
   (unless package-archive-contents
     (package-refresh-contents))
@@ -73,13 +71,13 @@ better package management for emacs.
   (require 'use-package)
   (setq use-package-always-ensure t)
   (setq use-package-always-defer t)
-  (use-package auto-package-update
-    :custom
-    (auto-package-update-interval 7)
-    (auto-package-update-prompt-before-update t)
-    (auto-package-update-hide-results t)
-    :config
-    (auto-package-update-maybe))
+  ;; (use-package auto-package-update
+  ;;   :custom
+  ;;   (auto-package-update-interval 7)
+  ;;   (auto-package-update-prompt-before-update t)
+  ;;   (auto-package-update-hide-results t)
+  ;;   :config
+  ;;   (auto-package-update-maybe))
   (setq use-package-verbose t)
 
 #+end_src
@@ -91,7 +89,8 @@ better package management for emacs.
   (setq ring-bell-function (lambda ()
                              (invert-face 'mode-line)
                              (run-with-timer 0.1 nil 'invert-face 'mode-line)))
-  ;;(setq visible-bell t) ; I don't like my errors being screamed at to me
+  ;; (setq visible-bell t) ; I don't like my errors being screamed at to me
+
 #+end_src
 ** Sraight.el
 #+begin_src emacs-lisp
@@ -129,14 +128,13 @@ better package management for emacs.
   ;; You must run (all-the-icons-install-fonts) one time after
   ;; installing this package!
 
-
   (use-package doom-modeline
     :init (doom-modeline-mode 1)
     :custom ((doom-modeline-height 15)))
 
   (use-package doom-themes
     :ensure t
-    :init (load-theme 'doom-zenburn t))
+    :init (load-theme 'doom-oksolar-light t))
 
   (use-package all-the-icons )
 
@@ -180,56 +178,58 @@ Make sure you have the font installed beforehand:
 #+end_src
 *** envrc
 #+begin_src emacs-lisp
-  (use-package envrc
-    :hook (after-init . envrc-global-mode))
+  ;; (use-package envrc
+  ;;   :hook (after-init . envrc-global-mode))
 #+end_src
 *** Vertico!
 
 #+begin_src emacs-lisp
 
+  (defun skls/minibuffer-backward-kill (arg)
+    "When minibuffer is completing a file name delete up to parent
+  folder, otherwise delete a word"
+    (interactive "p")
+    (if minibuffer-completing-file-name
+        ;; Borrowed from https://github.com/raxod502/selectrum/issues/498#issuecomment-803283608
+        ;;and davidwilson
+        (if (string-match-p "/." (minibuffer-contents))
+            (zap-up-to-char (- arg) ?/)
+          (delete-minibuffer-contents))
+        (backward-kill-word arg)))
+    ;; Enable vertico
 
   (use-package vertico
-    :ensure t
-    :demand
-    :config
-    (setq vertico-cycle t)
-    ;; currently requires melpa version of vertico
-    (setq vertico-preselect 'directory)
     :init
     (vertico-mode)
-    (defun my/vertico-insert ()
-      (interactive)
-      (let* ((mb (minibuffer-contents-no-properties))
-             (lc (if (string= mb "") mb (substring mb -1))))
-        (cond ((string-match-p "^[/~:]" lc) (self-insert-command 1 ?/))
-              ((file-directory-p (vertico--candidate)) (vertico-insert))
-              (t (self-insert-command 1 ?/)))))
-    :bind (:map vertico-map
-                ("/" . #'my/vertico-insert)))
+    :bind
+    ([C-backspace] . skls/minibuffer-backward-kill)
+    ([M-backspace] . skls/minibuffer-backward-kill)
+    :custom (vertico-cycle t)
+    ;; Grow and shrink the Vertico minibuffer
+    ;; (setq vertico-resize t)
+      )
+  (use-package marginalia
+    :after vertico
+    :custom
+    (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
+    :init (marginalia-mode))
 
-
-    (use-package marginalia
-      :after vertico
-      :custom
-      (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
-      :init (marginalia-mode))
-
-    ;; Use the `orderless' completion style. Additionally enable
-    ;; `partial-completion' for file path expansion. `partial-completion' is
-    ;; important for wildcard support. Multiple files can be opened at once
-    ;; with `find-file' if you enter a wildcard. You may also give the
-    ;; `initials' completion style a try.
-    (use-package orderless
-      :init
-      (setq completion-styles '(orderless)
-            completion-category-defaults nil
+  ;; Use the `orderless' completion style. Additionally enable
+  ;; `partial-completion' for file path expansion. `partial-completion' is
+  ;; important for wildcard support. Multiple files can be opened at once
+  ;; with `find-file' if you enter a wildcard. You may also give the
+  ;; `initials' completion style a try.
+  (use-package orderless
+    :init
+    (setq completion-styles '(orderless)
+          completion-category-defaults nil
             completion-category-overrides '((file (styles partial-completion)))))
 
     ;; Persist history over Emacs restarts. Vertico sorts by history position.
-    (use-package savehist
-      :straight t
-      :init
-      (savehist-mode))
+  (use-package savehist
+    :straight t
+    :init
+    (savehist-mode))
 #+end_src
 *** Consult commands
 Consult provides a lot of useful completion commands similar to Ivy’s Counsel.
@@ -261,49 +261,49 @@ Consult provides a lot of useful completion commands similar to Ivy’s Counsel.
   ;;         (lambda (map)
   ;;           (which-key--show-keymap "Embark" map nil nil 'no-paging)
   ;;           #'which-key--hide-popup-ignore-command)
-  ;;         embark-become-indicator embark-action-indicator)) 
+  ;;         embark-become-indicator embark-action-indicator))
 
 #+end_src
 *** Ivy
 Package for enhance the experience, along with swiper its a marvel.
   #+begin_src emacs-lisp :tangle no
-    ;; Enable recursive minibuffers
-    ;;    (setq enable-recursive-minibuffers t))
-    ;; (use-package ivy
-    ;;   :diminish
-    ;;   :bind (("C-s" . swiper)
-    ;;          ("M-x" . counsel-M-x)
-    ;;          :map ivy-minibuffer-map
-    ;;          ("TAB" . ivy-alt-done)
-    ;;          ("C-f" . ivy-alt-done)
-    ;;          ("C-j" . ivy-next-line)
-    ;;          ("C-k" . ivy-previous-line)
-    ;;          :map ivy-switch-buffer-map
-    ;;          ("C-k" . ivy-previous-line)
-    ;;          ("C-l" . ivy-done)
-    ;;          ("C-d" . ivy-switch-buffer-kill)
-    ;;          :map ivy-reverse-i-search-map
-    ;;          ("C-k" . ivy-previous-line)
-    ;;          ("C-d" . ivy-reverse-i-search-kill))
-    ;;   :init
-    ;;   (ivy-mode 1))
+      ;; Enable recursive minibuffers
+      ;;    (setq enable-recursive-minibuffers t))
+      ;; (use-package ivy
+      ;;   :diminish
+      ;;   :bind (("C-s" . swiper)
+      ;;          ("M-x" . counsel-M-x)
+      ;;          :map ivy-minibuffer-map
+      ;;          ("TAB" . ivy-alt-done)
+      ;;          ("C-f" . ivy-alt-done)
+      ;;          ("C-j" . ivy-next-line)
+      ;;          ("C-k" . ivy-previous-line)
+      ;;          :map ivy-switch-buffer-map
+      ;;          ("C-k" . ivy-previous-line)
+      ;;          ("C-l" . ivy-done)
+      ;;          ("C-d" . ivy-switch-buffer-kill)
+      ;;          :map ivy-reverse-i-search-map
+      ;;          ("C-k" . ivy-previous-line)
+      ;;          ("C-d" . ivy-reverse-i-search-kill))
+      ;;   :init
+      ;;   (ivy-mode 1))
 
-    ;; (use-package counsel
-    ;;   :bind (("C-M-j" . 'counsel-switch-buffer)
-    ;;          :map minibuffer-local-map
-    ;;          ("C-r" . 'counsel-minibuffer-history))
-    ;;   :config
-    ;;   (counsel-mode 1))
+      ;; (use-package counsel
+      ;;   :bind (("C-M-j" . 'counsel-switch-buffer)
+      ;;          :map minibuffer-local-map
+      ;;          ("C-r" . 'counsel-minibuffer-history))
+      ;;   :config
+      ;;   (counsel-mode 1))
 
-    ;; (use-package all-the-icons-ivy-rich
-    ;;   :after ivy
-    ;;   :init
-    ;;   (all-the-icons-ivy-rich-mode 1))
+      ;; (use-package all-the-icons-ivy-rich
+      ;;   :after ivy
+      ;;   :init
+      ;;   (all-the-icons-ivy-rich-mode 1))
 
-    ;; (use-package ivy-rich
-    ;;   :after all-the-icons-ivy-rich
-    ;;   :init
-    ;;   (ivy-rich-mode 1))
+      ;; (use-package ivy-rich
+      ;;   :after all-the-icons-ivy-rich
+      ;;   :init
+      ;;   (ivy-rich-mode 1))
 
 
 #+end_src
@@ -338,14 +338,14 @@ Package for enhance the experience, along with swiper its a marvel.
 #+begin_src emacs-lisp
   (use-package projectile
     :diminish projectile-mode
-    :defer nil
     :config (projectile-mode)
     :custom ((projectile-completion-system 'ivy))
     :bind-keymap
     ("C-c p" . projectile-command-map)
     :init
     ;; NOTE: Set this to the folder where you keep your Git repos!
-    (setq projectile-project-search-path '(("~/github/" . 2)))
+    (when (file-directory-p "~/github")
+      (setq projectile-project-search-path '("~/github")))
     (setq projectile-switch-project-action #'projectile-dired))
 
   (use-package counsel-projectile
@@ -393,7 +393,13 @@ Package for enhance the experience, along with swiper its a marvel.
   (define-key global-map (kbd "C--") 'text-scale-decrease)
   (global-set-key "\C-x\C-b" 'ibuffer)
 #+end_src
-
+** Backup
+I don't like emacs littering my working folders
+#+begin_src emacs-lisp
+  (use-package no-littering
+    :config
+    (no-littering-theme-backups))
+#+end_src
 ** Multiple cursors
 #+begin_src emacs-lisp
   (dolist (key '("\C-d" "\C-\M-b"))
@@ -428,7 +434,6 @@ Package for enhance the experience, along with swiper its a marvel.
 *** Magit
 #+begin_src emacs-lisp
   (use-package magit
-    :ensure t
     :commands magit-status
     :custom
     (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
@@ -481,90 +486,6 @@ Package for enhance the experience, along with swiper its a marvel.
     )
 
 #+end_src
-
-*** Python-mode
-
-Ahora si:
-#+begin_src emacs-lisp
-  ;;(setenv "WORKON_HOME" "~/Library/Caches/pypoetry/virtualenvs/")
-  (setq tab-width 4)
-
-  ;; (use-package pyvenv
-  ;;   :after python-mode
-  ;;   :config
-  ;;   (pyvenv-mode 1)
-  ;;   )
-
-  (use-package python-black
-    :demand t
-    :after python
-    :hook (python-mode . python-black-on-save-mode))
-
-  (use-package poetry
-    :after python
-    :ensure t)
-
-  (use-package eglot
-  		:ensure t
-  		:defer t
-  		:hook (python-mode . eglot-ensure))
-
-  ;; (defun my/python-send-line-and-move ()
-  ;; 		"Send the current line to the Python shell and move to the next line."
-  ;; 		(interactive)
-  ;; 		(python-shell-send-region (line-beginning-position) (line-end-position))
-  ;; 		(python-shell-send-string "\n")
-  ;; 		(forward-line 1)
-  ;; 		(move-beginning-of-line nil))
-
-  ;; (use-package elpy
-  ;;   :custom
-  ;;   ;(elpy-rpc-virtualenv-path 'current)  ;; this makes elpy use direnv venvs
-  ;;   (elpy-modules '(elpy-module-company elpy-module-eldoc elpy-module-flymake elpy-module-pyvenv elpy-module-yasnippet elpy-module-django elpy-module-sane-defaults))  ;; removes elpy-highlight-indentation
-  ;;   :config
-  ;;   (elpy-enable))
-
-  ;; (use-package lsp-treemacs
-  ;;   :after lsp)
-
-  ;; (use-package lsp-mode
-  ;;   :ensure t
-  ;;   :defer t
-  ;;   :defines (lsp-keymap-prefix lsp-mode-map)
-  ;;   :init
-  ;;   (setq lsp-keymap-prefix "C-c l")
-  ;;   :custom
-  ;;   ;; Read the documentation for those variable with `C-h v'.
-  ;;   ;; This reduces the visual bloat that LSP sometimes generate.
-  ;;   (lsp-eldoc-enable-hover nil)
-  ;;   (lsp-signature-auto-activate nil)
-  ;;   (lsp-completion-enable t)
-  ;;   :hook ((lsp-mode . lsp-enable-which-key-integration)
-  ;; 	   (python-mode . lsp-deferred))
-  ;;   :commands (lsp lsp-deferred))
-
-  ;; (use-package lsp-pyright
-  ;;   :ensure t
-  ;;   :defer t
-  ;;   ;; Launches pyright when a python buffer is opened.
-  ;;   :hook ((python-mode . (lambda ()
-  ;;   			  (require 'lsp-pyright)
-  ;;   			  (lsp-deferred)))))
-
-  ;; (use-package lsp-ui
-  ;;   :hook (lsp-mode . lsp-ui-mode)
-  ;;   :custom
-  ;;   (lsp-ui-doc-position 'bottom))
-
-  (use-package sphinx-doc
-    :after python-mode
-    :config (sphinx-doc-mode t))
-
-  (use-package python-mode
-    :ensure t)
-
-
-#+end_src
 *** Company-mode
 #+begin_src emacs-lisp
   (use-package company
@@ -576,10 +497,49 @@ Ahora si:
           ("<tab>" . company-indent-or-complete-common))
     :custom
     (company-minimum-prefix-length 1)
-    (company-idle-delay 0.0))
+    (company-idle-delay 1))
 
   (use-package company-box
     :hook (company-mode . company-box-mode))
+#+end_src
+*** Python-mode
+Remember to install the python language server, the correct one is :
+Ahora si:
+#+begin_src emacs-lisp
+  (setenv "WORKON_HOME" "~/Library/Caches/pypoetry/virtualenvs/")
+  (setq tab-width 4)
+  (use-package pyvenv
+    :after python-mode
+    :config
+    (pyvenv-mode 1)
+    )
+
+  (use-package python-black
+    :demand t
+    :after python
+    :hook (python-mode . python-black-on-save-mode))
+
+  (use-package poetry
+    :ensure t)
+
+  (use-package elpy
+    ;;:after python-mode
+    ;;:defer nil
+    :ensure t
+    :config
+    (setq python-shell-completion-native-disabled-interpreters '("python3"))
+    :init
+    (elpy-enable))
+
+  ;; (use-package python-django
+  ;;   :after python-mode)
+
+
+  (use-package sphinx-doc
+    :after python-mode
+    :config (sphinx-doc-mode t))
+  (use-package python-mode
+    :ensure t)
 #+end_src
 *** R ess
 #+begin_src emacs-lisp
@@ -882,7 +842,12 @@ Essh.el The best package so far for editing shell files as pipelines
 
 #+end_src
 
-
+*** Terraform
+#+begin_src emacs-lisp
+  ;; (use-package terraform-mode
+  ;;   :commands terraform-mode
+  ;;   :mode "\\.tf\\'")
+#+end_src
 ** Vterm
 #+begin_src emacs-lisp
   (defun skls/vterm-execute-current-line ()
@@ -1042,7 +1007,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
             ("WAIT" . (:foreground "HotPink2" :weight bold))
             ("BACK" . (:foreground "MediumPurple3" :weight bold))))
     ;; Save Org buffers after refiling!
-    (advice-add 'org-refile :after 'org-save-all-org-buffers)
+    ;; (advice-add 'org-refile :after 'org-save-all-org-buffers)
     (advice-add 'org-refile :after
                 (lambda (&rest _)
                   (org-save-all-org-buffers)))
@@ -1111,9 +1076,9 @@ First we setup the agenda it's kidna messy so I put it in a different place
 
 ** Org-Modern
 #+begin_src emacs-lisp
-  (defun skls/org-modern ()
-    (use-package org-modern)
-    (with-eval-after-load 'org (global-org-modern-mode)))
+  ;; (defun skls/org-modern ()
+  ;;   (use-package org-modern)
+  ;;   (with-eval-after-load 'org (global-org-modern-mode)))
 #+end_src
 
 ** Org reveal
@@ -1147,44 +1112,41 @@ First we setup the agenda it's kidna messy so I put it in a different place
 #+end_src
 ** Basic Setup
 #+begin_src emacs-lisp
-  (defun skls/org-font-setup ()
-    ;; Replace list hyphen with dot
-    (font-lock-add-keywords 'org-mode
-  			  '(("^ *\\([-]\\) "
-  			     (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
-  (defun skls/org-mode-setup ()
-    (toggle-truncate-lines)
-    (org-indent-mode)
-    (variable-pitch-mode 1)
-    (visual-line-mode 1))
+    (defun skls/org-font-setup ()
+      ;; Replace list hyphen with dot
+      (font-lock-add-keywords 'org-mode
+  			    '(("^ *\\([-]\\) "
+  			       (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
+    (defun skls/org-mode-setup ()
+      (toggle-truncate-lines)
+      (org-indent-mode)
+      (variable-pitch-mode 1)
+      (visual-line-mode 1))
 
-  (defun skls/org-mode-visual-fill ()
-    (use-package visual-fill-column
-      :ensure t)
-    (require 'visual-fill-column)
-    (setq visual-fill-column-width 180
-  	visual-fill-column-center-text t)
-    (visual-fill-column-mode 1))
-
+    (defun skls/org-mode-visual-fill ()
+      (use-package visual-fill-column)
+      (setq visual-fill-column-width 180
+  	  visual-fill-column-center-text t)
+      (visual-fill-column-mode 1))
   (use-package org-indent
     :ensure nil
     :defer t
     :init
     (add-hook 'org-mode-hook 'org-indent-mode))
 
-  (use-package org
-    :commands (org-capture org-agenda)
-    :hook ((org-mode . skls/org-mode-babel)
-  	 (org-mode . skls/org-mode-setup)
-  	 (org-mode . skls/org-mode-visual-fill)
-  	 ;(org-mode . skls/org-modern)
-  	 (org-mode . skls/org-reveal)
-  	 (org-mode . skls/org-treeslide))
-    :config
-    ;;(setq org-ellipsis " ▾")
-    (skls/org-agenda-setup)
-    (skls/org-font-setup)
-    )
+    (use-package org
+      :commands (org-capture org-agenda)
+      :hook ((org-mode . skls/org-mode-babel)
+  	   (org-mode . skls/org-mode-setup)
+  	   (org-mode . skls/org-mode-visual-fill)
+  	   ;(org-mode . skls/org-modern)
+  	   (org-mode . skls/org-reveal)
+  	   (org-mode . skls/org-treeslide))
+      :config
+      (setq org-ellipsis " ▾")
+      (skls/org-agenda-setup)
+     ;(skls/org-font-setup)
+      )
 #+end_src
 ** Faces
 #+begin_src emacs-lisp
@@ -1244,11 +1206,11 @@ First we setup the agenda it's kidna messy so I put it in a different place
 #+end_src
 ** Deft
 #+begin_src emacs-lisp
-  ;; (use-package deft
-  ;;   :commands (deft)
-  ;;   :config (setq deft-directory "~/Dropbox/org/org-roam"
-  ;;                 deft-recursive t
-  ;;                 deft-extensions '("md" "org")))
+(use-package deft
+  :commands (deft)
+  :config (setq deft-directory "~/Dropbox/org/org-roam"
+                deft-recursive t
+                deft-extensions '("md" "org")))
 #+end_src
 ** Org-Download
 #+begin_src emacs-lisp
@@ -1288,8 +1250,8 @@ First we setup the agenda it's kidna messy so I put it in a different place
 #+begin_src emacs-lisp
   (setq dired-listing-switches "-agho --group-directories-first")
 
-  ;; (use-package dired-single
-  ;;   :commands (dired dired-jump))
+  (use-package dired-single
+    :commands (dired dired-jump))
 
   (use-package dired-hide-dotfiles
     :hook (dired-mode . dired-hide-dotfiles-mode)
@@ -1302,124 +1264,124 @@ First we setup the agenda it's kidna messy so I put it in a different place
 
 ** Treemacs
 #+begin_src emacs-lisp
-  (use-package treemacs
-    :ensure t
-    :defer t
-    :init
-    (with-eval-after-load 'winum
-      (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-    :config
-    (progn
-      (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
-            treemacs-deferred-git-apply-delay        0.5
-            treemacs-directory-name-transformer      #'identity
-            treemacs-display-in-side-window          t
-            treemacs-eldoc-display                   'simple
-            treemacs-file-event-delay                2000
-            treemacs-file-extension-regex            treemacs-last-period-regex-value
-            treemacs-file-follow-delay               0.2
-            treemacs-file-name-transformer           #'identity
-            treemacs-follow-after-init               t
-            treemacs-expand-after-init               t
-            treemacs-find-workspace-method           'find-for-file-or-pick-first
-            treemacs-git-command-pipe                ""
-            treemacs-goto-tag-strategy               'refetch-index
-            treemacs-header-scroll-indicators        '(nil . "^^^^^^")
-            treemacs-hide-dot-git-directory          t
-            treemacs-indentation                     1
-            treemacs-indentation-string              " "
-            treemacs-is-never-other-window           nil
-            treemacs-max-git-entries                 5000
-            treemacs-missing-project-action          'ask
-            treemacs-move-files-by-mouse-dragging    t
-            treemacs-move-forward-on-expand          nil
-            treemacs-no-png-images                   nil
-            treemacs-no-delete-other-windows         t
-            treemacs-project-follow-cleanup          nil
-            treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-            treemacs-position                        'left
-            treemacs-read-string-input               'from-child-frame
-            treemacs-recenter-distance               0.1
-            treemacs-recenter-after-file-follow      nil
-            treemacs-recenter-after-tag-follow       nil
-            treemacs-recenter-after-project-jump     'always
-            treemacs-recenter-after-project-expand   'on-distance
-            treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
-            treemacs-project-follow-into-home        nil
-            treemacs-show-cursor                     nil
-            treemacs-show-hidden-files               t
-            treemacs-silent-filewatch                nil
-            treemacs-silent-refresh                  nil
-            treemacs-sorting                         'alphabetic-asc
-            treemacs-select-when-already-in-treemacs 'move-back
-            treemacs-space-between-root-nodes        t
-            treemacs-tag-follow-cleanup              t
-            treemacs-tag-follow-delay                1.5
-            treemacs-text-scale                      nil
-            treemacs-user-mode-line-format           nil
-            treemacs-user-header-line-format         nil
-            treemacs-wide-toggle-width               70
-            treemacs-width                           35
-            treemacs-width-increment                 1
-            treemacs-width-is-initially-locked       t
-            treemacs-workspace-switch-cleanup        nil)
+    (use-package treemacs
+      :ensure t
+      :defer t
+      :init
+      (with-eval-after-load 'winum
+        (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+      :config
+      (progn
+        (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
+              treemacs-deferred-git-apply-delay        0.5
+              treemacs-directory-name-transformer      #'identity
+              treemacs-display-in-side-window          t
+              treemacs-eldoc-display                   'simple
+              treemacs-file-event-delay                2000
+              treemacs-file-extension-regex            treemacs-last-period-regex-value
+              treemacs-file-follow-delay               0.2
+              treemacs-file-name-transformer           #'identity
+              treemacs-follow-after-init               t
+              treemacs-expand-after-init               t
+              treemacs-find-workspace-method           'find-for-file-or-pick-first
+              treemacs-git-command-pipe                ""
+              treemacs-goto-tag-strategy               'refetch-index
+              treemacs-header-scroll-indicators        '(nil . "^^^^^^")
+              treemacs-hide-dot-git-directory          t
+              treemacs-indentation                     2
+              treemacs-indentation-string              " "
+              treemacs-is-never-other-window           nil
+              treemacs-max-git-entries                 5000
+              treemacs-missing-project-action          'ask
+              treemacs-move-files-by-mouse-dragging    t
+              treemacs-move-forward-on-expand          nil
+              treemacs-no-png-images                   nil
+              treemacs-no-delete-other-windows         t
+              treemacs-project-follow-cleanup          nil
+              treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+              treemacs-position                        'left
+              treemacs-read-string-input               'from-child-frame
+              treemacs-recenter-distance               0.1
+              treemacs-recenter-after-file-follow      nil
+              treemacs-recenter-after-tag-follow       nil
+              treemacs-recenter-after-project-jump     'always
+              treemacs-recenter-after-project-expand   'on-distance
+              treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
+              treemacs-project-follow-into-home        nil
+              treemacs-show-cursor                     nil
+              treemacs-show-hidden-files               t
+              treemacs-silent-filewatch                nil
+              treemacs-silent-refresh                  nil
+              treemacs-sorting                         'alphabetic-asc
+              treemacs-select-when-already-in-treemacs 'move-back
+              treemacs-space-between-root-nodes        t
+              treemacs-tag-follow-cleanup              t
+              treemacs-tag-follow-delay                1.5
+              treemacs-text-scale                      nil
+              treemacs-user-mode-line-format           nil
+              treemacs-user-header-line-format         nil
+              treemacs-wide-toggle-width               70
+              treemacs-width                           35
+              treemacs-width-increment                 1
+              treemacs-width-is-initially-locked       t
+              treemacs-workspace-switch-cleanup        nil)
 
-      ;; The default width and height of the icons is 22 pixels. If you are
-      ;; using a Hi-DPI display, uncomment this to double the icon size.
-      ;;(treemacs-resize-icons 44)
+        ;; The default width and height of the icons is 22 pixels. If you are
+        ;; using a Hi-DPI display, uncomment this to double the icon size.
+        ;;(treemacs-resize-icons 44)
 
-      (treemacs-follow-mode t)
-      (treemacs-filewatch-mode t)
-      (treemacs-fringe-indicator-mode 'always)
-      (when treemacs-python-executable
-        (treemacs-git-commit-diff-mode t))
+        (treemacs-follow-mode t)
+        (treemacs-filewatch-mode t)
+        (treemacs-fringe-indicator-mode 'always)
+        (when treemacs-python-executable
+          (treemacs-git-commit-diff-mode t))
 
-      (pcase (cons (not (null (executable-find "git")))
-                   (not (null treemacs-python-executable)))
-        (`(t . t)
-         (treemacs-git-mode 'deferred))
-        (`(t . _)
-         (treemacs-git-mode 'simple)))
+        (pcase (cons (not (null (executable-find "git")))
+                     (not (null treemacs-python-executable)))
+          (`(t . t)
+           (treemacs-git-mode 'deferred))
+          (`(t . _)
+           (treemacs-git-mode 'simple)))
 
-      (treemacs-hide-gitignored-files-mode nil))
-    :bind
-    (:map global-map
-          ("M-0"       . treemacs-select-window)
-          ("C-x t 1"   . treemacs-delete-other-windows)
-          ("C-x t t"   . treemacs)
-          ("C-x t d"   . treemacs-select-directory)
-          ("C-x t B"   . treemacs-bookmark)
-          ("C-x t C-t" . treemacs-find-file)
-          ("C-x t M-t" . treemacs-find-tag))
-    )
+        (treemacs-hide-gitignored-files-mode nil))
+      :bind
+      (:map global-map
+            ("M-0"       . treemacs-select-window)
+            ("C-x t 1"   . treemacs-delete-other-windows)
+            ("C-x t t"   . treemacs)
+            ("C-x t d"   . treemacs-select-directory)
+            ("C-x t B"   . treemacs-bookmark)
+            ("C-x t C-t" . treemacs-find-file)
+            ("C-x t M-t" . treemacs-find-tag))
+      )
 
-  (use-package treemacs-evil
-    :after (treemacs evil)
-    :ensure t)
+    (use-package treemacs-evil
+      :after (treemacs evil)
+      :ensure t)
 
-  (use-package treemacs-projectile
-    :after (treemacs projectile)
-    :ensure t)
+    (use-package treemacs-projectile
+      :after (treemacs projectile)
+      :ensure t)
 
-  (use-package treemacs-icons-dired
-    :hook (dired-mode . treemacs-icons-dired-enable-once)
-    :ensure t)
+    (use-package treemacs-icons-dired
+      :hook (dired-mode . treemacs-icons-dired-enable-once)
+      :ensure t)
 
-  (use-package treemacs-magit
-    :after (treemacs magit)
-    :ensure t)
+    (use-package treemacs-magit
+      :after (treemacs magit)
+      :ensure t)
 
-  (use-package treemacs-persp ;;treemacs-perspective if you use perspective.el vs. persp-mode
-    :after (treemacs persp-mode) ;;or perspective vs. persp-mode
-    :ensure t
-    :config (treemacs-set-scope-type 'Perspectives))
+    (use-package treemacs-persp ;;treemacs-perspective if you use perspective.el vs. persp-mode
+      :after (treemacs persp-mode) ;;or perspective vs. persp-mode
+      :ensure t
+      :config (treemacs-set-scope-type 'Perspectives))
 
-  (use-package treemacs-tab-bar ;;treemacs-tab-bar if you use tab-bar-mode
-    :after (treemacs)
-    :ensure t
-    :config (treemacs-set-scope-type 'Tabs))
+    (use-package treemacs-tab-bar ;;treemacs-tab-bar if you use tab-bar-mode
+      :after (treemacs)
+      :ensure t
+      :config (treemacs-set-scope-type 'Tabs))
 
-  (treemacs-start-on-boot)
+    (treemacs-start-on-boot)
 #+end_src
 * Autosave to init.el
 
@@ -1474,8 +1436,8 @@ for the actual config file !
     (unless (getenv "LANG") (setenv "LANG" "en_US.UTF-8"))
     (unless (getenv "LC_ALL") (setenv "LC_ALL" "en_US.UTF-8"))
     ;;(setq insert-directory-program "/usr/local/opt/coreutils/libexec/gnubin/ls")
-    (setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin/:$HOME/.pyenv/shims"))
-    (setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin/:/opt/homebrew/bin/:/opt/homebrew/sbin/:/opt/homebrew/opt/libpq/bin:$HOME/.local/bin/"))
+    (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:$HOME/.pyenv/shims:$HOME/.local/bin/"))
+    (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin:/usr/local/bin/:/Users/miguelescalante/src/miniconda3/bin/:/opt/homebrew/bin/:/opt/homebrew/sbin/:/opt/homebrew/opt/libpq/bin"))
     (global-set-key (kbd "M-3") '(lambda () (interactive) (insert "#")))
     (global-set-key (kbd "M-ñ") '(lambda () (interactive) (insert "~")))
     (global-set-key (kbd "M-n") '(lambda () (interactive) (insert "ñ")))
@@ -1509,38 +1471,34 @@ for the actual config file !
     :config
     (pdf-loader-install))
 #+end_src
+* Cleanup
+Dial down GC thershold so it runs frequently but in less time.
+#+begin_src emacs-lisp
+;; Make gc pauses faster by decreasing the threshold.
+(setq gc-cons-threshold (* 5 1024 1024))
+#+end_src
 * Dashboard
 #+begin_src emacs-lisp
   (defun skls/dashboard-banner ()
     """Set a dashboard banner including information on package initialization
-             time and garbage collections."""
-             (setq dashboard-banner-logo-title
-                   (format "Emacs ready in %.2f seconds with %d garbage collections."
-                           (float-time (time-subtract after-init-time before-init-time)) gs-done)))
+     time and garbage collections."""
+     (setq dashboard-banner-logo-title
+           (format "Emacs ready in %.2f seconds with %d garbage collections."
+                   (float-time (time-subtract after-init-time before-init-time)) gs-done)))
 
-          ;; (use-package dashboard
-          ;;   :init
-          ;;   ;; (add-hook 'after-init-hook 'dashboard-refresh-buffer)
-          ;;   (add-hook 'dashboard-mode-hook 'skls/dashboard-banner)
-          ;;   :config
-          ;;   (setq dashboard-startup-banner 'logo)
-          ;;   (dashboard-setup-startup-hook))
+  ;; (use-package dashboard
+  ;;   :init
+  ;;   (add-hook 'after-init-hook 'dashboard-refresh-buffer)
+  ;;   (add-hook 'dashboard-mode-hook 'skls/dashboard-banner)
+  ;;   :config
+  ;;   (setq dashboard-startup-banner 'logo)
+  ;;   (dashboard-setup-startup-hook))
+  ;; use-package with package.el:
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook))
 
-
-
-      (use-package dashboard
-        :ensure t
-        :defer nil
-        :config
-        (dashboard-setup-startup-hook))
-      (setq dashboard-items '((recents   . 5)
-                              (bookmarks . 5)
-                              (projects  . 5)
-                              (agenda    . 15)
-                              (registers . 5)))
-    ;;  (setq dashboard-projects-switch-function 'projectile-persp-switch-project)
-  (setq dashboard-projects-switch-function 'projectile-persp-switch-project)
-  (setq dashboard-filter-agenda-entry 'dashboard-no-filter-agenda)
 #+end_src
 * Auto Update
 #+begin_src emacs-lisp
@@ -1566,9 +1524,7 @@ for the actual config file !
     (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
     )
 
-  (add-hook 'prog-mode-hook 'copilot-mode)
-  (setq warning-suppress-log-types '((copilot)))
-
+  ;;(add-hook 'prog-mode-hook 'copilot-mode)
   ;;(add-hook 'org-mode-hook 'copilot-mode)
 #+end_src
 
@@ -1577,7 +1533,7 @@ for the actual config file !
   (use-package c3po
     :straight (:host github :repo "d1egoaz/c3po.el")
     :config
-    (setq c3po-api-key  ""))
+    (setq c3po-api-key  (getenv "OPENAI_API_KEY")))
   (require 'c3po)
   (c3po-toggle-c3po-model)
 #+end_src
@@ -1585,13 +1541,15 @@ for the actual config file !
 ** gptel
 #+begin_src emacs-lisp
   (straight-use-package 'gptel)
-  (setq gptel-api-key "")
+  (setq gptel-api-key (getenv "OPENAI_API_KEY"))
   #+end_src
 
-* Cleanup
-Dial down GC thershold so it runs frequently but in less time.
+* Reload
 #+begin_src emacs-lisp
-  ;; Make gc pauses faster by decreasing the threshold.
-  (setq gc-cons-threshold (* 5 1024 1024))
-  (setq read-process-output-max (* 1024 1024)) ;; 1mb
+;; Reload Emacs configuration
+(defun reload-init-file ()
+  (interactive)
+  (load-file "~/.emacs.d/init.el"))
+
+(global-set-key (kbd "C-c r") 'reload-init-file)
 #+end_src
