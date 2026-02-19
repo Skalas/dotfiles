@@ -8,8 +8,20 @@
 #+Author: Miguel Escalante
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
 
+* Early init (loaded before init.el)
+Disable package.el at startup so straight.el is the only package manager; avoids the "straight.el was loaded when package.el was already loaded" warning.
+#+begin_src emacs-lisp :tangle .emacs.d/early-init.el :mkdirp yes
+(setq package-enable-at-startup nil)
+#+end_src
 
 * Set everything up
+** package.el (load first)
+Load package.el before any other code so use-package and packages load correctly; then straight.el loads after.
+#+begin_src emacs-lisp
+  (require 'package)
+  (package-initialize)
+#+end_src
+
 ** First Basics
 #+begin_src emacs-lisp
   ;; Encoding
@@ -55,16 +67,13 @@
 #+end_src
 
 ** Use-package
-better package management for emacs.
+Better package management for emacs. use-package and packages from ELPA; packages with ~:straight~ from straight.
 #+begin_src emacs-lisp
-  (require 'package)
-
   (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                            ("melpa-stable" . "https://stable.melpa.org/packages/")
                            ("elpa" . "https://elpa.gnu.org/packages/")
   			 ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
 
-  (package-initialize)
   (unless package-archive-contents
     (package-refresh-contents))
 
@@ -73,15 +82,7 @@ better package management for emacs.
   (require 'use-package)
   (setq use-package-always-ensure t)
   (setq use-package-always-defer t)
-  (use-package auto-package-update
-    :custom
-    (auto-package-update-interval 7)
-    (auto-package-update-prompt-before-update t)
-    (auto-package-update-hide-results t)
-    :config
-    (auto-package-update-maybe))
   (setq use-package-verbose t)
-
 #+end_src
 
 ** Visible mode line
@@ -93,7 +94,7 @@ better package management for emacs.
                              (run-with-timer 0.1 nil 'invert-face 'mode-line)))
   ;;(setq visible-bell t) ; I don't like my errors being screamed at to me
 #+end_src
-** Sraight.el
+** Straight.el
 #+begin_src emacs-lisp
   (defvar bootstrap-version)
   (let ((bootstrap-file
@@ -110,7 +111,6 @@ better package management for emacs.
 	(goto-char (point-max))
 	(eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
-  (setq package-enable-at-startup nil)
 
 #+end_src
 ** Perspective.el
@@ -340,7 +340,7 @@ Package for enhance the experience, along with swiper its a marvel.
     :diminish projectile-mode
     :defer nil
     :config (projectile-mode)
-    :custom ((projectile-completion-system 'ivy))
+    :custom ((projectile-completion-system 'vertico))
     :bind-keymap
     ("C-c p" . projectile-command-map)
     :init
@@ -568,12 +568,9 @@ Ahora si:
 *** Company-mode
 #+begin_src emacs-lisp
   (use-package company
-    :after lsp-mode
-    :hook (lsp-mode . company-mode)
+    :hook (prog-mode . company-mode)
     :bind (:map company-active-map
                 ("<tab>" . company-complete-selection))
-    (:map lsp-mode-map
-          ("<tab>" . company-indent-or-complete-common))
     :custom
     (company-minimum-prefix-length 1)
     (company-idle-delay 0.0))
@@ -1393,10 +1390,6 @@ First we setup the agenda it's kidna messy so I put it in a different place
           ("C-x t M-t" . treemacs-find-tag))
     )
 
-  (use-package treemacs-evil
-    :after (treemacs evil)
-    :ensure t)
-
   (use-package treemacs-projectile
     :after (treemacs projectile)
     :ensure t)
@@ -1427,11 +1420,10 @@ This automatically saves all the elisp code chunks to init.el
 #+begin_src emacs-lisp
   ;; Automatically tangle our Emacs.org config file when we save it
   (defun skls/org-babel-tangle-config ()
-    (when (string-equal  (file-name-directory (buffer-file-name))
-                         (expand-file-name"~/github/skalas/dotfiles/"))
-                         ;; Dynamic scoping to the rescue
-                         (let ((org-confirm-babel-evaluate nil))
-                           (org-babel-tangle))))
+    (when (and (buffer-file-name)
+               (locate-file "Emacs.org" (list (file-name-directory (buffer-file-name)))))
+      (let ((org-confirm-babel-evaluate nil))
+        (org-babel-tangle))))
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'skls/org-babel-tangle-config)))
 #+end_src
@@ -1450,21 +1442,6 @@ for the actual config file !
     ;; Set the fixed pitch face:
     ;;(set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 120)
     (setq insert-directory-program "/opt/homebrew/bin/gls")
-    (use-package org-download
-      :after org
-      :defer t
-      :custom
-      (org-download-method 'directory)
-      (org-download-image-dir "images")
-      (org-download-heading-lvl nil)
-      (org-download-timestamp "%Y%m%d-%H%M%S_")
-      (org-image-actual-width 500)
-      :bind
-      ("C-M-y" . org-download-clipboard)
-      :init
-      ;; Add handlers for drag-and-drop when Org is loaded.
-      (with-eval-after-load 'org
-        (org-download-enable)))
     (setq exec-path (cons "/usr/local/bin" exec-path))
     ;; Here is where you add the executables for emacs to look for.
     (add-to-list 'exec-path "/opt/homebrew/bin/")
@@ -1516,7 +1493,7 @@ for the actual config file !
              time and garbage collections."""
              (setq dashboard-banner-logo-title
                    (format "Emacs ready in %.2f seconds with %d garbage collections."
-                           (float-time (time-subtract after-init-time before-init-time)) gs-done)))
+                           (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
 
           ;; (use-package dashboard
           ;;   :init
@@ -1573,20 +1550,22 @@ for the actual config file !
 #+end_src
 
 ** C3P0
+Set ~OPENAI_API_KEY~ in your environment (e.g. .envrc, .zshrc).
 #+begin_src emacs-lisp
   (use-package c3po
     :straight (:host github :repo "d1egoaz/c3po.el")
     :config
-    (setq c3po-api-key  ""))
+    (setq c3po-api-key (getenv "OPENAI_API_KEY")))
   (require 'c3po)
   (c3po-toggle-c3po-model)
 #+end_src
 
 ** gptel
+Set ~OPENAI_API_KEY~ in your environment (e.g. .envrc, .zshrc).
 #+begin_src emacs-lisp
   (straight-use-package 'gptel)
-  (setq gptel-api-key "")
-  #+end_src
+  (setq gptel-api-key (getenv "OPENAI_API_KEY"))
+#+end_src
 
 * Cleanup
 Dial down GC thershold so it runs frequently but in less time.
