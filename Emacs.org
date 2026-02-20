@@ -156,7 +156,10 @@ Better package management for emacs. use-package and packages from ELPA; package
 Make sure you have the font installed beforehand:
 
 #+begin_src shell :noeval
+  # Linux (Debian/Ubuntu):
   sudo apt install fonts-firacode fonts-cantarell
+  # macOS (Homebrew):
+  brew install --cask font-fira-code font-cantarell
 #+end_src
 
 #+begin_src emacs-lisp

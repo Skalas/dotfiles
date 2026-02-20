@@ -24,8 +24,13 @@ alias md='mkdir -p'
 # Crear directorio y un archivo
 mkpfile() { mkdir -p "$(dirname "$1")" || return; touch "$1"; }
 
-alias install="sudo apt install"
-alias update="sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y"
+# Package manager aliases: Linux (apt) vs macOS (Homebrew; do not override system install)
+if [[ "$(uname -s)" == Darwin ]]; then
+  alias update="brew update && brew upgrade"
+else
+  alias install="sudo apt install"
+  alias update="sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y"
+fi
 
 SHELL=/bin/zsh
 

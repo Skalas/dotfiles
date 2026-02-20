@@ -1,14 +1,18 @@
 #+Title: Configuration for my zsh
 #+PROPERTY: header-args :mkdirp y
+#+begin_comment
+The canonical source for ~/.zshrc is the .zshrc file in this repo. The blocks below
+that previously tangled to ./.zshrc are kept as reference only (:tangle no).
+#+end_comment
 * Preamble: 
 Love this snippet 
 
-#+begin_src conf :tangle ./.zshrc
+#+begin_src conf :tangle no
 fortune -s
 #+end_src
 
 * Configure Antigen
-#+begin_src conf :tangle ./.zshrc
+#+begin_src conf :tangle no
   # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
   fortune -s
   # Initialization code that may require console input (password prompts, [y/n]
@@ -129,8 +133,6 @@ fortune -s
   #source ~/.env_vars
   source ~/src/skls/python/conda_initialize.zsh
   #source ~/src/skls/python/pyenv.zsh
-  # Alias
-  source ~/src/skls/aliases
   eval "$(direnv hook zsh)"
   export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 
@@ -197,8 +199,13 @@ export PATH="$HOME/.poetry/bin:$PATH"
   # Crear directorio y un archivo
   mkpfile() { mkdir -p "$(dirname "$1")" || return; touch "$1"; }
 
-  alias install="sudo apt install"
-  alias update="sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y"
+  # Package manager aliases: Linux (apt) vs macOS (Homebrew; do not override system install)
+  if [[ "$(uname -s)" == Darwin ]]; then
+    alias update="brew update && brew upgrade"
+  else
+    alias install="sudo apt install"
+    alias update="sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y"
+  fi
 
   SHELL=/bin/zsh
 
