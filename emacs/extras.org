@@ -82,8 +82,13 @@ Set ~OPENAI_API_KEY~ in your environment (e.g. .envrc, .zshrc).
 #+end_src
 
 ** Claude Code
-Run Claude Code CLI inside Emacs. Requires the ~claude~ CLI to be installed.
+Run Claude Code CLI inside Emacs via Vertex AI. Requires the ~claude~ CLI to be installed.
 #+begin_src emacs-lisp
+  ;; Vertex AI environment for Claude Code
+  (setenv "CLAUDE_CODE_USE_VERTEX" "1")
+  (setenv "CLOUD_ML_REGION" "global")
+  (setenv "ANTHROPIC_VERTEX_PROJECT_ID" "g-ai-agent-edu-dev-prj-f184")
+
   (use-package inheritenv
     :straight (:host github :repo "purcell/inheritenv"))
 
