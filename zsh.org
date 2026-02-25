@@ -139,7 +139,7 @@ fortune -s
 #+end_src
 * Python Config
 ** Anaconda initialize
-#+begin_src sh :tangle :tangle src/skls/python/conda_initialize.zsh
+#+begin_src sh :tangle src/skls/python/conda_initialize.zsh
   # >>> conda initialize >>>
   # !! Contents within this block are managed by 'conda init' !!
   __conda_setup="$('$HOME/src/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
