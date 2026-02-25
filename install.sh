@@ -9,7 +9,7 @@ case "$(uname -s)" in
       echo "Homebrew is required on macOS. Install from https://brew.sh"
       exit 1
     fi
-    brew install stow cmake
+    brew install stow cmake coreutils
     brew install --cask font-fira-code font-cantarell 2>/dev/null || true
     ;;
   Linux)
@@ -20,3 +20,6 @@ case "$(uname -s)" in
     exit 1
     ;;
 esac
+
+echo "Tangling Org files..."
+"$(dirname "$0")/tangle.sh"
