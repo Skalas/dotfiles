@@ -2,5 +2,6 @@ src/google-cloud-sdk
 .DS_Store
 .emacs.d
 .gitconfig
+.ssh
 .env
 backup.org

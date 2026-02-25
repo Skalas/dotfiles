@@ -1,0 +1,292 @@
+#+Title:  Core Configuration
+#+Author: Miguel Escalante
+#+PROPERTY: header-args:emacs-lisp :tangle ../.emacs.d/lisp/core.el :mkdirp yes :results silent
+
+* First Basics
+#+begin_src emacs-lisp
+  ;; Encoding
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (prefer-coding-system 'utf-8)
+
+  ;; The default is 800 kilobytes.  Measured in bytes.
+  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+  (setq gc-cons-threshold (* 50 1024 1024))
+  ;;        gc-cons-percentage 0.6)
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+              (message "*** Emacs loaded in %s with %d garbage collections."
+                       (format "%.2f seconds"
+                               (float-time
+                                (time-subtract after-init-time before-init-time)))
+                       gcs-done)))
+  (setq inhibit-startup-message t) ; No emacs init page
+  (menu-bar-mode -1) ; I don't like the menus
+  (scroll-bar-mode -1) ; I don't like the menus
+  (tool-bar-mode -1) ; I don't like the menus
+  (tooltip-mode -1) ; I don't like the menus
+  (set-fringe-mode -1) ; I don't like the menus
+  (global-auto-revert-mode 1)
+  (delete-selection-mode 1)
+  (defalias 'yes-or-no-p 'y-or-n-p)
+  ;; Make frame transparency overridable
+  ;;(defvar skls/frame-transparency '(90 . 90))
+#+end_src
+
+* Directories
+#+begin_src emacs-lisp
+  (setq org-directory "~/Documents/org")
+  (defun skls/org-path (path)
+    (expand-file-name path org-directory))
+
+  (setq org-default-notes-file (skls/org-path "Tasks.org"))
+  (setq default-directory "~/github/")
+  (custom-set-variables
+   '(org-directory "~/Documents/org")
+   '(org-agenda-files '("~/Documents/org/Tasks.org" "~/Documents/org/Cumpleaños.org")))
+#+end_src
+
+* Visible mode line
+#+begin_src emacs-lisp
+  (use-package mode-line-bell)
+  (setq visible-bell nil)
+  (setq ring-bell-function (lambda ()
+                             (invert-face 'mode-line)
+                             (run-with-timer 0.1 nil 'invert-face 'mode-line)))
+  ;;(setq visible-bell t) ; I don't like my errors being screamed at to me
+#+end_src
+
+* Perspective.el
+#+begin_src emacs-lisp
+  (use-package perspective
+    :defer nil
+    :custom
+    (persp-mode-prefix-key (kbd "C-c x"))
+    :config
+    (persp-mode))
+#+end_src
+
+* Themes
+** Visual Themes
+#+begin_src emacs-lisp
+  ;; You must run (all-the-icons-install-fonts) one time after
+  ;; installing this package!
+
+
+  (use-package doom-modeline
+    :init (doom-modeline-mode 1)
+    :custom ((doom-modeline-height 15)))
+
+  (use-package doom-themes
+    :ensure t
+    :init (load-theme 'doom-zenburn t))
+
+  (use-package all-the-icons )
+
+  (use-package all-the-icons-dired
+    :hook (dired-mode . all-the-icons-dired-mode)
+    :config
+    (setq all-the-icons-dired-monochrome nil))
+
+  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+#+end_src
+** Pretty fonts per different environments
+Make sure you have the font installed beforehand:
+
+#+begin_src shell :noeval
+  # Linux (Debian/Ubuntu):
+  sudo apt install fonts-firacode fonts-cantarell
+  # macOS (Homebrew):
+  brew install --cask font-fira-code font-cantarell
+#+end_src
+
+#+begin_src emacs-lisp
+
+  ;; (use-package fira-code-mode
+  ;;     :hook prog-mode)
+  (set-face-attribute 'default nil :font "Fira Code"); :height 160) ;
+  ;;  Set the fixed pitch face:
+  ;; (set-face-attribute 'fixed-pitch nil :font "Fira Code"); :height 160)
+  ;; ;;  Set the variable pitch face
+  ;; (set-face-attribute 'variable-pitch nil :font "Cantarell"); :weight 'regular :height 100)
+#+end_src
+
+* Interaction with Emacs
+
+** Direnv
+#+begin_src emacs-lisp
+  (use-package direnv
+    :init
+    (direnv-mode))
+#+end_src
+** envrc
+#+begin_src emacs-lisp
+  (use-package envrc
+    :hook (after-init . envrc-global-mode))
+#+end_src
+** Vertico!
+
+#+begin_src emacs-lisp
+
+
+  (use-package vertico
+    :ensure t
+    :demand
+    :config
+    (setq vertico-cycle t)
+    ;; currently requires melpa version of vertico
+    (setq vertico-preselect 'directory)
+    :init
+    (vertico-mode)
+    (defun my/vertico-insert ()
+      (interactive)
+      (let* ((mb (minibuffer-contents-no-properties))
+             (lc (if (string= mb "") mb (substring mb -1))))
+        (cond ((string-match-p "^[/~:]" lc) (self-insert-command 1 ?/))
+              ((file-directory-p (vertico--candidate)) (vertico-insert))
+              (t (self-insert-command 1 ?/)))))
+    :bind (:map vertico-map
+                ("/" . #'my/vertico-insert)))
+
+
+    (use-package marginalia
+      :after vertico
+      :custom
+      (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
+      :init (marginalia-mode))
+
+    ;; Use the `orderless' completion style. Additionally enable
+    ;; `partial-completion' for file path expansion. `partial-completion' is
+    ;; important for wildcard support. Multiple files can be opened at once
+    ;; with `find-file' if you enter a wildcard. You may also give the
+    ;; `initials' completion style a try.
+    (use-package orderless
+      :init
+      (setq completion-styles '(orderless)
+            completion-category-defaults nil
+            completion-category-overrides '((file (styles partial-completion)))))
+
+    ;; Persist history over Emacs restarts. Vertico sorts by history position.
+    (use-package savehist
+      :straight nil
+      :init
+      (savehist-mode))
+#+end_src
+** Consult commands
+Consult provides a lot of useful completion commands similar to Ivy's Counsel.
+#+begin_src emacs-lisp
+  (defun skls/get-project-root ()
+    (when (fboundp 'projectile-project-root)
+      (projectile-project-root)))
+
+  (use-package consult
+    :demand t
+    :bind (("C-s" . consult-line)
+           ("C-M-l" . consult-imenu)
+           ("C-M-j" . persp-switch-to-buffer*)
+           :map minibuffer-local-map
+           ("C-r" . consult-history))
+    :custom
+    (consult-project-root-function #'skls/get-project-root)
+    (completion-in-region-function #'consult-completion-in-region))
+#+end_src
+
+** General
+#+begin_src emacs-lisp
+  (use-package general
+    :config
+    ;; for frequently used prefix keys, the user can create a custom definer with a
+    ;; default :prefix
+    ;; using a variable is not necessary, but it may be useful if you want to
+    ;; experiment with different prefix keys and aren't using `general-create-definer'
+    (defconst my-leader "C-c")
+    (general-create-definer my-leader-def
+      :prefix "C-c")
+    (my-leader-def
+      ;; bind "C-c a" to 'org-agenda
+      "a" 'org-agenda
+      "b" 'consult-bookmark
+      "c" 'org-capture))
+#+end_src
+
+** Which key
+#+begin_src emacs-lisp
+  (use-package which-key
+    :init (which-key-mode)
+    :diminish which-key-mode
+    :config
+    (setq which-key-idle-delay 0.7))
+#+end_src
+
+** Projectile
+#+begin_src emacs-lisp
+  (use-package projectile
+    :diminish projectile-mode
+    :defer nil
+    :config (projectile-mode)
+    :custom ((projectile-completion-system 'vertico))
+    :bind-keymap
+    ("C-c p" . projectile-command-map)
+    :init
+    ;; NOTE: Set this to the folder where you keep your Git repos!
+    (setq projectile-project-search-path '(("~/github/" . 2)))
+    (setq projectile-switch-project-action #'projectile-dired))
+
+#+end_src
+** Helpful
+#+begin_src emacs-lisp
+  (use-package helpful
+    :commands (helpful-callable helpful-variable helpful-command helpful-key)
+    :bind
+    ([remap describe-function] . helpful-callable)
+    ([remap describe-command] . helpful-command)
+    ([remap describe-variable] . helpful-variable)
+    ([remap describe-key] . helpful-key))
+#+end_src
+** window Jump
+#+begin_src emacs-lisp
+  (defvar my-keys-minor-mode-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "<M-C-up>") 'windmove-up)
+      (define-key map (kbd "<M-C-right>") 'windmove-right)
+      (define-key map (kbd "<M-C-down>") 'windmove-down)
+      (define-key map (kbd "<M-C-left>") 'windmove-left)
+      map)
+    "my-keys-minor-mode keymap.")
+  (define-minor-mode my-keys-minor-mode
+    "A minor mode so that my key settings override annoying major modes."
+    :init-value t
+    :lighter " my-keys")
+  (my-keys-minor-mode 1)
+  (defun my-minibuffer-setup-hook ()
+    (my-keys-minor-mode 0))
+  (add-hook 'minibuffer-setup-hook 'my-minibuffer-setup-hook)
+
+#+end_src
+
+* Text Scale
+#+begin_src emacs-lisp
+  (define-key global-map (kbd "C-+") 'text-scale-increase)
+  (define-key global-map (kbd "C--") 'text-scale-decrease)
+  (global-set-key "\C-x\C-b" 'ibuffer)
+#+end_src
+
+* Multiple cursors
+#+begin_src emacs-lisp
+  (dolist (key '("\C-d" "\C-\M-b"))
+    (global-unset-key key))
+  ;; Multiple lines editing
+  (use-package multiple-cursors
+    :diminish multiple-cursors-mode
+    :init
+    (global-set-key (kbd "C-d") 'mc/mark-next-like-this)
+    (global-set-key (kbd "C-M-d") 'mc/mark-previous-like-this)
+    (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
+    )
+#+end_src
+* Ripgrep
+#+begin_src emacs-lisp
+  (use-package ripgrep)
+#+end_src

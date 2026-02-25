@@ -7,3 +7,10 @@ install_packages.sh
 .gitignore
 images
 install.sh
+tangle.sh
+^/emacs
+src/
+.zshrc
+src
+.env
+CLAUDE.md
