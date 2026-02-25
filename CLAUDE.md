@@ -36,7 +36,7 @@ Several configs are authored as Emacs Org files and tangled (via `org-babel-tang
 | `emacs/org-config.org` | `.emacs.d/lisp/org-config.el` | Babel, agenda, org-modern, org-roam, org-download |
 | `emacs/files.org` | `.emacs.d/lisp/files.el` | CSV/JSON/YAML modes, dired, treemacs |
 | `emacs/macos.org` | `.emacs.d/lisp/macos.el` | macOS keybindings, PATH, pdf-tools |
-| `emacs/extras.org` | `.emacs.d/lisp/extras.el` | Writing/LaTeX/markdown, dashboard, auto-update, AI/copilot/gptel |
+| `emacs/extras.org` | `.emacs.d/lisp/extras.el` | Writing/LaTeX/markdown, dashboard, AI/copilot/gptel/claude-code |
 | `git.org` | `.gitconfig` | `.gitconfig` is gitignored (contains personal data) |
 | `ssh.org` | `.ssh/config` | |
 | `zsh.org` | `src/skls/aliases`, `src/skls/python/*.zsh`, `src/skls/wsl.zsh` | Does NOT produce `.zshrc` |
@@ -44,9 +44,13 @@ Several configs are authored as Emacs Org files and tangled (via `org-babel-tang
 
 **Important:** `.zshrc` is maintained directly as a plain file, not tangled from `zsh.org`. The Org file's zsh blocks are `:tangle no` and kept as reference only.
 
+### Package Management
+
+All Emacs packages are managed via [straight.el](https://github.com/radian-software/straight.el) (`straight-use-package-by-default t`). Package.el is disabled in `early-init.el`. Built-in packages use `:straight nil` in their `use-package` declarations. Update all packages with `M-x straight-pull-all`.
+
 ### Stow Ignore
 
-`.stow-local-ignore` excludes Org files, `README.md`, `install.sh`, `.gitignore`, and other non-config files from being symlinked.
+`.stow-local-ignore` excludes Org files, `README.md`, `install.sh`, `tangle.sh`, `.gitignore`, the `emacs/` directory, and other non-config files from being symlinked. Note: `.zshrc` is also excluded — it must be manually symlinked or copied.
 
 ### Shell Setup
 
@@ -56,6 +60,8 @@ Several configs are authored as Emacs Org files and tangled (via `org-babel-tang
 - direnv for environment variables
 - Google Cloud SDK from `src/google-cloud-sdk/`
 
-### Secrets
+### Secrets & AI Configuration
 
 API keys (e.g. `OPENAI_API_KEY` for Emacs gptel) should be managed via direnv + `.env`, never committed. The `.env` file in the repo root is gitignored.
+
+Claude Code runs via Vertex AI. The environment variables (`CLAUDE_CODE_USE_VERTEX`, `CLOUD_ML_REGION`, `ANTHROPIC_VERTEX_PROJECT_ID`) are set in `emacs/extras.org` for the Emacs integration and in `~/.envrc` for shell usage.

@@ -5,14 +5,22 @@ Personal dotfiles (shell, tmux, Emacs, etc.), managed with [GNU Stow](https://ww
 ## Requirements
 
 - Stow
+- Emacs 30+ (for claude-code.el and native vterm)
+- Node.js (for copilot.el)
 - For full install script: see [install.sh](install.sh) (Linux: apt; macOS: Homebrew)
 
 ## Setup
 
-1. Install dependencies (optional, for scripted install):
+1. Install dependencies and tangle all Org files:
 
    ```bash
    ./install.sh
+   ```
+
+   Or tangle separately:
+
+   ```bash
+   ./tangle.sh
    ```
 
 2. Link dotfiles into your home directory:
@@ -21,7 +29,13 @@ Personal dotfiles (shell, tmux, Emacs, etc.), managed with [GNU Stow](https://ww
    stow -t ~ .
    ```
 
-   This creates symlinks for config files (e.g. `.tmux.conf`, `.zshrc`) from this repo into `$HOME`. Files and directories listed in `.stow-local-ignore` are not stowed.
+   This creates symlinks for config files (e.g. `.tmux.conf`) from this repo into `$HOME`. Files and directories listed in `.stow-local-ignore` are not stowed.
+
+   **Note:** `.zshrc` is excluded from stow — copy or symlink it manually:
+
+   ```bash
+   ln -sf ~/github/skalas/dotfiles/.zshrc ~/.zshrc
+   ```
 
 ## Literate config (Org → tangle → stow)
 
@@ -35,13 +49,13 @@ Several configs are maintained as literate Org files. **Recommended order:** tan
 | [emacs/org-config.org](emacs/org-config.org) | `.emacs.d/lisp/org-config.el` | Babel, agenda, org-modern, org-roam, org-download. |
 | [emacs/files.org](emacs/files.org) | `.emacs.d/lisp/files.el` | CSV/JSON/YAML modes, dired, treemacs. |
 | [emacs/macos.org](emacs/macos.org) | `.emacs.d/lisp/macos.el` | macOS keybindings, PATH, pdf-tools. |
-| [emacs/extras.org](emacs/extras.org) | `.emacs.d/lisp/extras.el` | Writing/LaTeX/markdown, dashboard, AI/copilot/gptel. |
+| [emacs/extras.org](emacs/extras.org) | `.emacs.d/lisp/extras.el` | Writing/LaTeX/markdown, dashboard, AI/copilot/gptel/claude-code. |
 | [git.org](git.org) | `.gitconfig` | `.gitconfig` is in `.gitignore` (personal data); tangle locally and stow if desired. |
 | [ssh.org](ssh.org) | `.ssh/config` | Tangle then stow. |
 | [zsh.org](zsh.org) | `src/skls/aliases`, `src/skls/python/*.zsh`, `src/skls/wsl.zsh` | **Not** `.zshrc`; the canonical source for `.zshrc` is the [.zshrc](.zshrc) file in this repo. |
 | [yasnippets.org](yasnippets.org) | `.emacs.d/templates/snippets/...` | Emacs yasnippet templates. |
 
-**Environment variables for AI packages (gptel, c3po):** export `OPENAI_API_KEY` in your environment (e.g. in `.envrc` with direnv, or in `.zshrc`). Prefer direnv + `.env` so secrets are not committed.
+**Environment variables for AI packages:** export `OPENAI_API_KEY` for gptel/c3po (via direnv + `.env`). Claude Code uses Vertex AI — its env vars are set in `emacs/extras.org`.
 
 ## Emacs
 
