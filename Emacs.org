@@ -1,11 +1,6 @@
-:PROPERTIES:
-:GPTEL_MODEL: gpt-4o
-:GPTEL_BACKEND: ChatGPT
-:GPTEL_SYSTEM: You are a large language model living in Emacs and a helpful assistant. Respond concisely.
-:GPTEL_BOUNDS: nil
-:END:
 #+Title:  My emacs Config
 #+Author: Miguel Escalante
+#+auto_tangle: t
 #+PROPERTY: header-args:emacs-lisp :tangle .emacs.d/init.el :mkdirp yes :results silent
 
 * Early init (loaded before init.el)
@@ -59,17 +54,11 @@ Add the lisp directory to the load path and load each module.
 
 * Auto-tangle on save
 
-Automatically tangle Emacs.org and any file in emacs/ when saved.
+Automatically tangle Org config files when saved. Uses =org-auto-tangle= — add =#+auto_tangle: t= to any Org file that should auto-tangle.
 #+begin_src emacs-lisp
-  ;; Automatically tangle our Emacs.org config file when we save it
-  (defun skls/org-babel-tangle-config ()
-    (when (and (buffer-file-name)
-               (or (locate-file "Emacs.org" (list (file-name-directory (buffer-file-name))))
-                   (string-match-p "/emacs/.*\\.org\\'" (buffer-file-name))))
-      (let ((org-confirm-babel-evaluate nil))
-        (org-babel-tangle))))
-
-  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'skls/org-babel-tangle-config)))
+  (use-package org-auto-tangle
+    :defer t
+    :hook (org-mode . org-auto-tangle-mode))
 #+end_src
 
 * Cleanup

@@ -6,11 +6,15 @@ set -e
 case "$(uname -s)" in
   Darwin)
     if ! command -v brew &>/dev/null; then
-      echo "Homebrew is required on macOS. Install from https://brew.sh"
-      exit 1
+      echo "Installing Homebrew..."
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
-    brew install stow cmake coreutils
-    brew install --cask font-fira-code font-cantarell 2>/dev/null || true
+    for pkg in stow cmake coreutils; do
+      brew list "$pkg" &>/dev/null || brew install "$pkg"
+    done
+    for cask in font-fira-code-nerd-font font-cantarell; do
+      brew list --cask "$cask" &>/dev/null || brew install --cask "$cask" 2>/dev/null || true
+    done
     ;;
   Linux)
     sudo apt update && sudo apt install -y cmake libtool-bin stow fonts-firacode fonts-cantarell xclip

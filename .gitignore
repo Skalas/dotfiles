@@ -1,7 +1,10 @@
 src/google-cloud-sdk
+src/macos-terminal-themes
 .DS_Store
 .emacs.d
 .gitconfig
 .ssh
 .env
-backup.org
+.claude/
+.cursor/
+*.el~

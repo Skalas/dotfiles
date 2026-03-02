@@ -2,10 +2,18 @@
 #+PROPERTY: header-args
 
 #+begin_src conf :mkdirp yes :tangle ./.ssh/config
+  Host *
+     AddKeysToAgent yes
+
   # Default github account: skls
   Host github.com
      HostName github.com
      IdentityFile ~/.ssh/id_ed25519
      IdentitiesOnly yes
-  
+
+  Host macmini
+    HostName 100.83.130.6
+    User skalas
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
 #+end_src

@@ -1,5 +1,6 @@
 #+Title:  Org Mode Configuration
 #+Author: Miguel Escalante
+#+auto_tangle: t
 #+PROPERTY: header-args:emacs-lisp :tangle ../.emacs.d/lisp/org-config.el :mkdirp yes :results silent
 
 * Treeslide o de cómo hacer presentaciones.
@@ -23,7 +24,6 @@ The best for writing Literate programing
     (add-to-list 'org-structure-template-alist '("js" . "src js"))
     (add-to-list 'org-structure-template-alist '("cy" . "src cypher"))
     (setq org-confirm-babel-evaluate nil)
-    (setq org-src-tab-acts-natively t)
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((emacs-lisp . t)
@@ -196,9 +196,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
     :hook ((org-mode . skls/org-mode-babel)
   	 (org-mode . skls/org-mode-setup)
   	 (org-mode . skls/org-mode-visual-fill)
-  	 ;(org-mode . skls/org-modern)
-  	 (org-mode . skls/org-reveal)
-  	 (org-mode . skls/org-treeslide))
+  	 (org-mode . skls/org-modern))
     :config
     ;;(setq org-ellipsis " ▾")
     (skls/org-agenda-setup)
@@ -216,18 +214,29 @@ First we setup the agenda it's kidna messy so I put it in a different place
                     (org-level-6 . 1.1)
                     (org-level-7 . 1.1)
                     (org-level-8 . 1.1)))
-      (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face))
-      (set-face-attribute 'org-block nil    :foreground 'unspecified :inherit 'fixed-pitch)
-      (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
-      (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
-      (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
-      (set-face-attribute 'org-table nil    :inherit '(shadow fixed-pitch))
-      (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-      (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-      (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-      (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
-      (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
-      (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch)))
+      (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+    (set-face-attribute 'org-block nil    :foreground 'unspecified :inherit 'fixed-pitch)
+    (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
+    (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
+    (set-face-attribute 'org-code nil     :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-checkbox nil  :inherit 'fixed-pitch)
+    (set-face-attribute 'line-number nil :inherit 'fixed-pitch)
+    (set-face-attribute 'line-number-current-line nil :inherit 'fixed-pitch))
+#+end_src
+
+* Org-appear
+Show emphasis markers only when the cursor is on them.
+#+begin_src emacs-lisp
+  (use-package org-appear
+    :hook (org-mode . org-appear-mode)
+    :custom
+    (org-appear-autoemphasis t)
+    (org-appear-autosubmarkers t)
+    (org-appear-autolinks t)
+    (org-hide-emphasis-markers t))
 #+end_src
 
 * Org-roam
@@ -235,14 +244,12 @@ First we setup the agenda it's kidna messy so I put it in a different place
   (use-package org-roam
     :custom
     (org-roam-directory "~/Documents/org/org-roam")
-    :init
-    (setq org-roam-v2-ack t)
     :bind (
            ("C-c n l" . org-roam-buffer-toggle)
            ("C-c n f" . org-roam-node-find)
            ("C-c n i" . org-roam-node-insert))
     :config
-    (org-roam-setup))
+    (org-roam-db-autosync-mode))
 #+end_src
 
 * Roam UI

@@ -3,7 +3,6 @@
 LICENSE
 README.md
 .DS_Store
-install_packages.sh
 .gitignore
 images
 install.sh
@@ -11,6 +10,7 @@ tangle.sh
 ^/emacs
 src/
 .zshrc
-src
 .env
 CLAUDE.md
+.claude/
+.cursor/
