@@ -9,7 +9,7 @@ case "$(uname -s)" in
       echo "Installing Homebrew..."
       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
-    for pkg in stow cmake coreutils; do
+    for pkg in stow cmake coreutils git; do
       brew list "$pkg" &>/dev/null || brew install "$pkg"
     done
     for cask in font-fira-code-nerd-font font-cantarell; do
