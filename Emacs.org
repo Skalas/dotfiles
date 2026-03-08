@@ -67,4 +67,9 @@ Dial down GC thershold so it runs frequently but in less time.
   ;; Make gc pauses faster by decreasing the threshold.
   (setq gc-cons-threshold (* 5 1024 1024))
   (setq read-process-output-max (* 1024 1024)) ;; 1mb
+
+  ;; Start the Emacs server so emacsclient can connect (e.g. git editor).
+  (require 'server)
+  (unless (server-running-p)
+    (server-start))
 #+end_src

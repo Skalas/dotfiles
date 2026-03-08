@@ -11,7 +11,7 @@ Basic User info
   [push]
   	default = current
   [core]
-  	editor = emacs -nw
+  	editor = emacsclient -t -a \"emacs -nw\"
   [init]
   	defaultBranch = main
 #+end_src
