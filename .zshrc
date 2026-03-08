@@ -47,9 +47,12 @@ eval "$(rbenv init - zsh)"
 
 # Docker completions
 fpath=($HOME/.docker/completions $fpath)
+autoload -Uz compinit
+compinit
 
 # Kiro shell integration
 [[ "$TERM_PROGRAM" == "kiro" ]] && . "$(kiro --locate-shell-integration-path zsh)"
 
 # Fortune (after prompt setup to avoid breaking instant prompt)
 fortune -s
+
