@@ -2,49 +2,11 @@
 #+PROPERTY: header-args :mkdirp y
 #+begin_comment
 The canonical source for ~/.zshrc is the .zshrc file in this repo.
-This org file only tangles helper scripts (aliases, conda, etc.), not .zshrc itself.
+This org file only tangles helper scripts (aliases). Not .zshrc itself.
 Secrets and env vars (API keys, Vertex AI config) live in ~/.env, loaded via direnv (~/.envrc).
 #+end_comment
-* Python Config
-** Anaconda initialize
-#+begin_src sh :tangle src/skls/python/conda_initialize.zsh
-  # >>> conda initialize >>>
-  # !! Contents within this block are managed by 'conda init' !!
-  __conda_setup="$('$HOME/src/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-  if [ $? -eq 0 ]; then
-      eval "$__conda_setup"
-  else
-      if [ -f "$HOME/src/miniconda3/etc/profile.d/conda.sh" ]; then
-          . "$HOME/src/miniconda3/etc/profile.d/conda.sh"
-      else
-          export PATH="$HOME/src/miniconda3/bin:$PATH"
-      fi
-  fi
-  unset __conda_setup
-  # <<< conda initialize <<<
-
-
-#+end_src
-** Pyenv
-#+begin_src conf :tangle src/skls/python/pyenv.zsh
-# Load pyenv automatically by adding
-# the following to ~/.bashrc:
-export PATH="/home/skalas/.pyenv/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-#+end_src
-** Poetry
-#+begin_src conf :tangle src/skls/python/poetry.zsh
-
-export PATH="$HOME/.poetry/bin:$PATH"
-	
-#+end_src
-* Aliases 
+* Aliases
 #+begin_src conf :tangle src/skls/aliases
-  # SSH
-  # Para evitar el error "Error opening terminal:rxvt-unicode"
-  # que sucede al conectarse via ssh
-
   # Git clone from GitHub
   function gch() {
     git clone git://github.com/skalas/$1.git
@@ -52,17 +14,15 @@ export PATH="$HOME/.poetry/bin:$PATH"
 
   alias grm="git status | grep deleted | awk '{print \$3}' | xargs git rm"
 
-
   # Quickly clobber a file and checkout
-  function grf() { 
+  function grf() {
     rm $1
-    git checkout $1 
+    git checkout $1
   }
 
   # General
   alias h='history'
   alias md='mkdir -p'
-
 
   # Crear directorio y un archivo
   mkpfile() { mkdir -p "$(dirname "$1")" || return; touch "$1"; }
@@ -81,11 +41,4 @@ export PATH="$HOME/.poetry/bin:$PATH"
   export GEM_HOME="$HOME/gems"
   export PATH="$HOME/gems/bin:$PATH"
 
-#+end_src
-* Wsl Fix (figure out a way to not use this on ubuntu)
-#+begin_src conf :tangle src/skls/wsl.zsh
-export DISPLAY=$(ip route | awk '{print $3; exit}'):0
-export LIBGL_ALWAYS_INDIRECT=1
-export GDK_SCALE=1
-setxkbmap us -variant intl
 #+end_src

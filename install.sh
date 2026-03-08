@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# Install dependencies for dotfiles (stow, cmake, fonts).
+# Install dependencies, tangle Org files, stow configs, and symlink .zshrc.
 # Linux: Debian/Ubuntu (apt). macOS: requires Homebrew (https://brew.sh).
 
 set -e
+DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Install dependencies
 case "$(uname -s)" in
   Darwin)
     if ! command -v brew &>/dev/null; then
@@ -25,5 +28,16 @@ case "$(uname -s)" in
     ;;
 esac
 
+# Tangle Org files
 echo "Tangling Org files..."
-"$(dirname "$0")/tangle.sh"
+"$DOTFILES_DIR/tangle.sh"
+
+# Stow dotfiles into $HOME
+echo "Stowing dotfiles..."
+stow -R -t ~ -d "$(dirname "$DOTFILES_DIR")" "$(basename "$DOTFILES_DIR")"
+
+# Symlink .zshrc (excluded from stow via .stow-local-ignore)
+echo "Symlinking .zshrc..."
+ln -sf "$DOTFILES_DIR/.zshrc" ~/.zshrc
+
+echo "Done."

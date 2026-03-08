@@ -28,7 +28,6 @@ source $(brew --prefix)/share/powerlevel10k/powerlevel10k.zsh-theme
 
 # Shell customizations
 source ~/src/skls/aliases
-source ~/src/skls/python/conda_initialize.zsh
 eval "$(direnv hook zsh)"
 
 # Google Cloud SDK

@@ -9,16 +9,13 @@ Personal dotfiles for macOS/Linux managed with [GNU Stow](https://www.gnu.org/so
 ## Key Commands
 
 ```bash
-# Install dependencies (stow, cmake, fonts) and tangle all Org files
+# Full setup: install deps, tangle Org files, stow configs, symlink .zshrc
 ./install.sh
 
 # Or tangle Org files separately (generates .emacs.d/, .gitconfig, etc.)
 ./tangle.sh
 
-# Symlink dotfiles into $HOME
-stow -t ~ .
-
-# Re-stow after adding/removing files
+# Re-stow after adding/removing files (install.sh does this automatically)
 stow -R -t ~ .
 ```
 
@@ -39,10 +36,10 @@ Several configs are authored as Emacs Org files and tangled (via `org-babel-tang
 | `emacs/extras.org` | `.emacs.d/lisp/extras.el` | LaTeX, markdown, dashboard, AI (copilot, gptel, claude-code) |
 | `git.org` | `.gitconfig` | `.gitconfig` is gitignored (contains personal data) |
 | `ssh.org` | `.ssh/config` | |
-| `zsh.org` | `src/skls/aliases`, `src/skls/python/*.zsh`, `src/skls/wsl.zsh` | Does NOT produce `.zshrc` |
+| `zsh.org` | `src/skls/aliases` | Does NOT produce `.zshrc` |
 | `yasnippets.org` | `.emacs.d/templates/snippets/...` | |
 
-**Important:** `.zshrc` is maintained directly as a plain file, not tangled from `zsh.org`. The Org file's zsh blocks are `:tangle no` and kept as reference only.
+**Important:** `.zshrc` is maintained directly as a plain file, not tangled from `zsh.org`. It is symlinked into `$HOME` by `install.sh`.
 
 ### Emacs Package Stack
 
@@ -77,14 +74,13 @@ All packages managed via [straight.el](https://github.com/radian-software/straig
 
 ### Stow Ignore
 
-`.stow-local-ignore` excludes Org files, `README.md`, `install.sh`, `tangle.sh`, `.gitignore`, the `emacs/` directory, `.claude/`, `.cursor/`, and other non-config files from being symlinked. Note: `.zshrc` is also excluded — it must be manually symlinked or copied.
+`.stow-local-ignore` excludes Org files, `README.md`, `install.sh`, `tangle.sh`, `.gitignore`, the `emacs/` directory, `.claude/`, `.cursor/`, and other non-config files from being symlinked. `.zshrc` is also excluded from stow — `install.sh` symlinks it separately.
 
 ### Shell Setup
 
 `.zshrc` uses oh-my-zsh with powerlevel10k theme (via Homebrew). It sources:
 - `~/src/skls/aliases` — custom shell aliases and functions (tangled from `zsh.org`)
-- `~/src/skls/python/conda_initialize.zsh` — conda setup
-- direnv for environment variables
+- direnv for environment variables (secrets loaded from `~/.env` via `~/.envrc`)
 - Google Cloud SDK from `src/google-cloud-sdk/`
 
 ### Secrets & AI Configuration
