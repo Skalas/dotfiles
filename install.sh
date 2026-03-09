@@ -59,6 +59,13 @@ if [[ ! -d "$P10K_DIR" ]]; then
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
 fi
 
+# Tmux Plugin Manager (TPM)
+TPM_DIR="$HOME/.tmux/plugins/tpm"
+if [[ ! -d "$TPM_DIR" ]]; then
+  echo "Installing TPM..."
+  git clone --depth=1 https://github.com/tmux-plugins/tpm "$TPM_DIR"
+fi
+
 # Tangle Org files
 echo "Tangling Org files..."
 "$DOTFILES_DIR/tangle.sh"
@@ -70,6 +77,17 @@ echo "Stowing dotfiles..."
 stow -R --no-folding -t ~ -d "$(dirname "$DOTFILES_DIR")" "$(basename "$DOTFILES_DIR")"
 
 # Copy .zshrc (not symlinked — each machine may diverge via ~/.zshrc.local)
+# Back up existing .zshrc with rotating suffix (.bak, .bak1, .bak2, ...)
+if [[ -f ~/.zshrc ]]; then
+  bak="$HOME/.zshrc.bak"
+  if [[ ! -f "$bak" ]]; then
+    cp ~/.zshrc "$bak"
+  else
+    n=1
+    while [[ -f "${bak}${n}" ]]; do ((n++)); done
+    cp ~/.zshrc "${bak}${n}"
+  fi
+fi
 echo "Installing .zshrc..."
 cp "$DOTFILES_DIR/.zshrc" ~/.zshrc
 
