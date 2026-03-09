@@ -9,7 +9,7 @@ Personal dotfiles for macOS/Linux managed with [GNU Stow](https://www.gnu.org/so
 ## Key Commands
 
 ```bash
-# Full setup: install deps, tangle Org files, stow configs, symlink .zshrc
+# Full setup: install deps, tangle Org files, stow configs, copy .zshrc
 ./install.sh
 
 # Or tangle Org files separately (generates .emacs.d/, .gitconfig, etc.)
@@ -78,9 +78,21 @@ All packages managed via [straight.el](https://github.com/radian-software/straig
 
 `install.sh` uses `stow -R --no-folding` to prevent stow from symlinking entire directories — this keeps runtime-generated content (e.g. `.emacs.d/straight/`) out of the dotfiles repo.
 
+### Tmux
+
+`.tmux.conf` is managed directly (not tangled). Plugins are managed via [TPM](https://github.com/tmux-plugins/tpm) (installed by `install.sh`). After loading the config, install plugins with `prefix + I`.
+
+**Plugins:** tmux-resurrect (save/restore sessions), tmux-continuum (auto-save + auto-restore on start), tmux-yank (system clipboard)
+
+**Status bar:** `[session] [hostname]` (left) — `[git branch] [ battery%] [date time]` (right), refreshes every 15s
+
+**Default session:** On first start, creates a `main` session with 3 windows: `home` (~/), `goes` (~/github/goes), `skalas` (~/github/skalas). Guarded with `if-shell` so reloads and SSH reattaches don't duplicate windows.
+
+**Key bindings:** `C-r` reload config, `C-v` split horizontal, `C-h` split vertical, `M-Arrow` navigate panes, `M-S-Arrow` resize panes
+
 ### Shell Setup
 
-`.zshrc` uses oh-my-zsh with powerlevel10k theme (via Homebrew). It sources:
+`.zshrc` uses oh-my-zsh with powerlevel10k theme (via Homebrew). `install.sh` backs up the existing `~/.zshrc` with rotating suffixes (`.bak`, `.bak1`, `.bak2`, ...) before overwriting. It sources:
 - `~/src/skls/aliases` — custom shell aliases and functions (tangled from `zsh.org`)
 - `~/.zshrc.local` — machine-specific config (not tracked); `install.sh` creates a starter file
 - direnv for environment variables (secrets loaded from `~/.env` via `~/.envrc`)

@@ -32,11 +32,7 @@ Personal dotfiles (shell, tmux, Emacs, etc.), managed with [GNU Stow](https://ww
 
    This creates symlinks for config files (e.g. `.tmux.conf`) from this repo into `$HOME`. Files and directories listed in `.stow-local-ignore` are not stowed.
 
-   **Note:** `.zshrc` is excluded from stow — copy or symlink it manually:
-
-   ```bash
-   ln -sf ~/github/skalas/dotfiles/.zshrc ~/.zshrc
-   ```
+   **Note:** `.zshrc` is excluded from stow — `install.sh` copies it automatically (with rotating backups of the previous version). Each machine can diverge via `~/.zshrc.local`.
 
 ## Literate config (Org → tangle → stow)
 
@@ -57,6 +53,18 @@ Several configs are maintained as literate Org files. All use `#+auto_tangle: t`
 | [yasnippets.org](yasnippets.org) | `.emacs.d/templates/snippets/...` | Emacs yasnippet templates |
 
 **Environment variables for AI packages:** export `OPENAI_API_KEY` for gptel (via direnv + `.env`). Claude Code uses Vertex AI — its env vars are set in `emacs/extras.org`.
+
+## Tmux
+
+Tmux config (`.tmux.conf`) includes [TPM](https://github.com/tmux-plugins/tpm) with the following plugins:
+
+- **tmux-resurrect** — save/restore sessions across restarts (`prefix + C-s` / `prefix + C-r`)
+- **tmux-continuum** — auto-saves sessions every 15 min, auto-restores on tmux start
+- **tmux-yank** — copy to system clipboard from copy mode
+
+The status bar shows session name, hostname, git branch, battery %, and date/time. On first launch, a `main` session is created with three windows: `home` (~/), `goes` (~/github/goes), and `skalas` (~/github/skalas).
+
+After first install, run `prefix + I` inside tmux to install plugins via TPM.
 
 ## Emacs
 
