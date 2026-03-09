@@ -25,6 +25,10 @@ if [[ "$(uname -s)" == Darwin ]]; then
   for cask in font-fira-code-nerd-font font-cantarell; do
     brew list --cask "$cask" &>/dev/null || brew install --cask "$cask" 2>/dev/null || true
   done
+  # iTerm2 (skip if already installed via app or brew)
+  if [[ ! -d /Applications/iTerm.app ]] && ! brew list --cask iterm2 &>/dev/null; then
+    brew install --cask iterm2 2>/dev/null || true
+  fi
   # Docker Desktop (skip if already installed via app or brew)
   if ! command -v docker &>/dev/null; then
     brew install --cask docker 2>/dev/null || true

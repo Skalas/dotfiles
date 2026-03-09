@@ -1,3 +1,9 @@
+fortune -s 
+if command -v direnv &>/dev/null; then
+  export DIRENV_LOG_FORMAT=""
+  eval "$(direnv hook zsh)"
+fi
+
 # Auto-start tmux (must be before everything else)
 if command -v tmux &>/dev/null && [[ -z "$TMUX" && -z "$EMACS" && -z "$INSIDE_EMACS" && $- == *i* ]]; then
   tmux new-session -A -s main && return
@@ -34,7 +40,7 @@ export LANG=en_US.UTF-8
 
 # Shell customizations
 [[ -f ~/src/skls/aliases ]] && source ~/src/skls/aliases
-command -v direnv &>/dev/null && eval "$(direnv hook zsh)"
+
 
 # Machine-specific config (not tracked in dotfiles)
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local

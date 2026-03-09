@@ -36,10 +36,10 @@ Several configs are authored as Emacs Org files and tangled (via `org-babel-tang
 | `emacs/extras.org` | `.emacs.d/lisp/extras.el` | LaTeX, markdown, dashboard, AI (copilot, gptel, claude-code) |
 | `git.org` | `.gitconfig` | `.gitconfig` is gitignored (contains personal data) |
 | `ssh.org` | `.ssh/config` | |
-| `zsh.org` | `src/skls/aliases` | Does NOT produce `.zshrc` |
+| `zsh.org` | `src/skls/aliases`, `src/skls/python/*.zsh`, `src/skls/wsl.zsh` | Does NOT produce `.zshrc` |
 | `yasnippets.org` | `.emacs.d/templates/snippets/...` | |
 
-**Important:** `.zshrc` is maintained directly as a plain file, not tangled from `zsh.org`. It is symlinked into `$HOME` by `install.sh`.
+**Important:** `.zshrc` is maintained directly as a plain file, not tangled from `zsh.org`. It is **copied** (not symlinked) into `$HOME` by `install.sh`, so each machine can diverge via `~/.zshrc.local`.
 
 ### Emacs Package Stack
 
@@ -74,12 +74,15 @@ All packages managed via [straight.el](https://github.com/radian-software/straig
 
 ### Stow Ignore
 
-`.stow-local-ignore` excludes Org files, `README.md`, `install.sh`, `tangle.sh`, `.gitignore`, the `emacs/` directory, `.claude/`, `.cursor/`, and other non-config files from being symlinked. `.zshrc` is also excluded from stow — `install.sh` symlinks it separately.
+`.stow-local-ignore` excludes Org files, `README.md`, `install.sh`, `tangle.sh`, `.gitignore`, the `emacs/` directory, `.claude/`, `.cursor/`, and other non-config files from being symlinked. `.zshrc` is also excluded from stow — `install.sh` copies it separately.
+
+`install.sh` uses `stow -R --no-folding` to prevent stow from symlinking entire directories — this keeps runtime-generated content (e.g. `.emacs.d/straight/`) out of the dotfiles repo.
 
 ### Shell Setup
 
 `.zshrc` uses oh-my-zsh with powerlevel10k theme (via Homebrew). It sources:
 - `~/src/skls/aliases` — custom shell aliases and functions (tangled from `zsh.org`)
+- `~/.zshrc.local` — machine-specific config (not tracked); `install.sh` creates a starter file
 - direnv for environment variables (secrets loaded from `~/.env` via `~/.envrc`)
 - Google Cloud SDK from `src/google-cloud-sdk/`
 
