@@ -1,8 +1,10 @@
 #+Title: Configuration for my zsh
 #+PROPERTY: header-args :mkdirp y
 #+begin_comment
-The canonical source for ~/.zshrc is the .zshrc file in this repo.
-This org file only tangles helper scripts (aliases). Not .zshrc itself.
+The .zshrc in this repo is a shared base config. install.sh copies (not symlinks) it to ~/.zshrc.
+Machine-specific config (rbenv, iTerm2, gcloud, etc.) goes in ~/.zshrc.local, which is sourced
+automatically and not tracked in this repo.
+This org file only tangles helper scripts (aliases).
 Secrets and env vars (API keys, Vertex AI config) live in ~/.env, loaded via direnv (~/.envrc).
 #+end_comment
 * Aliases
