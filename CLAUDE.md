@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Personal dotfiles for macOS/Linux managed with [GNU Stow](https://www.gnu.org/software/stow/). Configs cover zsh (oh-my-zsh + powerlevel10k), tmux, Emacs, and git.
+Personal dotfiles for macOS/Linux managed with [GNU Stow](https://www.gnu.org/software/stow/). Configs cover zsh (oh-my-zsh + powerlevel10k), tmux, Emacs ([emacs-plus](https://github.com/d12frosted/homebrew-emacs-plus) on macOS), and git.
 
 ## Key Commands
 
@@ -40,6 +40,12 @@ Several configs are authored as Emacs Org files and tangled (via `org-babel-tang
 | `yasnippets.org` | `.emacs.d/templates/snippets/...` | |
 
 **Important:** `.zshrc` is maintained directly as a plain file, not tangled from `zsh.org`. It is **copied** (not symlinked) into `$HOME` by `install.sh`, so each machine can diverge via `~/.zshrc.local`.
+
+### Emacs Installation
+
+On **macOS**, Emacs is installed via [emacs-plus@30](https://github.com/d12frosted/homebrew-emacs-plus) (`d12frosted/emacs-plus` tap). This provides a full Cocoa GUI build with native compilation. `install.sh` copies `Emacs.app` and `Emacs Client.app` to `/Applications/` for Spotlight integration. If plain `emacs` from Homebrew is detected, `install.sh` removes it first (no GUI/Spotlight support).
+
+On **Linux**, Emacs is installed via `apt`.
 
 ### Emacs Package Stack
 

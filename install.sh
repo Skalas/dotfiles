@@ -16,9 +16,26 @@ if ! command -v brew &>/dev/null; then
 fi
 
 # Core packages via Homebrew
-for pkg in stow cmake coreutils git direnv fortune tmux emacs uv node rbenv; do
+for pkg in stow cmake coreutils git direnv fortune tmux uv node rbenv; do
   brew list "$pkg" &>/dev/null || brew install "$pkg"
 done
+
+# Emacs (emacs-plus on macOS for GUI/Spotlight support, apt on Linux)
+if [[ "$(uname -s)" == Darwin ]]; then
+  # Remove plain emacs if installed (no GUI/Spotlight support)
+  brew list emacs &>/dev/null && brew uninstall emacs
+  if ! brew list emacs-plus@30 &>/dev/null; then
+    brew tap d12frosted/emacs-plus
+    brew install emacs-plus@30
+  fi
+  # Copy Emacs.app to /Applications for Spotlight integration
+  if [[ ! -d /Applications/Emacs.app ]]; then
+    cp -r /opt/homebrew/opt/emacs-plus@30/Emacs.app /Applications/
+    cp -r "/opt/homebrew/opt/emacs-plus@30/Emacs Client.app" /Applications/
+  fi
+else
+  command -v emacs &>/dev/null || sudo apt install -y emacs
+fi
 
 # macOS extras
 if [[ "$(uname -s)" == Darwin ]]; then
