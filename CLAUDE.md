@@ -57,7 +57,7 @@ All packages managed via [straight.el](https://github.com/radian-software/straig
 
 **Org:** org-modern, org-appear, org-roam + org-roam-ui, org-download, org-auto-tangle
 
-**AI:** copilot.el (`copilot-emacs/copilot.el`), gptel, claude-code.el (via Vertex AI)
+**AI:** gptel, claude-code.el (via Vertex AI)
 
 **UI:** doom-themes (zenburn), doom-modeline, nerd-icons, perspective.el, treemacs, dashboard
 
