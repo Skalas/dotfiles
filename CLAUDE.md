@@ -95,11 +95,11 @@ All packages managed via [straight.el](https://github.com/radian-software/straig
 `.zshrc` uses oh-my-zsh with powerlevel10k theme (via Homebrew). `install.sh` backs up the existing `~/.zshrc` with rotating suffixes (`.bak`, `.bak1`, `.bak2`, ...) before overwriting. It sources:
 - `~/src/skls/aliases` — custom shell aliases and functions (tangled from `zsh.org`)
 - `~/.zshrc.local` — machine-specific config (not tracked); `install.sh` creates a starter file
-- direnv for environment variables (secrets loaded from `~/.env` via `~/.envrc`)
+- direnv for project-level environment variables (per-project `.envrc` files)
 - Google Cloud SDK from `src/google-cloud-sdk/`
 
 ### Secrets & AI Configuration
 
-API keys (e.g. `OPENAI_API_KEY` for Emacs gptel) should be managed via direnv + `.env`, never committed. The `.env` file in the repo root is gitignored.
+API keys and global env vars (e.g. `CLAUDE_CODE_USE_VERTEX`, `CLOUD_ML_REGION`, `ANTHROPIC_VERTEX_PROJECT_ID`, `XAI_API_KEY`) live in `~/.zshrc.local` as `export` statements — not in direnv, because a project-level `.envrc` overrides the global one. Never commit secrets.
 
-Claude Code runs via Vertex AI. The environment variables (`CLAUDE_CODE_USE_VERTEX`, `CLOUD_ML_REGION`, `ANTHROPIC_VERTEX_PROJECT_ID`) are set in `emacs/extras.org` for the Emacs integration and in `~/.envrc` for shell usage.
+Claude Code runs via Vertex AI. The Vertex env vars are set in `emacs/extras.org` for the Emacs integration and in `~/.zshrc.local` for shell usage.
