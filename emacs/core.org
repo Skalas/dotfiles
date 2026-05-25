@@ -69,7 +69,10 @@
   (use-package doom-themes
     :init (load-theme 'doom-zenburn t))
 
-  (use-package nerd-icons)
+  (use-package nerd-icons
+    :config
+    (unless (member "Symbols Nerd Font Mono" (font-family-list))
+      (nerd-icons-install-fonts t)))
 
   (use-package nerd-icons-dired
     :hook (dired-mode . nerd-icons-dired-mode))

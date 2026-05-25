@@ -14,7 +14,8 @@
     :commands (markdown-mode gfm-mode)
     :mode (("README\\.md\\'" . gfm-mode)
            ("\\.md\\'" . markdown-mode)
-           ("\\.markdown\\'" . markdown-mode))
+           ("\\.markdown\\'" . markdown-mode)
+           ("\\.mdx\\'" . markdown-mode))
     :init (setq markdown-command "multimarkdown"))
 #+END_SRC
 
@@ -36,22 +37,20 @@
 * AI
 
 ** gptel
-Set ~OPENAI_API_KEY~ in your environment (e.g. .envrc, .zshrc).
+API key stored in =~/.authinfo.gpg= under ~machine api.openai.com~.
 #+begin_src emacs-lisp
   (use-package gptel
     :commands (gptel gptel-send gptel-menu)
     :config
-    (setq gptel-api-key (getenv "OPENAI_API_KEY")))
+    (setq gptel-api-key
+          (lambda ()
+            (auth-source-pick-first-password :host "api.openai.com"))))
 #+end_src
 
 ** Claude Code
 Run Claude Code CLI inside Emacs via Vertex AI. Requires the ~claude~ CLI to be installed.
 #+begin_src emacs-lisp
   ;; Vertex AI environment for Claude Code
-  (setenv "CLAUDE_CODE_USE_VERTEX" "1")
-  (setenv "CLOUD_ML_REGION" "global")
-  (setenv "ANTHROPIC_VERTEX_PROJECT_ID" "g-ai-agent-edu-dev-prj-f184")
-
   (use-package inheritenv
     :straight (:host github :repo "purcell/inheritenv"))
 

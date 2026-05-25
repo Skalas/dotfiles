@@ -7,6 +7,9 @@
 Disable package.el at startup so straight.el is the only package manager; avoids the "straight.el was loaded when package.el was already loaded" warning.
 #+begin_src emacs-lisp :tangle .emacs.d/early-init.el :mkdirp yes
 (setq package-enable-at-startup nil)
+
+;; Suppress native-compiler warnings from third-party packages
+(setq native-comp-async-report-warnings-errors 'silent)
 #+end_src
 
 * Bootstrap
