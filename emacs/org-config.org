@@ -3,13 +3,6 @@
 #+auto_tangle: t
 #+PROPERTY: header-args:emacs-lisp :tangle ../.emacs.d/lisp/org-config.el :mkdirp yes :results silent
 
-* Treeslide o de cómo hacer presentaciones.
-#+begin_src emacs-lisp
-  (defun skls/org-treeslide ()
-    (use-package org-tree-slide
-      :custom
-      (org-image-actual-width nil)))
-#+end_src
 * Babel
 The best for writing Literate programing
 #+begin_src emacs-lisp
@@ -22,7 +15,6 @@ The best for writing Literate programing
     (add-to-list 'org-structure-template-alist '("R" . "src R"))
     (add-to-list 'org-structure-template-alist '("sql" . "src sql"))
     (add-to-list 'org-structure-template-alist '("js" . "src js"))
-    (add-to-list 'org-structure-template-alist '("cy" . "src cypher"))
     (setq org-confirm-babel-evaluate nil)
     (org-babel-do-load-languages
      'org-babel-load-languages
@@ -31,9 +23,7 @@ The best for writing Literate programing
        (python . t)
        (sql . t)
        (shell . t)
-       (js . t)
-       (cypher . t)
-       ))
+       (js . t)))
     (add-hook 'org-babel-after-execute-hook 'clear-image-cache)
     (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
     )
@@ -75,7 +65,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
   	  ("@Northe" . ?n)
             ("@Personal" . ?p)
             ("@ES" . ?e)
-            ("idea" . ?i)
+            ("idea" . ?d)
             ("@Fratellino" . ?f)))
 
     (setq org-agenda-custom-commands
@@ -129,25 +119,14 @@ First we setup the agenda it's kidna messy so I put it in a different place
 #+end_src
 
 * Org-Modern
+Declared at top level rather than from inside a function called by =org-mode-hook=;
+=use-package= is a macro meant for top level, and from a hook it re-ran its whole
+configuration on every Org buffer.
 #+begin_src emacs-lisp
-  (defun skls/org-modern ()
-    (use-package org-modern)
-    (with-eval-after-load 'org (global-org-modern-mode)))
+  (use-package org-modern
+    :hook (org-mode . org-modern-mode)
+    :config (global-org-modern-mode))
 #+end_src
-
-* Org reveal
-#+begin_src emacs-lisp
-  (defun skls/org-reveal ()
-    (use-package ox-reveal
-      :custom
-      (org-reveal-note-key-char nil)
-      (org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js")
-      (org-reveal-mathjax t)
-      )
-    (use-package htmlize)
-    (require 'ox-reveal)
-    )
- #+end_src
 
 * Org -> Md
 #+begin_src emacs-lisp
@@ -155,15 +134,6 @@ First we setup the agenda it's kidna messy so I put it in a different place
     :after org)
 #+end_src
 
-* Org cypher
-#+begin_src emacs-lisp
-  (use-package ob-cypher
-    :ensure t
-    :config
-    (add-to-list 'org-babel-load-languages '(cypher . t))
-    (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
-    (add-to-list 'org-babel-tangle-lang-exts '("cypher" . "cypher")))
-#+end_src
 * Basic Setup
 #+begin_src emacs-lisp
   (defun skls/org-font-setup ()
@@ -177,13 +147,11 @@ First we setup the agenda it's kidna messy so I put it in a different place
     (variable-pitch-mode 1)
     (visual-line-mode 1))
 
-  (defun skls/org-mode-visual-fill ()
-    (use-package visual-fill-column
-      :ensure t)
-    (require 'visual-fill-column)
-    (setq visual-fill-column-width 180
-  	visual-fill-column-center-text t)
-    (visual-fill-column-mode 1))
+  ;; olivetti replaces visual-fill-column: the GitHub repo is archived (moved to
+  ;; Codeberg) and centering prose is exactly what olivetti is built for.
+  (use-package olivetti
+    :hook (org-mode . olivetti-mode)
+    :custom (olivetti-body-width 100))
 
   (use-package org-indent
     :straight nil
@@ -194,9 +162,7 @@ First we setup the agenda it's kidna messy so I put it in a different place
   (use-package org
     :commands (org-capture org-agenda)
     :hook ((org-mode . skls/org-mode-babel)
-  	 (org-mode . skls/org-mode-setup)
-  	 (org-mode . skls/org-mode-visual-fill)
-  	 (org-mode . skls/org-modern))
+  	 (org-mode . skls/org-mode-setup))
     :config
     ;;(setq org-ellipsis " ▾")
     (skls/org-agenda-setup)
@@ -206,15 +172,18 @@ First we setup the agenda it's kidna messy so I put it in a different place
 * Faces
 #+begin_src emacs-lisp
   (with-eval-after-load 'org-faces
-    (dolist (face '((org-level-1 . 2.0)
-                    (org-level-2 . 1.5)
-                    (org-level-3 . 1.0)
-                    (org-level-4 . 1.0)
-                    (org-level-5 . 1.1)
-                    (org-level-6 . 1.1)
-                    (org-level-7 . 1.1)
-                    (org-level-8 . 1.1)))
-      (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+    ;; Only restyle heading fonts if the family is actually installed; otherwise
+    ;; leave the heading faces alone rather than silently falling back.
+    (when-let ((heading-font (skls/first-font "Cantarell" "Helvetica Neue" "DejaVu Sans")))
+      (dolist (face '((org-level-1 . 2.0)
+                      (org-level-2 . 1.5)
+                      (org-level-3 . 1.0)
+                      (org-level-4 . 1.0)
+                      (org-level-5 . 1.1)
+                      (org-level-6 . 1.1)
+                      (org-level-7 . 1.1)
+                      (org-level-8 . 1.1)))
+        (set-face-attribute (car face) nil :font heading-font :weight 'regular :height (cdr face))))
     (set-face-attribute 'org-block nil    :foreground 'unspecified :inherit 'fixed-pitch)
     (set-face-attribute 'org-table nil    :inherit 'fixed-pitch)
     (set-face-attribute 'org-formula nil  :inherit 'fixed-pitch)
@@ -263,10 +232,12 @@ Show emphasis markers only when the cursor is on them.
 ;;         if you don't care about startup time, use
 ;;  :hook (after-init . org-roam-ui-mode)
     :config
+    ;; open-on-start nil: it launched a browser whenever org-roam-ui loaded.
+    ;; Start it deliberately with M-x org-roam-ui-open.
     (setq org-roam-ui-sync-theme t
           org-roam-ui-follow t
           org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
+          org-roam-ui-open-on-start nil))
 #+end_src
 * Org-Download
 #+begin_src emacs-lisp
