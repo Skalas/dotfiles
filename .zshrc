@@ -4,8 +4,8 @@ if command -v direnv &>/dev/null; then
   eval "$(direnv hook zsh)"
 fi
 
-# Auto-start tmux (must be before everything else)
-if command -v tmux &>/dev/null && [[ -z "$TMUX" && -z "$EMACS" && -z "$INSIDE_EMACS" && $- == *i* ]]; then
+# Auto-start tmux only in iTerm2 (Warp manages its own multiplexing)
+if command -v tmux &>/dev/null && [[ "$TERM_PROGRAM" == "iTerm.app" && -z "$TMUX" && -z "$EMACS" && -z "$INSIDE_EMACS" && $- == *i* ]]; then
   tmux new-session -A -s main && return
 fi
 
