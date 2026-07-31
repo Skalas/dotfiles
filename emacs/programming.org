@@ -40,11 +40,6 @@
            (prog-mode . ws-butler-mode)))
 #+end_src
 * Languages
-** RealGUD
-#+begin_src emacs-lisp
-(use-package realgud)
-#+end_src
-
 ** Coding enhancements
 #+begin_src emacs-lisp
   (use-package yasnippet
@@ -63,22 +58,22 @@
 #+end_src
 
 ** Python
+Virtualenv activation is handled entirely by direnv (see =envrc= in =core.org=)
+together with =uv= — no Emacs-side venv manager. =poetry.el= was removed for that
+reason, and because =uv= is the standard here.
+
+Hooks target =python-base-mode=, the common parent of =python-mode= and
+=python-ts-mode=, so they keep firing if tree-sitter modes are ever enabled.
 #+begin_src emacs-lisp
   (use-package apheleia
-    :hook (python-mode . apheleia-mode))
-
-  (use-package poetry
-    :after python)
+    :hook (python-base-mode . apheleia-mode))
 
   (use-package eglot
     :straight nil
     :defer t
-    :hook (python-mode . eglot-ensure))
+    :hook (python-base-mode . eglot-ensure))
 
-  (use-package sphinx-doc
-    :hook (python-mode . sphinx-doc-mode))
-
-  (add-hook 'python-mode-hook (lambda () (setq-local tab-width 4)))
+  (add-hook 'python-base-mode-hook (lambda () (setq-local tab-width 4)))
 #+end_src
 ** Completion
 #+begin_src emacs-lisp
@@ -143,11 +138,16 @@ I used polymode in order to use jinja between the two braces, while still using 
 #+BEGIN_SRC emacs-lisp
   (use-package flymake-sqlfluff)
 
-  (eval-after-load "sql"
-    '(use-package sql-indent))
+  ;; Top-level with :hook rather than a use-package call inside eval-after-load —
+  ;; that form registered nothing until `sql' happened to load, which made the
+  ;; package look unused to straight's orphan detection.
+  (use-package sql-indent
+    :hook (sql-mode . sqlind-minor-mode))
+
+  (use-package jinja2-mode
+    :commands jinja2-mode)
 
   (defun skls/create-poly-jinja ()
-    (use-package jinja2-mode)
     (define-hostmode poly-sql-hostmode :mode 'sql-mode)
     (define-innermode poly-jinja2-expr-sql-innermode
       :mode 'jinja2-mode
@@ -212,9 +212,14 @@ I used polymode in order to use jinja between the two braces, while still using 
     (setq vterm-shell "zsh")
     (setq vterm-max-scrollback 10000))
 
+  ;; MesloLGS NF is powerlevel10k's recommended font, so the prompt's glyphs
+  ;; render correctly in vterm. Falls back to any installed Nerd Font; the plain
+  ;; `Fira Code' has no glyph coverage for p10k, so it is deliberately last.
   (add-hook 'vterm-mode-hook
             (lambda ()
-              (set (make-local-variable 'buffer-face-mode-face) '(:family "MesloLGS NF"))
-              (buffer-face-mode t)))
+              (when-let ((font (skls/first-font "MesloLGS NF" "MesloLGS Nerd Font"
+                                               "FiraCode Nerd Font")))
+                (set (make-local-variable 'buffer-face-mode-face) `(:family ,font))
+                (buffer-face-mode t))))
   (global-set-key "\M-c" 'skls/vterm-execute-current-line)
 #+end_src

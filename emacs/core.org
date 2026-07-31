@@ -28,6 +28,27 @@
   (setq use-short-answers t)
 #+end_src
 
+** Built-in modes worth having on
+All of these ship with Emacs — no packages, no startup cost worth measuring.
+=recentf-mode= in particular is what feeds the dashboard's =recents= section.
+
+#+begin_src emacs-lisp
+  ;; Reopen files at the position you left them.
+  (save-place-mode 1)
+
+  ;; Recent-file history (dashboard's `recents' section reads this).
+  (setq recentf-max-saved-items 200
+        recentf-exclude '("/straight/" "/elpa/" "/\\.git/" "/tmp/" "~$"))
+  (recentf-mode 1)
+
+  ;; Repeat the last command's keymap without the prefix: C-x o o o …
+  (repeat-mode 1)
+
+  ;; Degrade gracefully in files with very long lines (generated SQL, CSV dumps,
+  ;; minified JSON) instead of hanging on font-lock.
+  (global-so-long-mode 1)
+#+end_src
+
 * Directories
 #+begin_src emacs-lisp
   (setq org-directory "~/Documents/org")
@@ -69,9 +90,13 @@
   (use-package doom-themes
     :init (load-theme 'doom-zenburn t))
 
+  ;; The display-graphic-p guard matters: without a display `font-family-list'
+  ;; returns nil, so the `unless' was always true and every headless/batch run
+  ;; re-downloaded and reinstalled the Nerd Font (~2.5MB, ~6s).
   (use-package nerd-icons
     :config
-    (unless (member "Symbols Nerd Font Mono" (font-family-list))
+    (when (and (display-graphic-p)
+               (not (member "Symbols Nerd Font Mono" (font-family-list))))
       (nerd-icons-install-fonts t)))
 
   (use-package nerd-icons-dired
@@ -81,20 +106,39 @@
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
 #+end_src
 ** Fonts
-Make sure you have the font installed beforehand:
+=install.sh= installs these on macOS; on Debian/Ubuntu use
+=sudo apt install fonts-cantarell fonts-firacode=.
 
-#+begin_src shell :noeval
-  # Linux (Debian/Ubuntu):
-  sudo apt install fonts-cantarell
-  # Install Fira Code Nerd Font: https://www.nerdfonts.com/
-  # macOS (Homebrew):
-  brew install --cask font-fira-code-nerd-font font-cantarell
-#+end_src
+Two things this has to work around:
+
+1. A missing font does *not* signal an error — Emacs silently falls back to some
+   default. So a typo or an uninstalled family is invisible except that the frame
+   looks wrong. =skls/first-font= makes the choice explicit and returns nil when
+   nothing matches, so the =when-let= simply leaves the face alone.
+2. =font-family-list= returns nil when there is no GUI frame, which is the case
+   during init under =--bg-daemon=. Applying fonts only at load time would leave
+   a daemon's frames unstyled, so =skls/apply-fonts= also runs from
+   =after-make-frame-functions=.
 
 #+begin_src emacs-lisp
-  ;; Font is set per-platform in macos.el for macOS.
-  (unless (equal system-type 'darwin)
-    (set-face-attribute 'default nil :font "Fira Code" :height 110))
+  (defun skls/first-font (&rest families)
+    "Return the first family in FAMILIES available in the current frame, else nil.
+  Returns nil when there is no graphical frame, since `font-family-list' is
+  empty then and no font choice can be validated."
+    (when (display-graphic-p)
+      (seq-find (lambda (family) (member family (font-family-list))) families)))
+
+  (defun skls/apply-fonts (&optional _frame)
+    "Set the default and variable-pitch faces, if the fonts exist."
+    (when-let ((mono (skls/first-font "Fira Code" "FiraCode Nerd Font"
+                                     "MesloLGS NF" "Menlo" "DejaVu Sans Mono")))
+      (set-face-attribute 'default nil :font mono :height 110))
+    (when-let ((sans (skls/first-font "Cantarell" "Helvetica Neue" "DejaVu Sans")))
+      (set-face-attribute 'variable-pitch nil :font sans)))
+
+  ;; Once now (normal startup) and once per new frame (daemon startup).
+  (add-hook 'after-make-frame-functions #'skls/apply-fonts)
+  (skls/apply-fonts)
 #+end_src
 
 * Interaction with Emacs
@@ -137,6 +181,13 @@ Make sure you have the font installed beforehand:
 
   (use-package savehist
     :straight nil
+    :custom
+    (history-length 1000)
+    (history-delete-duplicates t)
+    (savehist-additional-variables '(kill-ring
+                                     search-ring
+                                     regexp-search-ring
+                                     last-kbd-macro))
     :init
     (savehist-mode))
 #+end_src
@@ -173,17 +224,17 @@ Make sure you have the font installed beforehand:
 
 ** Which key
 #+begin_src emacs-lisp
+  ;; Built into Emacs 30 — no straight recipe needed. Built-in does not mean
+  ;; enabled, so `which-key-mode' still has to be turned on explicitly.
   (use-package which-key
+    :straight nil
     :init (which-key-mode)
-    :diminish which-key-mode
-    :config
-    (setq which-key-idle-delay 0.7))
+    :custom (which-key-idle-delay 0.7))
 #+end_src
 
 ** Projectile
 #+begin_src emacs-lisp
   (use-package projectile
-    :diminish projectile-mode
     :defer nil
     :config (projectile-mode)
     :custom ((projectile-completion-system 'default))
@@ -204,23 +255,23 @@ Make sure you have the font installed beforehand:
     ([remap describe-key] . helpful-key))
 #+end_src
 ** Window Jump
+=general-define-key= with =:keymaps 'override= gives these precedence over major
+modes, which is what the previous hand-rolled =my-keys-minor-mode= (plus its
+=minibuffer-setup-hook= workaround to switch itself off) existed to achieve.
+=general= is already a dependency, so this drops ~15 lines and a stray modeline
+lighter.
+
+Wrapped in =with-eval-after-load= rather than called at top level, so it does not
+depend on =general= having loaded by the time this section is evaluated.
+
 #+begin_src emacs-lisp
-  (defvar my-keys-minor-mode-map
-    (let ((map (make-sparse-keymap)))
-      (define-key map (kbd "<M-C-up>") 'windmove-up)
-      (define-key map (kbd "<M-C-right>") 'windmove-right)
-      (define-key map (kbd "<M-C-down>") 'windmove-down)
-      (define-key map (kbd "<M-C-left>") 'windmove-left)
-      map)
-    "my-keys-minor-mode keymap.")
-  (define-minor-mode my-keys-minor-mode
-    "A minor mode so that my key settings override annoying major modes."
-    :init-value t
-    :lighter " my-keys")
-  (my-keys-minor-mode 1)
-  (defun my-minibuffer-setup-hook ()
-    (my-keys-minor-mode 0))
-  (add-hook 'minibuffer-setup-hook 'my-minibuffer-setup-hook)
+  (with-eval-after-load 'general
+    (general-define-key
+     :keymaps 'override
+     "<M-C-up>"    'windmove-up
+     "<M-C-right>" 'windmove-right
+     "<M-C-down>"  'windmove-down
+     "<M-C-left>"  'windmove-left))
 #+end_src
 
 * Text Scale
@@ -235,7 +286,6 @@ Make sure you have the font installed beforehand:
   (dolist (key '("\C-d" "\C-\M-b"))
     (global-unset-key key))
   (use-package multiple-cursors
-    :diminish multiple-cursors-mode
     :init
     (global-set-key (kbd "C-d") 'mc/mark-next-like-this)
     (global-set-key (kbd "C-M-d") 'mc/mark-previous-like-this)

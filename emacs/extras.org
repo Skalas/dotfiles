@@ -9,6 +9,8 @@
 (use-package auctex)
 #+END_SRC
 ** Markdown
+Rendered via =pandoc= (=multimarkdown= was never installed, so preview silently failed).
+=markdown-hide-markup= mirrors the org-appear behaviour — toggle with =C-c C-x C-m=.
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
     :commands (markdown-mode gfm-mode)
@@ -16,7 +18,35 @@
            ("\\.md\\'" . markdown-mode)
            ("\\.markdown\\'" . markdown-mode)
            ("\\.mdx\\'" . markdown-mode))
-    :init (setq markdown-command "multimarkdown"))
+    :custom
+    (markdown-command "pandoc -f gfm -t html5 --standalone")
+    (markdown-fontify-code-blocks-natively t)
+    (markdown-hide-markup t)
+    (markdown-header-scaling t))
+#+END_SRC
+
+*** grip-mode
+Live GFM preview through GitHub's own renderer, so task lists, alert blockquotes and
+mermaid blocks match what GitHub shows. Bound to =C-c C-c g=. Needs =grip= on PATH
+(installed by =install.sh=) and a =GITHUB_TOKEN= in =~/.zshrc.local= to avoid the
+unauthenticated API rate limit. Previews in an xwidget buffer — this emacs-plus build
+has WebKit support.
+#+BEGIN_SRC emacs-lisp
+  (use-package grip-mode
+    :after markdown-mode
+    :bind (:map markdown-mode-command-map
+                ("g" . grip-mode))
+    :custom
+    (grip-preview-in-webkit t)
+    (grip-real-time-refresh t))
+#+END_SRC
+
+*** mermaid-mode
+Diagrams that survive outside Emacs — GitHub renders mermaid natively. Needs =mmdc=
+(installed by =install.sh= via npm).
+#+BEGIN_SRC emacs-lisp
+  (use-package mermaid-mode
+    :mode "\\.mmd\\'")
 #+END_SRC
 
 * Dashboard

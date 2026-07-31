@@ -6,8 +6,8 @@
 * macOS Setup
 #+BEGIN_SRC emacs-lisp
   (when (equal system-type 'darwin)
-    (set-face-attribute 'default nil :font "Fira Code" :height 110)
-
+    ;; Fonts are handled centrally by `skls/apply-fonts' in core.el — it guards
+    ;; on availability and re-applies for daemon frames.
     (setq insert-directory-program "/opt/homebrew/bin/gls")
     (setq magit-git-executable "/opt/homebrew/bin/git")
 

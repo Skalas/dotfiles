@@ -44,15 +44,38 @@ Install use-package via straight.el and make straight the default backend for al
 
 * Load modules
 Add the lisp directory to the load path and load each module.
+
+Each module is loaded inside =condition-case= so a failure in one does not abort
+the rest of init. Without this, a single bad form part-way through the list
+silently prevents every later module from loading at all — which is exactly what
+=treemacs-start-on-boot= in =files.el= used to do to =macos.el= and =extras.el=.
+Failures are collected and reported once at the end of startup instead of
+disappearing.
+
 #+begin_src emacs-lisp
   (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
-  (load "core")
-  (load "programming")
-  (load "org-config")
-  (load "files")
-  (load "macos")
-  (load "extras")
+  (defvar skls/module-load-errors nil
+    "Alist of (MODULE . ERROR) for config modules that failed to load.")
+
+  (defun skls/load-module (module)
+    "Load MODULE from lisp/, recording any error instead of propagating it."
+    (condition-case err
+        (load module)
+      (error
+       (push (cons module err) skls/module-load-errors)
+       (message "[init] module `%s' failed: %s" module (error-message-string err)))))
+
+  (dolist (module '("core" "programming" "org-config" "files" "macos" "extras"))
+    (skls/load-module module))
+
+  (when skls/module-load-errors
+    (add-hook 'emacs-startup-hook
+              (lambda ()
+                (message "[init] %d module(s) failed to load: %s — see *Messages*"
+                         (length skls/module-load-errors)
+                         (mapconcat #'car (reverse skls/module-load-errors) ", ")))
+              t))
 #+end_src
 
 * Auto-tangle on save

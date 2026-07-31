@@ -23,7 +23,7 @@ stow -R -t ~ .
 
 ### Literate Config (Org → Tangle → Stow)
 
-Several configs are authored as Emacs Org files and tangled (via `org-babel-tangle`) into their final locations before stowing. All Org files use `#+auto_tangle: t` for automatic tangling on save via `org-auto-tangle`.
+Several configs are authored as Emacs Org files and tangled (via `org-babel-tangle`) into their final locations before stowing. `Emacs.org` and everything under `emacs/` carry `#+auto_tangle: t` for automatic tangling on save via `org-auto-tangle`; `git.org`, `ssh.org`, `zsh.org`, and `yasnippets.org` do not, and require `./tangle.sh`.
 
 | Org file | Tangles to | Notes |
 |----------|------------|-------|
@@ -33,10 +33,10 @@ Several configs are authored as Emacs Org files and tangled (via `org-babel-tang
 | `emacs/org-config.org` | `.emacs.d/lisp/org-config.el` | Babel, agenda, org-modern, org-appear, org-roam, org-download |
 | `emacs/files.org` | `.emacs.d/lisp/files.el` | CSV/JSON/YAML modes, dired, treemacs |
 | `emacs/macos.org` | `.emacs.d/lisp/macos.el` | macOS fonts, PATH/exec-path, Spanish keyboard bindings, pdf-tools |
-| `emacs/extras.org` | `.emacs.d/lisp/extras.el` | LaTeX, markdown, dashboard, AI (copilot, gptel, claude-code) |
+| `emacs/extras.org` | `.emacs.d/lisp/extras.el` | LaTeX, markdown (grip/mermaid), dashboard, AI (gptel, claude-code) |
 | `git.org` | `.gitconfig` | `.gitconfig` is gitignored (contains personal data) |
 | `ssh.org` | `.ssh/config` | |
-| `zsh.org` | `src/skls/aliases`, `src/skls/python/*.zsh`, `src/skls/wsl.zsh` | Does NOT produce `.zshrc` |
+| `zsh.org` | `src/skls/aliases` | Does NOT produce `.zshrc` |
 | `yasnippets.org` | `.emacs.d/templates/snippets/...` | |
 
 **Important:** `.zshrc` is maintained directly as a plain file, not tangled from `zsh.org`. It is **copied** (not symlinked) into `$HOME` by `install.sh`, so each machine can diverge via `~/.zshrc.local`.
@@ -51,11 +51,15 @@ On **Linux**, Emacs is installed via `apt`.
 
 All packages managed via [straight.el](https://github.com/radian-software/straight.el) (`straight-use-package-by-default t`). Package.el is disabled in `early-init.el`.
 
+Versions are pinned in `emacs/straight-versions.el`, symlinked by `install.sh` to `~/.emacs.d/straight/versions/default.el`. `M-x straight-freeze-versions` writes through that symlink into the repo — commit the diff. Packages that Emacs 30 ships built-in (`which-key`, `eglot`, `savehist`, `org-indent`, `editorconfig`) must be declared `:straight nil` so straight does not clone a duplicate.
+
 **Completion:** vertico + orderless + marginalia + consult + corfu + cape (the "minad stack")
 
 **Programming:** eglot (LSP, built-in), apheleia (formatting), magit, smartparens, rainbow-delimiters, yasnippet
 
-**Org:** org-modern, org-appear, org-roam + org-roam-ui, org-download, org-auto-tangle
+**Org:** org-modern, org-appear, olivetti, org-roam + org-roam-ui, org-download, org-auto-tangle
+
+**Markdown:** markdown-mode (pandoc preview), grip-mode (live GFM preview), mermaid-mode
 
 **AI:** gptel, claude-code.el (via Vertex AI)
 

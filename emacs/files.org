@@ -67,6 +67,9 @@
   (use-package treemacs-perspective
     :after (treemacs perspective)
     :config (treemacs-set-scope-type 'Perspectives))
-
-  (treemacs-start-on-boot)
 #+end_src
+
+=treemacs-start-on-boot= is deliberately absent: with no persisted workspace it
+calls =treemacs--read-first-project-path=, which prompts for a project root
+*during init* and aborts the rest of the load (=macos.el= and =extras.el= never
+run). Open treemacs on demand with =M-0= or =C-x t t= instead.
